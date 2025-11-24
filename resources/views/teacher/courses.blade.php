@@ -1,0 +1,355 @@
+@extends('teacher.layouts.app')
+
+@section('title', 'Courses Management')
+@section('page-title', 'Courses Management')
+
+@section('content')
+    <!-- Enhanced Filters -->
+    <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #e2e8f0;">
+        <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-radius: 12px 12px 0 0; margin: -1px -1px 0 -1px;">
+            <h3 class="card-title" style="color: white; display: flex; align-items: center; gap: 12px; margin: 0;">
+                <i class="fas fa-filter" style="color: #93c5fd;"></i>
+                Advanced Filters
+            </h3>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <form method="GET" action="{{ route('teacher.courses') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: end;">
+                <!-- Student Filter -->
+                <div style="position: relative;">
+                    <label for="student_id" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-user-graduate" style="color: #3b82f6; margin-right: 6px;"></i>
+                        Student
+                    </label>
+                    <div style="position: relative;">
+                        <select name="student_id" id="student_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
+                            <option value="">All Students</option>
+                            @foreach($students as $student)
+                                <option value="{{ $student->id }}" {{ request('student_id') == $student->id ? 'selected' : '' }}>
+                                    {{ $student->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Status Filter -->
+                <div style="position: relative;">
+                    <label for="status" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+                        Status
+                    </label>
+                    <select name="status" id="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
+                        <option value="">All Status</option>
+                        <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>✅ Present</option>
+                        <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>❌ Absent</option>
+                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>⏰ Late</option>
+                    </select>
+                </div>
+                
+                <!-- Course Type Filter -->
+                <div style="position: relative;">
+                    <label for="course_type" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-book" style="color: #8b5cf6; margin-right: 6px;"></i>
+                        Course Type
+                    </label>
+                    <select name="course_type" id="course_type" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
+                        <option value="">All Types</option>
+                        @foreach($subjects as $subject)
+                            <option value="{{ $subject->name }}" {{ request('course_type') == $subject->name ? 'selected' : '' }}>
+                                {{ $subject->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <!-- Date From Filter -->
+                <div style="position: relative;">
+                    <label for="date_from" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-calendar-alt" style="color: #f59e0b; margin-right: 6px;"></i>
+                        From Date
+                    </label>
+                    <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
+                </div>
+                
+                <!-- Date To Filter -->
+                <div style="position: relative;">
+                    <label for="date_to" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-calendar-check" style="color: #10b981; margin-right: 6px;"></i>
+                        To Date
+                    </label>
+                    <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
+                </div>
+                
+                <!-- Filter Button -->
+                <div style="display: flex; gap: 12px; align-items: end;">
+                    <button type="submit" style="flex: 1; padding: 12px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                        <i class="fas fa-search"></i>
+                        Apply Filters
+                    </button>
+                    <a href="{{ route('teacher.courses') }}" style="padding: 12px 16px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </a>
+                </div>
+            </form>
+            
+            <!-- Active Filters Display -->
+            @if(request()->hasAny(['student_id', 'status', 'course_type', 'date_from', 'date_to']))
+                <div style="margin-top: 20px; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                        <span style="font-weight: 600; color: #1e40af;">Active Filters:</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        @if(request('student_id'))
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-user-graduate"></i>
+                                Student: {{ $students->where('id', request('student_id'))->first()->name ?? 'Unknown' }}
+                            </span>
+                        @endif
+                        @if(request('status'))
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #dcfce7; color: #166534; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-check-circle"></i>
+                                Status: {{ request('status') }}
+                            </span>
+                        @endif
+                        @if(request('course_type'))
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f3e8ff; color: #7c3aed; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-book"></i>
+                                Type: {{ request('course_type') }}
+                            </span>
+                        @endif
+                        @if(request('date_from'))
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-calendar-alt"></i>
+                                From: {{ request('date_from') }}
+                            </span>
+                        @endif
+                        @if(request('date_to'))
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-calendar-check"></i>
+                                To: {{ request('date_to') }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Advanced Courses Table -->
+    <div class="card" style="border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div class="card-header" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 1px solid #e2e8f0; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 class="card-title" style="display: flex; align-items: center; gap: 12px; margin: 0; color: #1e293b; font-size: 20px; font-weight: 700;">
+                        <i class="fas fa-graduation-cap" style="color: #3b82f6;"></i>
+                        My Courses
+                    </h3>
+                    <p style="color: #64748b; margin: 8px 0 0 0; font-size: 14px;">Manage your teaching courses and track progress</p>
+                </div>
+                <a href="{{ route('teacher.courses.create') }}" style="padding: 12px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); text-decoration: none;">
+                    <i class="fas fa-plus"></i> Add Course
+                </a>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            @if($courses->count() > 0)
+                <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
+                    <table style="width: 100%; min-width: 1200px; border-collapse: separate; border-spacing: 0;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-hashtag" style="color: #3b82f6; margin-right: 6px;"></i>
+                                    No.
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-user-graduate" style="color: #10b981; margin-right: 6px;"></i>
+                                    Student
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-book" style="color: #8b5cf6; margin-right: 6px;"></i>
+                                    Course Name
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-tag" style="color: #f59e0b; margin-right: 6px;"></i>
+                                    Type
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-calendar-alt" style="color: #dc2626; margin-right: 6px;"></i>
+                                    Date & Time
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-clock" style="color: #6366f1; margin-right: 6px;"></i>
+                                    Duration
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+                                    Status
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-user-shield" style="color: #8b5cf6; margin-right: 6px;"></i>
+                                    Admin Status
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-dollar-sign" style="color: #059669; margin-right: 6px;"></i>
+                                    Income
+                                </th>
+                                <th style="padding: 20px 16px; text-align: center; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-cog" style="color: #64748b; margin-right: 6px;"></i>
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($courses as $index => $course)
+                                <tr style="background: {{ $index % 2 === 0 ? '#ffffff' : '#fafbfc' }}; border-bottom: 1px solid #f1f5f9; transition: all 0.3s;" onmouseover="this.style.background='#f8fafc'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.background='{{ $index % 2 === 0 ? '#ffffff' : '#fafbfc' }}'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                    <td style="padding: 20px 16px; font-weight: 700; color: #1e293b; font-size: 16px; white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
+                                                {{ $course->n_value }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0369a1; font-weight: 700; font-size: 16px;">
+                                                {{ substr($course->student->name, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->student->name }}</div>
+                                                <div style="font-size: 12px; color: #64748b;">Package: {{ $course->student->package_number }} lessons</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="font-weight: 600; color: #1e293b; font-size: 14px; margin-bottom: 4px;">{{ $course->name }}</div>
+                                        <div style="font-size: 12px; color: #64748b;">Created {{ $course->created_at->diffForHumans() }}</div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7c3aed; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #d8b4fe;">
+                                            <i class="fas fa-book"></i>
+                                            {{ $course->course_type }}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                                            <div style="font-weight: 600; color: #1e293b; font-size: 14px;">
+                                                <i class="fas fa-calendar" style="color: #f59e0b; margin-right: 6px;"></i>
+                                                {{ $course->course_date->format('M d, Y') }}
+                                            </div>
+                                            <div style="font-size: 12px; color: #64748b;">
+                                                <i class="fas fa-clock" style="color: #10b981; margin-right: 4px;"></i>
+                                                {{ \Carbon\Carbon::parse($course->class_time)->format('H:i') }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #d97706; font-weight: 700; font-size: 12px;">
+                                                <i class="fas fa-hourglass-half"></i>
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->duration_hours }}h {{ $course->duration_minutes }}m</div>
+                                                <div style="font-size: 12px; color: #64748b;">{{ $course->total_hours }}h total</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: {{ $course->status === 'Present' ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' : ($course->status === 'Absent' ? 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)') }}; color: {{ $course->status === 'Present' ? '#166534' : ($course->status === 'Absent' ? '#dc2626' : '#d97706') }}; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid {{ $course->status === 'Present' ? '#bbf7d0' : ($course->status === 'Absent' ? '#fecaca' : '#fde68a') }}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas {{ $course->status === 'Present' ? 'fa-check-circle' : ($course->status === 'Absent' ? 'fa-times-circle' : 'fa-clock') }}"></i>
+                                            {{ $course->status }}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        @if($course->admin_status === 'approved')
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-check-circle"></i>
+                                                Approved
+                                            </span>
+                                        @elseif($course->admin_status === 'pending')
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #fde68a; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-clock"></i>
+                                                Pending
+                                            </span>
+                                        @elseif($course->admin_status === 'rejected')
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #fecaca; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-times-circle"></i>
+                                                Rejected
+                                            </span>
+                                        @else
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-check-circle"></i>
+                                                Approved
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #166534; font-weight: 700; font-size: 12px;">
+                                                <i class="fas fa-dollar-sign"></i>
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 700; color: #1e293b; font-size: 16px;">${{ number_format($course->income, 2) }}</div>
+                                                <div style="font-size: 12px; color: #64748b;">Earned</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                            <a href="{{ route('teacher.courses.edit', $course) }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border: 1px solid #fde68a; border-radius: 8px; text-decoration: none; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                                                <i class="fas fa-edit" style="font-size: 14px;"></i>
+                                            </a>
+                                            <form method="POST" action="{{ route('teacher.courses.destroy', $course) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this course?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                                                    <i class="fas fa-trash" style="font-size: 14px;"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Table Footer with Summary -->
+                <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-top: 1px solid #e2e8f0; padding: 20px 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(59, 130, 246, 0.1); border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                                <i class="fas fa-list" style="color: #3b82f6;"></i>
+                                <span style="font-weight: 600; color: #1e40af; font-size: 14px;">{{ $courses->count() }} Courses</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                                <i class="fas fa-clock" style="color: #10b981;"></i>
+                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ $courses->sum('total_hours') }}h Total</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(5, 150, 105, 0.1); border-radius: 20px; border: 1px solid rgba(5, 150, 105, 0.2);">
+                                <i class="fas fa-dollar-sign" style="color: #059669;"></i>
+                                <span style="font-weight: 600; color: #166534; font-size: 14px;">${{ number_format($courses->sum('income'), 2) }} Earned</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 12px;">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Showing {{ $courses->count() }} of {{ $courses->total() }} courses</span>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div style="text-align: center; padding: 80px 24px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                    <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+                        <i class="fas fa-book-open" style="font-size: 48px; color: #94a3b8;"></i>
+                    </div>
+                    <h3 style="color: #374151; margin-bottom: 12px; font-size: 24px; font-weight: 700;">No courses found</h3>
+                    <p style="color: #64748b; margin-bottom: 32px; font-size: 16px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.6;">Start by creating your first course to begin tracking your teaching progress and student engagement.</p>
+                    <a href="{{ route('teacher.courses.create') }}" style="display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.3s; text-decoration: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)'">
+                        <i class="fas fa-plus"></i> Create Your First Course
+                    </a>
+                </div>
+            @endif
+        </div>
+    </div>
+@endsection
