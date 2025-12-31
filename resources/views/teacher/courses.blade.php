@@ -35,7 +35,7 @@
                 <!-- Status Filter -->
                 <div style="position: relative;">
                     <label for="status" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+                        <i class="fas fa-check-circle" style="color: #34d399; margin-right: 6px;"></i>
                         Status
                     </label>
                     <select name="status" id="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
@@ -65,7 +65,7 @@
                 <!-- Date From Filter -->
                 <div style="position: relative;">
                     <label for="date_from" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                        <i class="fas fa-calendar-alt" style="color: #f59e0b; margin-right: 6px;"></i>
+                        <i class="fas fa-calendar-alt" style="color: #fbbf24; margin-right: 6px;"></i>
                         From Date
                     </label>
                     <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
@@ -74,7 +74,7 @@
                 <!-- Date To Filter -->
                 <div style="position: relative;">
                     <label for="date_to" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                        <i class="fas fa-calendar-check" style="color: #10b981; margin-right: 6px;"></i>
+                        <i class="fas fa-calendar-check" style="color: #34d399; margin-right: 6px;"></i>
                         To Date
                     </label>
                     <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
@@ -164,7 +164,7 @@
                                     No.
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
-                                    <i class="fas fa-user-graduate" style="color: #10b981; margin-right: 6px;"></i>
+                                    <i class="fas fa-user-graduate" style="color: #34d399; margin-right: 6px;"></i>
                                     Student
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
@@ -172,11 +172,11 @@
                                     Course Name
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
-                                    <i class="fas fa-tag" style="color: #f59e0b; margin-right: 6px;"></i>
+                                    <i class="fas fa-tag" style="color: #fbbf24; margin-right: 6px;"></i>
                                     Type
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
-                                    <i class="fas fa-calendar-alt" style="color: #dc2626; margin-right: 6px;"></i>
+                                    <i class="fas fa-calendar-alt" style="color: #f87171; margin-right: 6px;"></i>
                                     Date & Time
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
@@ -184,7 +184,7 @@
                                     Duration
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
-                                    <i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+                                    <i class="fas fa-check-circle" style="color: #34d399; margin-right: 6px;"></i>
                                     Status
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
@@ -235,11 +235,11 @@
                                     <td style="padding: 20px 16px; white-space: nowrap;">
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             <div style="font-weight: 600; color: #1e293b; font-size: 14px;">
-                                                <i class="fas fa-calendar" style="color: #f59e0b; margin-right: 6px;"></i>
+                                                <i class="fas fa-calendar" style="color: #fbbf24; margin-right: 6px;"></i>
                                                 {{ $course->course_date->format('M d, Y') }}
                                             </div>
                                             <div style="font-size: 12px; color: #64748b;">
-                                                <i class="fas fa-clock" style="color: #10b981; margin-right: 4px;"></i>
+                                                <i class="fas fa-clock" style="color: #34d399; margin-right: 4px;"></i>
                                                 {{ \Carbon\Carbon::parse($course->class_time)->format('H:i') }}
                                             </div>
                                         </div>
@@ -324,7 +324,7 @@
                                 <span style="font-weight: 600; color: #1e40af; font-size: 14px;">{{ $courses->count() }} Courses</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                                <i class="fas fa-clock" style="color: #10b981;"></i>
+                                <i class="fas fa-clock" style="color: #34d399;"></i>
                                 <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ $courses->sum('total_hours') }}h Total</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(5, 150, 105, 0.1); border-radius: 20px; border: 1px solid rgba(5, 150, 105, 0.2);">

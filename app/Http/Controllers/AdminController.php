@@ -73,8 +73,8 @@ class AdminController extends Controller
         
         // Pagination
         $perPage = $request->get('per_page', 20);
-        $courses = $query->orderBy('course_date', 'desc')
-                        ->orderBy('class_time', 'desc')
+        $courses = $query->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
                         ->paginate($perPage);
         
         return view('admin.dashboard', compact(
@@ -556,8 +556,8 @@ class AdminController extends Controller
             $query->where('status', $request->status);
         }
         
-        $courses = $query->orderBy('course_date', 'desc')
-                        ->orderBy('class_time', 'desc')
+        $courses = $query->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
                         ->paginate(20);
         
         $teachers = Teacher::all();

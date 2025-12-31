@@ -211,12 +211,12 @@
                             <td style="padding: 16px; white-space: nowrap;">
                                 @php
                                     $statusColors = [
-                                        'Active' => '#10b981',
-                                        'Inactive' => '#f59e0b',
-                                        'Suspended' => '#ef4444',
-                                        'Archived' => '#6b7280'
+                                        'Active' => '#6ee7b7',
+                                        'Inactive' => '#fcd34d',
+                                        'Suspended' => '#fca5a5',
+                                        'Archived' => '#9ca3af'
                                     ];
-                                    $statusColor = $statusColors[$activityStatus] ?? '#64748b';
+                                    $statusColor = $statusColors[$activityStatus] ?? '#94a3b8';
                                 @endphp
                                 <select class="inline-edit" data-field="payment_status_id" data-student-id="{{ $student->id }}" 
                                         style="width: 100%; padding: 6px 10px; border: 1px solid {{ $statusColor }}; border-radius: 6px; font-size: 12px; background: white; cursor: pointer; color: {{ $statusColor }}; font-weight: 600;">

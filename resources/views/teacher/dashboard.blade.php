@@ -164,17 +164,17 @@
                     @forelse($courses as $course)
                         @php
                             // Color coding for student names
-                            $nameColor = '#1e293b';
+                            $nameColor = '#64748b';
                             if ($course->status === 'Pending') {
-                                $nameColor = '#f59e0b';
+                                $nameColor = '#fbbf24';
                             } elseif ($course->student->package_number > 0) {
                                 $progress = ($course->n_value / $course->student->package_number) * 100;
                                 if ($progress >= 80) {
-                                    $nameColor = '#ec4899'; // Pink
+                                    $nameColor = '#f9a8d4'; // Soft Pink
                                 } elseif ($progress >= 50) {
-                                    $nameColor = '#eab308'; // Yellow
+                                    $nameColor = '#fde047'; // Soft Yellow
                                 } else {
-                                    $nameColor = '#a855f7'; // Purple
+                                    $nameColor = '#c084fc'; // Soft Purple
                                 }
                             }
                         @endphp
@@ -198,13 +198,13 @@
                             </td>
                             <td style="padding: 16px;">
                                 @if($course->status === 'Present')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Present</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">Present</span>
                                 @elseif($course->status === 'Pending')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #f59e0b; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Pending</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">Pending</span>
                                 @elseif($course->status === 'Absent')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #ef4444; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Absent</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">Absent</span>
                                 @else
-                                    <span style="display: inline-block; padding: 6px 12px; background: #f59e0b; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Late</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">Late</span>
                                 @endif
                             </td>
                             <td style="padding: 16px;">

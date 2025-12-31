@@ -191,7 +191,7 @@
                             }
                             
                             // Color coding for student names
-                            $nameColor = '#3b82f6';
+                            $nameColor = '#60a5fa';
                         @endphp
                         <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" 
                             onmouseover="this.style.background='#f8fafc'" 
@@ -220,15 +220,15 @@
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 @if($course->status === 'Present')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Present</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">Present</span>
                                 @elseif($course->status === 'Pending')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #f59e0b; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Pending</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">Pending</span>
                                 @elseif($course->status === 'Absent')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #ef4444; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Absent</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">Absent</span>
                                 @elseif($course->status === 'Late')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #f59e0b; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">Late</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">Late</span>
                                 @else
-                                    <span style="display: inline-block; padding: 6px 12px; background: #94a3b8; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ $course->status ?? '-' }}</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #cbd5e1; color: #475569; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ $course->status ?? '-' }}</span>
                                 @endif
                             </td>
                             <td style="padding: 16px; white-space: nowrap; color: #64748b;">
@@ -236,7 +236,7 @@
                             </td>
                             <td style="padding: 16px; white-space: nowrap; color: #64748b;">
                                 @if($course->homework)
-                                    <i class="fas fa-check" style="color: #10b981;"></i>
+                                    <i class="fas fa-check" style="color: #34d399;"></i>
                                 @else
                                     -
                                 @endif

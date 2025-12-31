@@ -133,8 +133,8 @@ class TeacherController extends Controller
         }
         
         $perPage = $request->get('per_page', 10);
-        $courses = $query->orderBy('course_date', 'desc')
-                        ->orderBy('class_time', 'desc')
+        $courses = $query->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
                         ->paginate($perPage);
         
         // Get students and subjects for filters
@@ -191,9 +191,9 @@ class TeacherController extends Controller
             $query->whereDate('course_date', '<=', $request->date_to);
         }
         
-        $courses = $query->orderBy('created_at', 'desc')
-                        ->orderBy('course_date', 'desc')
-                        ->orderBy('class_time', 'desc')
+        $courses = $query->orderBy('created_at', 'asc')
+                        ->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
                         ->paginate(20);
         
         // Get students for filter dropdown
