@@ -161,7 +161,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($courses as $course)
+                    @forelse($courses as $index => $course)
                         @php
                             // Color coding for student names
                             $nameColor = '#64748b';
@@ -185,7 +185,7 @@
                                 <input type="checkbox" style="cursor: pointer;">
                             </td>
                             <td style="padding: 16px; font-weight: 600; color: #1e293b;">
-                                {{ number_format($course->n_value, 1) }}
+                                {{ number_format((($courses->firstItem() ?? 1) - 1 + $index + 0.5), 1) }}
                             </td>
                             <td style="padding: 16px;">
                                 <span style="color: {{ $nameColor }}; font-weight: 600;">{{ $course->student->name }}</span>

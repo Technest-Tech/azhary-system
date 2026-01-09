@@ -21,10 +21,8 @@ class AdminController extends Controller
         // Calculate metrics
         $totalStudents = Student::count();
         
-        // Monthly Hours - sum of total_hours for current month
-        $monthlyHours = Course::whereMonth('course_date', now()->month)
-            ->whereYear('course_date', now()->year)
-            ->sum('total_hours') ?? 0;
+        // Total Hours - sum of all total_hours from all courses (all students)
+        $totalHours = Course::sum('total_hours') ?? 0;
         
         // Monthly Revenue - sum of income for current month
         $monthlyRevenue = Course::whereMonth('course_date', now()->month)
@@ -79,7 +77,7 @@ class AdminController extends Controller
         
         return view('admin.dashboard', compact(
             'totalStudents',
-            'monthlyHours',
+            'totalHours',
             'monthlyRevenue',
             'teachers',
             'students',

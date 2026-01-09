@@ -207,7 +207,7 @@
                                     <td style="padding: 20px 16px; font-weight: 700; color: #1e293b; font-size: 16px; white-space: nowrap;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
-                                                {{ $course->n_value }}
+                                                {{ number_format((($courses->firstItem() ?? 1) - 1 + $index + 0.5), 1) }}
                                             </div>
                                         </div>
                                     </td>

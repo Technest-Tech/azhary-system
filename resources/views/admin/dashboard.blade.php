@@ -19,15 +19,15 @@
             </div>
         </div>
 
-        <!-- Monthly Hours Card -->
+        <!-- Total Hours Card -->
         <div class="card" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #f59e0b;">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-clock" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Monthly Hours</p>
-                    <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ number_format($monthlyHours, 1) }}</h3>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Total Hours</p>
+                    <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ number_format($totalHours, 1) }}</h3>
                 </div>
             </div>
         </div>
@@ -200,7 +200,7 @@
                                 <input type="checkbox" style="cursor: pointer;">
                             </td>
                             <td style="padding: 16px; white-space: nowrap; font-weight: 600; color: #1e293b;">
-                                {{ number_format($course->n_value, 1) }}
+                                {{ number_format((($courses->firstItem() ?? 1) - 1 + $index + 0.5), 1) }}
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 <span style="color: {{ $nameColor }}; font-weight: 600;">{{ $course->student->name ?? $course->student_name ?? 'N/A' }}</span>
