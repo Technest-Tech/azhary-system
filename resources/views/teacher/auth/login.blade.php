@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -139,8 +139,8 @@
     <div class="login-container">
         <div class="login-header">
             <h1>🎓 Azhary Academy</h1>
-            <p style="font-size: 18px; font-weight: 600; color: #11998e; margin-bottom: 8px;">Teacher Login</p>
-            <p>Welcome back! Please login to your account.</p>
+            <p style="font-size: 18px; font-weight: 600; color: #11998e; margin-bottom: 8px;">{{ __('teacher.login') }}</p>
+            <p>{{ __('teacher.login') }}</p>
         </div>
 
         @if ($errors->any())
@@ -155,7 +155,7 @@
             @csrf
 
             <div class="form-group @error('email') error @enderror">
-                <label for="email">Email Address</label>
+                <label for="email">{{ __('teacher.email') }}</label>
                 <input 
                     type="email" 
                     id="email" 
@@ -163,7 +163,7 @@
                     value="{{ old('email') }}" 
                     required 
                     autofocus
-                    placeholder="teacher@example.com"
+                    placeholder="{{ __('teacher.email_placeholder') }}"
                 >
                 @error('email')
                     <div class="error-message">{{ $message }}</div>
@@ -171,13 +171,13 @@
             </div>
 
             <div class="form-group @error('password') error @enderror">
-                <label for="password">Password</label>
+                <label for="password">{{ __('teacher.password') }}</label>
                 <input 
                     type="password" 
                     id="password" 
                     name="password" 
                     required
-                    placeholder="Enter your password"
+                    placeholder="{{ __('teacher.password_placeholder') }}"
                 >
                 @error('password')
                     <div class="error-message">{{ $message }}</div>
@@ -186,11 +186,11 @@
 
             <div class="remember-me">
                 <input type="checkbox" id="remember" name="remember">
-                <label for="remember">Remember me</label>
+                <label for="remember">{{ __('teacher.remember_me') }}</label>
             </div>
 
             <button type="submit" class="submit-btn">
-                Login
+                {{ __('teacher.login') }}
             </button>
         </form>
     </div>

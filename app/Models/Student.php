@@ -62,6 +62,11 @@ class Student extends Authenticatable
         return $this->belongsTo(PaymentStatus::class);
     }
 
+    public function waitingList()
+    {
+        return $this->hasMany(WaitingList::class);
+    }
+
     /**
      * Get the activity status based on last course attendance
      * Active: Last course within 30 days

@@ -1,7 +1,7 @@
 @extends('teacher.layouts.app')
 
-@section('title', 'My Students')
-@section('page-title', 'My Students')
+@section('title', __('teacher.my_students'))
+@section('page-title', __('teacher.my_students'))
 
 @section('content')
     <!-- Header Actions -->
@@ -11,10 +11,10 @@
                 <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
                     <i class="fas fa-user-graduate" style="color: #14b8a6; margin-right: 8px;"></i>
                     <span style="display: inline-block; width: 8px; height: 8px; background: #10B981; border-radius: 50%; margin-right: 8px; vertical-align: middle;"></span>
-                    Active Students
+                    {{ __('teacher.active_students') }}
                 </h2>
                 <p style="color: #64748b; font-size: 14px;">
-                    View and manage your students
+                    {{ __('teacher.view_manage_students') }}
                 </p>
             </div>
         </div>
@@ -71,7 +71,7 @@
                         
                         <!-- Package Number -->
                         <p style="font-size: 14px; color: #64748b; margin: 0;">
-                            <strong style="color: #1e293b;">Package Number:</strong> {{ $student->package_number }}
+                            <strong style="color: #1e293b;">{{ __('teacher.package_number') }}:</strong> {{ $student->package_number }}
                         </p>
                     </div>
                 </div>
@@ -80,8 +80,8 @@
     @else
         <div class="card" style="text-align: center; padding: 60px 20px; color: #94a3b8;">
             <i class="fas fa-user-slash" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-            <p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No students assigned yet</p>
-            <p style="font-size: 14px; margin-bottom: 24px;">Students will appear here once they are assigned to your classes</p>
+            <p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">{{ __('teacher.no_students_assigned') }}</p>
+            <p style="font-size: 14px; margin-bottom: 24px;">{{ __('teacher.students_will_appear') }}</p>
         </div>
     @endif
 @endsection

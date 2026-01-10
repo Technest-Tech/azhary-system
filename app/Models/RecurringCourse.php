@@ -158,21 +158,59 @@ class RecurringCourse extends Model
                 $teacher = Teacher::find($instanceData['teacher_id']);
                 
                 if ($student && $teacher) {
+                    // Get previous lessons excluding unapproved absences and waiting list entries
                     $previousCourse = Course::where('student_id', $student->id)
                         ->where('teacher_id', $teacher->id)
+                        ->where('name', '!=', '0') // Exclude unapproved absences
+                        ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
                         ->orderBy('n_value', 'desc')
                         ->first();
                     
                     $previousNValue = $previousCourse ? $previousCourse->n_value : 0;
                     $currentDuration = $instanceData['duration_hours'] + ($instanceData['duration_minutes'] / 60.0);
-                    $instanceData['n_value'] = $previousNValue + $currentDuration;
-                    $instanceData['total_hours'] = $currentDuration;
-                    $instanceData['income'] = $currentDuration * $teacher->hourly_rate;
                     
-                    Course::create($instanceData);
+                    // Check if package limit has been reached
+                    $packageLimitReached = $previousNValue >= $student->package_number;
                     
-                    // Update n_value for subsequent courses
-                    $this->updateNValues($student->id, $teacher->id);
+                    $income = $currentDuration * $teacher->hourly_rate;
+                    
+                    if ($packageLimitReached) {
+                        // Package limit reached - add to waiting list
+                        WaitingList::create([
+                            'teacher_id' => $instanceData['teacher_id'],
+                            'student_id' => $instanceData['student_id'],
+                            'student_name' => $instanceData['student_name'],
+                            'name' => $instanceData['name'],
+                            'course_date' => $instanceData['course_date'],
+                            'class_time' => $instanceData['class_time'],
+                            'duration_hours' => $instanceData['duration_hours'],
+                            'duration_minutes' => $instanceData['duration_minutes'],
+                            'total_hours' => $currentDuration,
+                            'course_type' => $instanceData['course_type'],
+                            'status' => $instanceData['status'],
+                            'admin_status' => 'approved',
+                            'income' => $income,
+                            'is_recurring' => true,
+                            'recurring_course_id' => $this->id,
+                        ]);
+                        
+                        // Set payment status to "EN ATTENTE DE PAYEMENT" if not already set
+                        $waitingPaymentStatus = \App\Models\PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+                        if ($waitingPaymentStatus && $student->payment_status_id !== $waitingPaymentStatus->id) {
+                            $student->payment_status_id = $waitingPaymentStatus->id;
+                            $student->save();
+                        }
+                    } else {
+                        // Normal lesson - create course
+                        $instanceData['n_value'] = $previousNValue + $currentDuration;
+                        $instanceData['total_hours'] = $currentDuration;
+                        $instanceData['income'] = $income;
+                        
+                        Course::create($instanceData);
+                        
+                        // Update n_value for subsequent courses
+                        $this->updateNValues($student->id, $teacher->id);
+                    }
                 }
             }
         }

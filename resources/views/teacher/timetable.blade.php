@@ -1,9 +1,22 @@
 @extends('teacher.layouts.app')
 
-@section('title', 'Timetable')
-@section('page-title', 'Timetable')
+@section('title', __('teacher.timetable'))
+@section('page-title', __('teacher.timetable'))
 
 @section('styles')
+<script>
+    // Translations for JavaScript
+    window.translations = {
+        courseCreatedSuccess: @json(__('teacher.course_created_success')),
+        courseDeletedSuccess: @json(__('teacher.course_deleted_success')),
+        errorCreatingCourse: @json(__('teacher.error_creating_course')),
+        errorDeletingCourse: @json(__('teacher.error_deleting_course')),
+        errorTryAgain: @json(__('teacher.error_try_again')),
+        deleteConfirm: @json(__('teacher.delete_confirm')),
+        errorCreatingRecurring: @json(__('teacher.error_creating_recurring', ['message' => ''])),
+        errorGeneratingEvents: @json(__('teacher.error_generating_events', ['message' => ''])),
+    };
+</script>
 <style>
     .timetable-container {
         background: white;
@@ -323,7 +336,7 @@
             <button class="nav-button" onclick="navigateWeek(-1)">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <button class="today-button" onclick="goToToday()">Today</button>
+            <button class="today-button" onclick="goToToday()">{{ __('teacher.today') }}</button>
             <button class="nav-button" onclick="navigateWeek(1)">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -335,16 +348,16 @@
         <div class="header-actions">
             <button class="action-button btn-recurring" onclick="openRecurringModal()">
                 <i class="fas fa-sync-alt"></i>
-                Course Recurrents
+                {{ __('teacher.course_recurrents') }}
             </button>
             <button class="action-button btn-refresh" onclick="loadEvents()">
                 <i class="fas fa-sync"></i>
-                Refresh
+                {{ __('teacher.refresh') }}
             </button>
             <div class="view-toggles">
-                <button class="view-toggle">Month</button>
-                <button class="view-toggle active">Week</button>
-                <button class="view-toggle">Day</button>
+                <button class="view-toggle">{{ __('teacher.month') }}</button>
+                <button class="view-toggle active">{{ __('teacher.week') }}</button>
+                <button class="view-toggle">{{ __('teacher.day') }}</button>
             </div>
         </div>
     </div>
@@ -393,7 +406,7 @@
 <div id="addLessonModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Add a course</h2>
+            <h2 class="modal-title">{{ __('teacher.add_a_course') }}</h2>
             <button class="modal-close" onclick="closeAddLessonModal()">&times;</button>
         </div>
         <div id="addLessonFormContent">
@@ -406,7 +419,7 @@
 <div id="recurringModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Add Recurring Courses</h2>
+            <h2 class="modal-title">{{ __('teacher.add_recurring_courses') }}</h2>
             <button class="modal-close" onclick="closeRecurringModal()">&times;</button>
         </div>
         @include('teacher.recurring-course-form')
@@ -455,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok || response.redirected) {
                     closeAddLessonModal();
                     loadEvents();
-                    alert('Course created successfully!');
+                    alert(window.translations.courseCreatedSuccess);
                 } else {
                     return response.text().then(text => {
                         // Try to parse error messages from response
@@ -469,14 +482,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                             alert(errorMsg);
                         } else {
-                            alert('Error creating course. Please check the form.');
+                            alert(window.translations.errorCreatingCourse);
                         }
                     });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error creating course. Please try again.');
+                alert(window.translations.errorTryAgain);
             });
         });
     }
@@ -789,7 +802,7 @@ function renderEvents() {
 }
 
 function deleteCourse(courseId) {
-    if (!confirm('Are you sure you want to delete this course?')) return;
+    if (!confirm(window.translations.deleteConfirm)) return;
     
     fetch(`/teacher/courses/${courseId}`, {
         method: 'DELETE',
@@ -800,14 +813,14 @@ function deleteCourse(courseId) {
     .then(response => {
         if (response.ok || response.redirected) {
             loadEvents();
-            alert('Course deleted successfully!');
+            alert(window.translations.courseDeletedSuccess);
         } else {
-            alert('Error deleting course.');
+            alert(window.translations.errorDeletingCourse);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error deleting course.');
+        alert(window.translations.errorDeletingCourse);
     });
 }
 
@@ -833,12 +846,12 @@ function submitRecurringForm() {
             // Now generate the events
             generateRecurringEvents(data.id);
         } else {
-            alert('Error creating recurring course: ' + (data.message || 'Unknown error'));
+            alert(window.translations.errorCreatingRecurring + (data.message || window.translations.errorTryAgain));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error creating recurring course. Please try again.');
+        alert(window.translations.errorCreatingRecurring + window.translations.errorTryAgain);
     });
 }
 
@@ -858,14 +871,15 @@ function generateRecurringEvents(recurringCourseId) {
         if (data.success) {
             closeRecurringModal();
             loadEvents();
-            alert(`Generated ${data.count} recurring course instances!`);
+            const generatedMsg = @json(__('teacher.generated_recurring', ['count' => ':count'])).replace(':count', data.count);
+            alert(generatedMsg);
         } else {
-            alert('Error generating events: ' + (data.message || 'Unknown error'));
+            alert(window.translations.errorGeneratingEvents + (data.message || window.translations.errorTryAgain));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error generating events. Please try again.');
+        alert(window.translations.errorGeneratingEvents + window.translations.errorTryAgain);
     });
 }
 </script>

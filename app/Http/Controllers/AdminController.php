@@ -10,6 +10,7 @@ use App\Models\Evaluation;
 use App\Models\PaymentStatus;
 use App\Models\Course;
 use App\Models\Notification;
+use App\Models\WaitingList;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -606,24 +607,84 @@ class AdminController extends Controller
         }
         
         // Calculate n_value based on package_number and previous lessons
+        // Exclude unapproved absences (name = "0") and lessons beyond limit that haven't been paid (name = "0.0")
         $previousLessons = Course::where('student_id', $student->id)
                                ->where('teacher_id', $teacher->id)
+                               ->where('name', '!=', '0') // Exclude unapproved absences
+                               ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
                                ->orderBy('n_value', 'desc')
                                ->first();
         
         $previousNValue = $previousLessons ? $previousLessons->n_value : 0;
         $currentDuration = $validated['duration_hours'] + ($validated['duration_minutes'] / 60.0);
-        $nValue = $previousNValue + $currentDuration;
+        
+        // Check if package limit has been reached
+        $packageLimitReached = $previousNValue >= $student->package_number;
         
         // Calculate income based on teacher's hourly rate
         $income = $currentDuration * $teacher->hourly_rate;
         
-        $validated['student_name'] = $validated['student_name'] ?? $student->name;
-        $validated['n_value'] = $nValue;
-        $validated['total_hours'] = $currentDuration;
-        $validated['income'] = $income;
-        
-        Course::create($validated);
+        // Set admin_status: pending for absences, approved for others
+        if ($validated['status'] === 'Absent') {
+            $validated['admin_status'] = 'pending';
+            $validated['name'] = '0';
+            $nValue = $previousNValue; // Don't increment n_value for absences until approved
+            
+            $validated['student_name'] = $validated['student_name'] ?? $student->name;
+            $validated['n_value'] = $nValue;
+            $validated['total_hours'] = $currentDuration;
+            $validated['income'] = $income;
+            
+            Course::create($validated);
+        } else {
+            $validated['admin_status'] = 'approved';
+            
+            if ($packageLimitReached) {
+                // Package limit reached - add to waiting list
+                WaitingList::create([
+                    'teacher_id' => $teacher->id,
+                    'student_id' => $student->id,
+                    'student_name' => $validated['student_name'] ?? $student->name,
+                    'name' => $validated['name'],
+                    'course_date' => $validated['course_date'],
+                    'class_time' => $validated['class_time'],
+                    'duration_hours' => $validated['duration_hours'],
+                    'duration_minutes' => $validated['duration_minutes'],
+                    'total_hours' => $currentDuration,
+                    'course_type' => $validated['course_type'],
+                    'status' => $validated['status'],
+                    'admin_status' => 'approved',
+                    'homework' => $validated['homework'] ?? null,
+                    'evaluation_id' => $validated['evaluation_id'] ?? null,
+                    'content' => $validated['content'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'souvenir_image' => $validated['souvenir_image'] ?? null,
+                    'income' => $income,
+                    'is_recurring' => false,
+                    'recurring_course_id' => null,
+                ]);
+                
+                // Set payment status to "EN ATTENTE DE PAYEMENT" (Waiting for payment)
+                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+                if ($waitingPaymentStatus) {
+                    $student->payment_status_id = $waitingPaymentStatus->id;
+                    $student->save();
+                }
+                
+                return redirect()->route('admin.dashboard')
+                                ->with('success', 'Lesson added to waiting list. Package limit reached.');
+            } else {
+                // Normal lesson - calculate n_value and create course
+                $nValue = $previousNValue + $currentDuration;
+                
+                $validated['student_name'] = $validated['student_name'] ?? $student->name;
+                $validated['n_value'] = $nValue;
+                $validated['total_hours'] = $currentDuration;
+                $validated['income'] = $income;
+                
+                Course::create($validated);
+            }
+        }
         
         return redirect()->route('admin.dashboard')
                         ->with('success', 'Course created successfully!');
@@ -1028,39 +1089,65 @@ class AdminController extends Controller
     }
 
     /**
-     * Rename lessons with name "0.0" sequentially after package limit
+     * Apply waiting list lessons and rename lessons with name "0.0" after package limit
      * When payment is activated, restart from 0 for the new package
      */
     private function renameLessonsAfterPackageLimit(Student $student)
     {
-        // Get all courses for this student that have name "0.0" (lessons beyond package limit)
-        // Exclude unapproved absences (name = "0")
-        $coursesToRename = Course::where('student_id', $student->id)
-            ->where('name', '0.0')
-            ->where('name', '!=', '0')
+        // Get all waiting list entries for this student
+        $waitingListEntries = WaitingList::where('student_id', $student->id)
             ->orderBy('course_date', 'asc')
             ->orderBy('class_time', 'asc')
             ->get();
 
-        if ($coursesToRename->isEmpty()) {
-            return;
+        // Get the last valid course to determine starting n_value
+        // If we have waiting list entries, use the teacher_id from the first entry
+        // Otherwise, get the last course for any teacher
+        $teacherId = $waitingListEntries->isNotEmpty() ? $waitingListEntries->first()->teacher_id : null;
+        
+        $lastValidCourse = Course::where('student_id', $student->id)
+            ->when($teacherId, function($query) use ($teacherId) {
+                return $query->where('teacher_id', $teacherId);
+            })
+            ->where('name', '!=', '0') // Exclude unapproved absences
+            ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
+            ->orderBy('n_value', 'desc')
+            ->first();
+
+        // Start from 0 for the new package cycle
+        $baseNValue = 0;
+        $lessonNumber = 0;
+
+        // Convert waiting list entries to courses and apply them to the new package
+        foreach ($waitingListEntries as $waitingEntry) {
+            $lessonNumber++;
+            $baseNValue += $waitingEntry->total_hours;
+            
+            // Create course from waiting list entry
+            $courseData = $waitingEntry->toCourse($baseNValue);
+            $courseData['name'] = (string)$lessonNumber;
+            
+            Course::create($courseData);
+            
+            // Delete the waiting list entry
+            $waitingEntry->delete();
         }
 
-        // When payment is activated, restart from 0 for the new package
-        // Start lesson numbering from 1 and n_value from 0
-        $lessonNumber = 0;
-        $baseNValue = 0;
+        // Also handle any existing courses with name "0.0" (for backward compatibility)
+        $coursesToRename = Course::where('student_id', $student->id)
+            ->where('name', '0.0')
+            ->orderBy('course_date', 'asc')
+            ->orderBy('class_time', 'asc')
+            ->get();
 
-        // Rename and recalculate n_value for each lesson
-        foreach ($coursesToRename as $course) {
-            $lessonNumber++;
-            $course->name = (string)$lessonNumber;
-            
-            // Recalculate n_value starting from 0 for the new package
-            $baseNValue += $course->total_hours;
-            $course->n_value = $baseNValue;
-            
-            $course->save();
+        if ($coursesToRename->isNotEmpty()) {
+            foreach ($coursesToRename as $course) {
+                $lessonNumber++;
+                $baseNValue += $course->total_hours;
+                $course->name = (string)$lessonNumber;
+                $course->n_value = $baseNValue;
+                $course->save();
+            }
         }
     }
 

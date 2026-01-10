@@ -8,15 +8,15 @@
             <div>
                 <label for="modal_student_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-user" style="color: #3b82f6;"></i>
-                    Name
+                    {{ __('teacher.name') }}
                 </label>
                 <input type="text" name="student_name" id="modal_student_name" 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                       placeholder="Student name" readonly>
+                       placeholder="{{ __('teacher.student_name') }}" readonly>
                 <input type="hidden" name="student_id" id="modal_student_id" required>
                 <select id="modal_student_select" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; margin-top: 8px;"
                         onchange="document.getElementById('modal_student_id').value = this.value; document.getElementById('modal_student_name').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                    <option value="">Select a student</option>
+                    <option value="">{{ __('teacher.select_a_student') }}</option>
                     @foreach($students as $student)
                         <option value="{{ $student->id }}">{{ $student->name }}</option>
                     @endforeach
@@ -30,7 +30,7 @@
             <div>
                 <label for="modal_class_time" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-clock" style="color: #3b82f6;"></i>
-                    Class Time
+                    {{ __('teacher.class_time') }}
                 </label>
                 <div style="position: relative;">
                     <input type="time" name="class_time" id="modal_class_time" 
@@ -47,12 +47,12 @@
             <div>
                 <label for="modal_course_type" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-book" style="color: #3b82f6;"></i>
-                    Course
+                    {{ __('teacher.course') }}
                 </label>
                 <div style="position: relative;">
                     <select name="course_type" id="modal_course_type" 
                             style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                        <option value="">Select a course</option>
+                        <option value="">{{ __('teacher.select_a_course') }}</option>
                         @foreach($subjects as $subject)
                             <option value="{{ $subject->name }}">{{ $subject->name }}</option>
                         @endforeach
@@ -68,7 +68,7 @@
             <div>
                 <label for="modal_course_date" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-calendar" style="color: #3b82f6;"></i>
-                    Date
+                    {{ __('teacher.date') }}
                 </label>
                 <div style="position: relative;">
                     <input type="date" name="course_date" id="modal_course_date" 
@@ -85,7 +85,7 @@
             <div>
                 <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-stopwatch" style="color: #3b82f6;"></i>
-                    Duration
+                    {{ __('teacher.duration') }}
                 </label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <select name="duration_hours" id="modal_duration_hours" 
@@ -111,14 +111,14 @@
             <div>
                 <label for="modal_status" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-user-check" style="color: #3b82f6;"></i>
-                    Status
+                    {{ __('teacher.status') }}
                 </label>
                 <select name="status" id="modal_status" 
                         style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                    <option value="Present" selected>Present</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Absent">Absent</option>
-                    <option value="Late">Late</option>
+                    <option value="Present" selected>{{ __('teacher.present') }}</option>
+                    <option value="Pending">{{ __('teacher.pending') }}</option>
+                    <option value="Absent">{{ __('teacher.absent') }}</option>
+                    <option value="Late">{{ __('teacher.late') }}</option>
                 </select>
                 @error('status')
                     <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
@@ -132,11 +132,11 @@
             <div>
                 <label for="modal_homework" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i>
-                    Homework
+                    {{ __('teacher.homework') }}
                 </label>
                 <input type="text" name="homework" id="modal_homework" 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                       placeholder="Assigned homework">
+                       placeholder="{{ __('teacher.homework_placeholder') }}">
                 @error('homework')
                     <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                 @enderror
@@ -146,11 +146,11 @@
             <div>
                 <label for="modal_evaluation_id" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-sun" style="color: #3b82f6;"></i>
-                    Evaluation
+                    {{ __('teacher.evaluation') }}
                 </label>
                 <select name="evaluation_id" id="modal_evaluation_id" 
                         style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;">
-                    <option value="">Select an evaluation</option>
+                    <option value="">{{ __('teacher.select_an_evaluation') }}</option>
                     @foreach($evaluations as $evaluation)
                         <option value="{{ $evaluation->id }}">{{ $evaluation->name }} : {{ $evaluation->max_percentage }} %</option>
                     @endforeach
@@ -164,11 +164,11 @@
             <div>
                 <label for="modal_content" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-file-alt" style="color: #3b82f6;"></i>
-                    Content
+                    {{ __('teacher.content') }}
                 </label>
                 <textarea name="content" id="modal_content" rows="4" 
                           style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;"
-                          placeholder="Content covered in this course"></textarea>
+                          placeholder="{{ __('teacher.content_placeholder') }}"></textarea>
                 @error('content')
                     <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                 @enderror
@@ -178,11 +178,11 @@
             <div>
                 <label for="modal_notes" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-sticky-note" style="color: #3b82f6;"></i>
-                    Notes
+                    {{ __('teacher.notes') }}
                 </label>
                 <textarea name="notes" id="modal_notes" rows="4" 
                           style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;"
-                          placeholder="Additional notes"></textarea>
+                          placeholder="{{ __('teacher.notes_placeholder') }}"></textarea>
                 @error('notes')
                     <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                 @enderror
@@ -192,12 +192,12 @@
             <div>
                 <label for="modal_souvenir_image" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-camera" style="color: #3b82f6;"></i>
-                    Souvenir
+                    {{ __('teacher.souvenir') }}
                 </label>
                 <div style="position: relative;">
                     <input type="text" id="modal_souvenir_image_text" 
                            style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                           placeholder="Paste an image here or click on the icon" readonly>
+                           placeholder="{{ __('teacher.souvenir_placeholder') }}" readonly>
                     <input type="file" name="souvenir_image" id="modal_souvenir_image" accept="image/*" 
                            style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;"
                            onchange="document.getElementById('modal_souvenir_image_text').value = this.files[0] ? this.files[0].name : '';">
@@ -218,12 +218,12 @@
         <button type="button" onclick="closeAddLessonModal()" 
                 style="padding: 14px 28px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-times"></i>
-            Cancel
+            {{ __('teacher.cancel') }}
         </button>
         <button type="submit" name="save_only" value="1" 
                 style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
             <i class="fas fa-save"></i>
-            Save Course
+            {{ __('teacher.save_course') }}
         </button>
     </div>
 </form>

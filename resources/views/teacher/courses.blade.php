@@ -1,7 +1,7 @@
 @extends('teacher.layouts.app')
 
-@section('title', 'Courses Management')
-@section('page-title', 'Courses Management')
+@section('title', __('teacher.courses_management'))
+@section('page-title', __('teacher.courses_management'))
 
 @section('content')
     <!-- Enhanced Filters -->
@@ -9,7 +9,7 @@
         <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-radius: 12px 12px 0 0; margin: -1px -1px 0 -1px;">
             <h3 class="card-title" style="color: white; display: flex; align-items: center; gap: 12px; margin: 0;">
                 <i class="fas fa-filter" style="color: #93c5fd;"></i>
-                Advanced Filters
+                {{ __('teacher.advanced_filters') }}
             </h3>
         </div>
         <div class="card-body" style="padding: 24px;">
@@ -22,7 +22,7 @@
                     </label>
                     <div style="position: relative;">
                         <select name="student_id" id="student_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
-                            <option value="">All Students</option>
+                            <option value="">{{ __('teacher.all_students') }}</option>
                             @foreach($students as $student)
                                 <option value="{{ $student->id }}" {{ request('student_id') == $student->id ? 'selected' : '' }}>
                                     {{ $student->name }}
@@ -36,13 +36,13 @@
                 <div style="position: relative;">
                     <label for="status" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
                         <i class="fas fa-check-circle" style="color: #34d399; margin-right: 6px;"></i>
-                        Status
+                        {{ __('teacher.status') }}
                     </label>
                     <select name="status" id="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
-                        <option value="">All Status</option>
-                        <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>✅ Present</option>
-                        <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>❌ Absent</option>
-                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>⏰ Late</option>
+                        <option value="">{{ __('teacher.all_status') }}</option>
+                        <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>✅ {{ __('teacher.present') }}</option>
+                        <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>❌ {{ __('teacher.absent') }}</option>
+                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>⏰ {{ __('teacher.late') }}</option>
                     </select>
                 </div>
                 
@@ -50,10 +50,10 @@
                 <div style="position: relative;">
                     <label for="course_type" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
                         <i class="fas fa-book" style="color: #8b5cf6; margin-right: 6px;"></i>
-                        Course Type
+                        {{ __('teacher.course_type') }}
                     </label>
                     <select name="course_type" id="course_type" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
-                        <option value="">All Types</option>
+                        <option value="">{{ __('teacher.all_types') }}</option>
                         @foreach($subjects as $subject)
                             <option value="{{ $subject->name }}" {{ request('course_type') == $subject->name ? 'selected' : '' }}>
                                 {{ $subject->name }}
@@ -66,7 +66,7 @@
                 <div style="position: relative;">
                     <label for="date_from" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
                         <i class="fas fa-calendar-alt" style="color: #fbbf24; margin-right: 6px;"></i>
-                        From Date
+                        {{ __('teacher.from_date') }}
                     </label>
                     <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
                 </div>
@@ -75,7 +75,7 @@
                 <div style="position: relative;">
                     <label for="date_to" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
                         <i class="fas fa-calendar-check" style="color: #34d399; margin-right: 6px;"></i>
-                        To Date
+                        {{ __('teacher.to_date') }}
                     </label>
                     <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
                 </div>
@@ -84,11 +84,11 @@
                 <div style="display: flex; gap: 12px; align-items: end;">
                     <button type="submit" style="flex: 1; padding: 12px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
                         <i class="fas fa-search"></i>
-                        Apply Filters
+                        {{ __('teacher.apply_filters') }}
                     </button>
                     <a href="{{ route('teacher.courses') }}" style="padding: 12px 16px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 6px;">
                         <i class="fas fa-times"></i>
-                        Clear
+                        {{ __('teacher.clear') }}
                     </a>
                 </div>
             </form>
@@ -98,37 +98,37 @@
                 <div style="margin-top: 20px; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                         <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
-                        <span style="font-weight: 600; color: #1e40af;">Active Filters:</span>
+                        <span style="font-weight: 600; color: #1e40af;">{{ __('teacher.active_filters') }}:</span>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         @if(request('student_id'))
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <i class="fas fa-user-graduate"></i>
-                                Student: {{ $students->where('id', request('student_id'))->first()->name ?? 'Unknown' }}
+                                {{ __('teacher.student') }}: {{ $students->where('id', request('student_id'))->first()->name ?? 'Unknown' }}
                             </span>
                         @endif
                         @if(request('status'))
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #dcfce7; color: #166534; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <i class="fas fa-check-circle"></i>
-                                Status: {{ request('status') }}
+                                {{ __('teacher.status') }}: {{ request('status') === 'Present' ? __('teacher.present') : (request('status') === 'Absent' ? __('teacher.absent') : __('teacher.late')) }}
                             </span>
                         @endif
                         @if(request('course_type'))
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f3e8ff; color: #7c3aed; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <i class="fas fa-book"></i>
-                                Type: {{ request('course_type') }}
+                                {{ __('teacher.type') }}: {{ request('course_type') }}
                             </span>
                         @endif
                         @if(request('date_from'))
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <i class="fas fa-calendar-alt"></i>
-                                From: {{ request('date_from') }}
+                                {{ __('teacher.from_date') }}: {{ request('date_from') }}
                             </span>
                         @endif
                         @if(request('date_to'))
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <i class="fas fa-calendar-check"></i>
-                                To: {{ request('date_to') }}
+                                {{ __('teacher.to_date') }}: {{ request('date_to') }}
                             </span>
                         @endif
                     </div>
@@ -144,12 +144,12 @@
                 <div>
                     <h3 class="card-title" style="display: flex; align-items: center; gap: 12px; margin: 0; color: #1e293b; font-size: 20px; font-weight: 700;">
                         <i class="fas fa-graduation-cap" style="color: #3b82f6;"></i>
-                        My Courses
+                        {{ __('teacher.my_courses') }}
                     </h3>
-                    <p style="color: #64748b; margin: 8px 0 0 0; font-size: 14px;">Manage your teaching courses and track progress</p>
+                    <p style="color: #64748b; margin: 8px 0 0 0; font-size: 14px;">{{ __('teacher.manage_teaching_courses') }}</p>
                 </div>
                 <a href="{{ route('teacher.courses.create') }}" style="padding: 12px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); text-decoration: none;">
-                    <i class="fas fa-plus"></i> Add Course
+                    <i class="fas fa-plus"></i> {{ __('teacher.add_course') }}
                 </a>
             </div>
         </div>
@@ -161,43 +161,43 @@
                             <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-hashtag" style="color: #3b82f6; margin-right: 6px;"></i>
-                                    No.
+                                    {{ __('teacher.no') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-user-graduate" style="color: #34d399; margin-right: 6px;"></i>
-                                    Student
+                                    {{ __('teacher.student') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-book" style="color: #8b5cf6; margin-right: 6px;"></i>
-                                    Course Name
+                                    {{ __('teacher.course_name') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-tag" style="color: #fbbf24; margin-right: 6px;"></i>
-                                    Type
+                                    {{ __('teacher.type') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-calendar-alt" style="color: #f87171; margin-right: 6px;"></i>
-                                    Date & Time
+                                    {{ __('teacher.date_time') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-clock" style="color: #6366f1; margin-right: 6px;"></i>
-                                    Duration
+                                    {{ __('teacher.duration') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-check-circle" style="color: #34d399; margin-right: 6px;"></i>
-                                    Status
+                                    {{ __('teacher.status') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-user-shield" style="color: #8b5cf6; margin-right: 6px;"></i>
-                                    Admin Status
+                                    {{ __('teacher.admin_status') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-dollar-sign" style="color: #059669; margin-right: 6px;"></i>
-                                    Income
+                                    {{ __('teacher.income') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: center; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-cog" style="color: #64748b; margin-right: 6px;"></i>
-                                    Actions
+                                    {{ __('teacher.actions') }}
                                 </th>
                             </tr>
                         </thead>
@@ -258,24 +258,32 @@
                                     <td style="padding: 20px 16px; white-space: nowrap;">
                                         <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: {{ $course->status === 'Present' ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' : ($course->status === 'Absent' ? 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)') }}; color: {{ $course->status === 'Present' ? '#166534' : ($course->status === 'Absent' ? '#dc2626' : '#d97706') }}; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid {{ $course->status === 'Present' ? '#bbf7d0' : ($course->status === 'Absent' ? '#fecaca' : '#fde68a') }}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                             <i class="fas {{ $course->status === 'Present' ? 'fa-check-circle' : ($course->status === 'Absent' ? 'fa-times-circle' : 'fa-clock') }}"></i>
-                                            {{ $course->status }}
+                                            @if($course->status === 'Present')
+                                                {{ __('teacher.present') }}
+                                            @elseif($course->status === 'Pending')
+                                                {{ __('teacher.pending') }}
+                                            @elseif($course->status === 'Absent')
+                                                {{ __('teacher.absent') }}
+                                            @else
+                                                {{ __('teacher.late') }}
+                                            @endif
                                         </span>
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
                                         @if($course->admin_status === 'approved')
                                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                 <i class="fas fa-check-circle"></i>
-                                                Approved
+                                                {{ __('teacher.approved') }}
                                             </span>
                                         @elseif($course->admin_status === 'pending')
                                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #fde68a; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                 <i class="fas fa-clock"></i>
-                                                Pending
+                                                {{ __('teacher.pending') }}
                                             </span>
                                         @elseif($course->admin_status === 'rejected')
                                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #fecaca; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                 <i class="fas fa-times-circle"></i>
-                                                Rejected
+                                                {{ __('teacher.rejected') }}
                                             </span>
                                         @else
                                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -291,7 +299,7 @@
                                             </div>
                                             <div>
                                                 <div style="font-weight: 700; color: #1e293b; font-size: 16px;">${{ number_format($course->income, 2) }}</div>
-                                                <div style="font-size: 12px; color: #64748b;">Earned</div>
+                                                <div style="font-size: 12px; color: #64748b;">{{ __('teacher.earned') }}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -300,7 +308,7 @@
                                             <a href="{{ route('teacher.courses.edit', $course) }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border: 1px solid #fde68a; border-radius: 8px; text-decoration: none; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
                                                 <i class="fas fa-edit" style="font-size: 14px;"></i>
                                             </a>
-                                            <form method="POST" action="{{ route('teacher.courses.destroy', $course) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this course?')">
+                                            <form method="POST" action="{{ route('teacher.courses.destroy', $course) }}" style="display: inline;" onsubmit="return confirm('{{ __('teacher.delete_confirm') }}')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
@@ -321,20 +329,20 @@
                         <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(59, 130, 246, 0.1); border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2);">
                                 <i class="fas fa-list" style="color: #3b82f6;"></i>
-                                <span style="font-weight: 600; color: #1e40af; font-size: 14px;">{{ $courses->count() }} Courses</span>
+                                <span style="font-weight: 600; color: #1e40af; font-size: 14px;">{{ __('teacher.courses_count', ['count' => $courses->count()]) }}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);">
                                 <i class="fas fa-clock" style="color: #34d399;"></i>
-                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ $courses->sum('total_hours') }}h Total</span>
+                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ __('teacher.total_hours', ['hours' => $courses->sum('total_hours')]) }}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(5, 150, 105, 0.1); border-radius: 20px; border: 1px solid rgba(5, 150, 105, 0.2);">
                                 <i class="fas fa-dollar-sign" style="color: #059669;"></i>
-                                <span style="font-weight: 600; color: #166534; font-size: 14px;">${{ number_format($courses->sum('income'), 2) }} Earned</span>
+                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ __('teacher.earned_amount', ['amount' => number_format($courses->sum('income'), 2)]) }}</span>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 12px;">
                             <i class="fas fa-info-circle"></i>
-                            <span>Showing {{ $courses->count() }} of {{ $courses->total() }} courses</span>
+                            <span>{{ __('teacher.showing_courses', ['count' => $courses->count(), 'total' => $courses->total()]) }}</span>
                         </div>
                     </div>
                 </div>
@@ -343,10 +351,10 @@
                     <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
                         <i class="fas fa-book-open" style="font-size: 48px; color: #94a3b8;"></i>
                     </div>
-                    <h3 style="color: #374151; margin-bottom: 12px; font-size: 24px; font-weight: 700;">No courses found</h3>
-                    <p style="color: #64748b; margin-bottom: 32px; font-size: 16px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.6;">Start by creating your first course to begin tracking your teaching progress and student engagement.</p>
+                    <h3 style="color: #374151; margin-bottom: 12px; font-size: 24px; font-weight: 700;">{{ __('teacher.no_courses_found') }}</h3>
+                    <p style="color: #64748b; margin-bottom: 32px; font-size: 16px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.6;">{{ __('teacher.start_creating') }}</p>
                     <a href="{{ route('teacher.courses.create') }}" style="display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.3s; text-decoration: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)'">
-                        <i class="fas fa-plus"></i> Create Your First Course
+                        <i class="fas fa-plus"></i> {{ __('teacher.create_first_course') }}
                     </a>
                 </div>
             @endif

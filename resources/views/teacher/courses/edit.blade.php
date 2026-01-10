@@ -1,7 +1,7 @@
 @extends('teacher.layouts.app')
 
-@section('title', 'Edit Course')
-@section('page-title', 'Edit Course')
+@section('title', __('teacher.edit_course'))
+@section('page-title', __('teacher.edit_course'))
 
 @section('content')
     <!-- Main Form -->
@@ -17,15 +17,15 @@
                     <div>
                         <label for="student_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-user" style="color: #3b82f6;"></i>
-                            Name
+                            {{ __('teacher.name') }}
                         </label>
                         <input type="text" name="student_name" id="student_name" 
                                style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                               value="{{ old('student_name', $course->student->name) }}" placeholder="Student name">
+                               value="{{ old('student_name', $course->student->name) }}" placeholder="{{ __('teacher.student_name') }}">
                         <input type="hidden" name="student_id" id="student_id" value="{{ old('student_id', $course->student_id) }}" required>
                         <select id="student_select" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; margin-top: 8px;"
                                 onchange="document.getElementById('student_id').value = this.value; document.getElementById('student_name').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                            <option value="">Select a student</option>
+                            <option value="">{{ __('teacher.select_a_student') }}</option>
                             @foreach($students as $student)
                                 <option value="{{ $student->id }}" {{ old('student_id', $course->student_id) == $student->id ? 'selected' : '' }}>
                                     {{ $student->name }}
@@ -41,7 +41,7 @@
                     <div>
                         <label for="class_time" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-clock" style="color: #3b82f6;"></i>
-                            Class Time
+                            {{ __('teacher.class_time') }}
                         </label>
                         <div style="position: relative;">
                             <input type="time" name="class_time" id="class_time" 
@@ -58,12 +58,12 @@
                     <div>
                         <label for="course_type" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-book" style="color: #3b82f6;"></i>
-                            Course
+                            {{ __('teacher.course') }}
                         </label>
                         <div style="position: relative;">
                             <select name="course_type" id="course_type" 
                                     style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                <option value="">Select a course</option>
+                                <option value="">{{ __('teacher.select_a_course') }}</option>
                                 @foreach($subjects as $subject)
                                     <option value="{{ $subject->name }}" {{ old('course_type', $course->course_type) == $subject->name ? 'selected' : '' }}>
                                         {{ $subject->name }}
@@ -81,7 +81,7 @@
                     <div>
                         <label for="course_date" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-calendar" style="color: #3b82f6;"></i>
-                            Date
+                            {{ __('teacher.date') }}
                         </label>
                         <div style="position: relative;">
                             <input type="date" name="course_date" id="course_date" 
@@ -98,7 +98,7 @@
                     <div>
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-stopwatch" style="color: #3b82f6;"></i>
-                            Duration
+                            {{ __('teacher.duration') }}
                         </label>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <select name="duration_hours" id="duration_hours" 
@@ -124,14 +124,14 @@
                     <div>
                         <label for="status" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-user-check" style="color: #3b82f6;"></i>
-                            Status
+                            {{ __('teacher.status') }}
                         </label>
                         <select name="status" id="status" 
                                 style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                            <option value="Present" {{ old('status', $course->status) == 'Present' ? 'selected' : '' }}>Present</option>
-                            <option value="Pending" {{ old('status', $course->status) == 'Pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="Absent" {{ old('status', $course->status) == 'Absent' ? 'selected' : '' }}>Absent</option>
-                            <option value="Late" {{ old('status', $course->status) == 'Late' ? 'selected' : '' }}>Late</option>
+                            <option value="Present" {{ old('status', $course->status) == 'Present' ? 'selected' : '' }}>{{ __('teacher.present') }}</option>
+                            <option value="Pending" {{ old('status', $course->status) == 'Pending' ? 'selected' : '' }}>{{ __('teacher.pending') }}</option>
+                            <option value="Absent" {{ old('status', $course->status) == 'Absent' ? 'selected' : '' }}>{{ __('teacher.absent') }}</option>
+                            <option value="Late" {{ old('status', $course->status) == 'Late' ? 'selected' : '' }}>{{ __('teacher.late') }}</option>
                         </select>
                         @error('status')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
@@ -145,11 +145,11 @@
                     <div>
                         <label for="homework" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i>
-                            Homework
+                            {{ __('teacher.homework') }}
                         </label>
                         <input type="text" name="homework" id="homework" 
                                style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                               value="{{ old('homework', $course->homework) }}" placeholder="Devoir assigné">
+                               value="{{ old('homework', $course->homework) }}" placeholder="{{ __('teacher.homework_placeholder') }}">
                         @error('homework')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                         @enderror
@@ -159,11 +159,11 @@
                     <div>
                         <label for="evaluation_id" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-sun" style="color: #3b82f6;"></i>
-                            Evaluation
+                            {{ __('teacher.evaluation') }}
                         </label>
                         <select name="evaluation_id" id="evaluation_id" 
                                 style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;">
-                            <option value="">Select an evaluation</option>
+                            <option value="">{{ __('teacher.select_an_evaluation') }}</option>
                             @foreach($evaluations as $evaluation)
                                 <option value="{{ $evaluation->id }}" {{ old('evaluation_id', $course->evaluation_id) == $evaluation->id ? 'selected' : '' }}>
                                     {{ $evaluation->name }} : {{ $evaluation->max_percentage }} %
@@ -179,11 +179,11 @@
                     <div>
                         <label for="content" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-file-alt" style="color: #3b82f6;"></i>
-                            Content
+                            {{ __('teacher.content') }}
                         </label>
                         <textarea name="content" id="content" rows="4" 
                                   style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;"
-                                  placeholder="Content covered in this course">{{ old('content', $course->content) }}</textarea>
+                                  placeholder="{{ __('teacher.content_placeholder') }}">{{ old('content', $course->content) }}</textarea>
                         @error('content')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                         @enderror
@@ -193,11 +193,11 @@
                     <div>
                         <label for="notes" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-sticky-note" style="color: #3b82f6;"></i>
-                            Notes
+                            {{ __('teacher.notes') }}
                         </label>
                         <textarea name="notes" id="notes" rows="4" 
                                   style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;"
-                                  placeholder="Additional notes">{{ old('notes', $course->notes) }}</textarea>
+                                  placeholder="{{ __('teacher.notes_placeholder') }}">{{ old('notes', $course->notes) }}</textarea>
                         @error('notes')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                         @enderror
@@ -207,18 +207,18 @@
                     <div>
                         <label for="souvenir_image" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-camera" style="color: #3b82f6;"></i>
-                            Souvenir
+                            {{ __('teacher.souvenir') }}
                         </label>
                         @if($course->souvenir_image)
                             <div style="margin-bottom: 8px;">
-                                <img src="{{ asset('storage/' . $course->souvenir_image) }}" alt="Souvenir" 
+                                <img src="{{ asset('storage/' . $course->souvenir_image) }}" alt="{{ __('teacher.souvenir') }}" 
                                      style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e2e8f0;">
                             </div>
                         @endif
                         <div style="position: relative;">
                             <input type="text" id="souvenir_image_text" 
                                    style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                                   placeholder="Paste an image here or click on the icon" readonly>
+                                   placeholder="{{ __('teacher.souvenir_placeholder') }}" readonly>
                             <input type="file" name="souvenir_image" id="souvenir_image" accept="image/*" 
                                    style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;"
                                    onchange="document.getElementById('souvenir_image_text').value = this.files[0] ? this.files[0].name : '';">
@@ -239,17 +239,17 @@
                 <a href="{{ route('teacher.dashboard') }}" 
                    style="padding: 14px 28px; background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-times"></i>
-                    Cancel
+                    {{ __('teacher.cancel') }}
                 </a>
                 <button type="submit" name="save_only" value="1" 
                         style="padding: 14px 28px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-save"></i>
-                    Save only
+                    {{ __('teacher.update') }}
                 </button>
                 <button type="submit" name="generate_report" value="1" 
                         style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
                     <i class="fas fa-file-alt"></i>
-                    Save and generate report
+                    {{ __('teacher.update') }}
                 </button>
             </div>
         </form>

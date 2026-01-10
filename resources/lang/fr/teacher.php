@@ -1,0 +1,183 @@
+<?php
+
+return [
+    // Layout
+    'academy_name' => 'Azhary Academy',
+    'teacher_portal' => 'Portail Enseignant',
+    'main_menu' => 'Menu Principal',
+    'teaching' => 'Enseignement',
+    'management' => 'Gestion',
+    'teacher' => 'Enseignant',
+    'logout' => 'Déconnexion',
+    
+    // Navigation
+    'dashboard' => 'Tableau de bord',
+    'courses' => 'Cours',
+    'timetable' => 'Emploi du temps',
+    'students' => 'Étudiants',
+    
+    // Dashboard
+    'dashboard_overview' => 'Aperçu du tableau de bord',
+    'total_students' => 'Total des étudiants',
+    'hours_this_month' => 'Heures ce mois-ci',
+    'monthly_revenue' => 'Revenus mensuels',
+    'teacher_performance_level' => 'Niveau de performance de l\'enseignant',
+    'performance' => 'Performance',
+    'search' => 'Rechercher...',
+    'all_statuses' => 'Tous les statuts',
+    'present' => 'Présent',
+    'pending' => 'En attente',
+    'absent' => 'Absent',
+    'late' => 'En retard',
+    'all_months' => 'Tous les mois',
+    'filter' => 'Filtrer',
+    'number_of_courses' => 'Nombre de cours : :count',
+    'name' => 'Nom',
+    'course' => 'Cours',
+    'date' => 'Date',
+    'status' => 'Statut',
+    'admin_status' => 'Statut administrateur',
+    'duration' => 'Durée',
+    'homework' => 'Devoirs',
+    'evaluation' => 'Évaluation',
+    'content' => 'Contenu',
+    'notes' => 'Notes',
+    'completed' => 'Terminé',
+    'actions' => 'Actions',
+    'no_courses_found' => 'Aucun cours trouvé',
+    'add_a_course' => 'Ajouter un cours',
+    'previous' => 'Précédent',
+    'next' => 'Suivant',
+    'approved' => 'Approuvé',
+    'rejected' => 'Rejeté',
+    'delete_confirm' => 'Êtes-vous sûr de vouloir supprimer ce cours ?',
+    
+    // Courses
+    'courses_management' => 'Gestion des cours',
+    'advanced_filters' => 'Filtres avancés',
+    'student' => 'Étudiant',
+    'all_students' => 'Tous les étudiants',
+    'all_status' => 'Tous les statuts',
+    'course_type' => 'Type de cours',
+    'all_types' => 'Tous les types',
+    'from_date' => 'Date de début',
+    'to_date' => 'Date de fin',
+    'apply_filters' => 'Appliquer les filtres',
+    'clear' => 'Effacer',
+    'active_filters' => 'Filtres actifs',
+    'my_courses' => 'Mes cours',
+    'manage_teaching_courses' => 'Gérez vos cours et suivez les progrès',
+    'add_course' => 'Ajouter un cours',
+    'no' => 'N°',
+    'course_name' => 'Nom du cours',
+    'type' => 'Type',
+    'date_time' => 'Date et heure',
+    'income' => 'Revenus',
+    'earned' => 'Gagné',
+    'courses_count' => ':count Cours',
+    'total_hours' => ':hours Total',
+    'earned_amount' => ':amount € Gagné',
+    'showing_courses' => 'Affichage de :count sur :total cours',
+    'start_creating' => 'Commencez par créer votre premier cours pour commencer à suivre vos progrès d\'enseignement et l\'engagement des étudiants.',
+    'create_first_course' => 'Créer votre premier cours',
+    
+    // Create/Edit Course
+    'create_course' => 'Créer un cours',
+    'create_new_course' => 'Créer un nouveau cours',
+    'edit_course' => 'Modifier le cours',
+    'class_time' => 'Heure du cours',
+    'select_a_course' => 'Sélectionner un cours',
+    'select_a_student' => 'Sélectionner un étudiant',
+    'student_name' => 'Nom de l\'étudiant',
+    'duration_hours' => 'Heures',
+    'duration_minutes' => 'Minutes',
+    'save' => 'Enregistrer',
+    'cancel' => 'Annuler',
+    'update' => 'Mettre à jour',
+    'delete' => 'Supprimer',
+    
+    // Students
+    'my_students' => 'Mes étudiants',
+    'active_students' => 'Étudiants actifs',
+    'view_manage_students' => 'Voir et gérer vos étudiants',
+    'package_number' => 'Numéro de forfait',
+    'no_students_assigned' => 'Aucun étudiant assigné pour le moment',
+    'students_will_appear' => 'Les étudiants apparaîtront ici une fois qu\'ils seront assignés à vos classes',
+    
+    // Timetable
+    'timetable' => 'Emploi du temps',
+    
+    // Login
+    'login' => 'Connexion',
+    'email' => 'E-mail',
+    'password' => 'Mot de passe',
+    'remember_me' => 'Se souvenir de moi',
+    'forgot_password' => 'Mot de passe oublié ?',
+    
+    // Common
+    'edit' => 'Modifier',
+    'delete' => 'Supprimer',
+    'close' => 'Fermer',
+    'submit' => 'Soumettre',
+    'loading' => 'Chargement...',
+    'no_data' => 'Aucune donnée disponible',
+    
+    // Form Placeholders
+    'homework_placeholder' => 'Devoirs assignés',
+    'content_placeholder' => 'Contenu couvert dans ce cours',
+    'notes_placeholder' => 'Notes supplémentaires',
+    'souvenir_placeholder' => 'Collez une image ici ou cliquez sur l\'icône',
+    'souvenir' => 'Souvenir',
+    'search_student_placeholder' => 'Rechercher un étudiant...',
+    'email_placeholder' => 'enseignant@exemple.com',
+    'password_placeholder' => 'Entrez votre mot de passe',
+    'enter_number' => 'Entrez le nombre',
+    
+    // Recurring Course Form
+    'student_name' => 'Nom de l\'étudiant',
+    'time' => 'Heure',
+    'start_date' => 'Date de début',
+    'day_of_week' => 'Jour de la semaine',
+    'repetition_type' => 'Type de répétition',
+    'number' => 'Nombre',
+    'generate_recurring_courses' => 'Générer des cours récurrents',
+    'save_course' => 'Enregistrer le cours',
+    
+    // Days of Week
+    'monday' => 'Lundi',
+    'tuesday' => 'Mardi',
+    'wednesday' => 'Mercredi',
+    'thursday' => 'Jeudi',
+    'friday' => 'Vendredi',
+    'saturday' => 'Samedi',
+    'sunday' => 'Dimanche',
+    
+    // Recurrence Types
+    'weekly' => 'Hebdomadaire',
+    'weeks_count' => 'Pour un nombre de semaines',
+    'months_count' => 'Pour un nombre de mois',
+    'endless' => 'Toujours (Infini)',
+    
+    // Select Options
+    'select_an_evaluation' => 'Sélectionner une évaluation',
+    
+    // Timetable
+    'today' => 'Aujourd\'hui',
+    'course_recurrents' => 'Cours récurrents',
+    'refresh' => 'Actualiser',
+    'month' => 'Mois',
+    'week' => 'Semaine',
+    'day' => 'Jour',
+    'add_a_course' => 'Ajouter un cours',
+    'add_recurring_courses' => 'Ajouter des cours récurrents',
+    
+    // Messages
+    'course_created_success' => 'Cours créé avec succès !',
+    'course_deleted_success' => 'Cours supprimé avec succès !',
+    'error_creating_course' => 'Erreur lors de la création du cours. Veuillez vérifier le formulaire.',
+    'error_deleting_course' => 'Erreur lors de la suppression du cours.',
+    'error_try_again' => 'Erreur. Veuillez réessayer.',
+    'generated_recurring' => ':count instances de cours récurrents générées !',
+    'error_generating_events' => 'Erreur lors de la génération des événements : :message',
+    'error_creating_recurring' => 'Erreur lors de la création du cours récurrent : :message',
+];

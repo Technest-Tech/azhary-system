@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -338,6 +338,37 @@
             background: #dbeafe;
             color: #1e40af;
         }
+        
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .language-switcher:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .language-switcher select {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        .language-switcher select option {
+            background: #064e3b;
+            color: #fff;
+        }
     </style>
     @yield('styles')
 </head>
@@ -349,38 +380,38 @@
                 <div class="sidebar-logo">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <div class="sidebar-logo-text">
-                        <h2>Azhary Academy</h2>
-                        <p>Teacher Portal</p>
+                        <h2>{{ __('teacher.academy_name') }}</h2>
+                        <p>{{ __('teacher.teacher_portal') }}</p>
                     </div>
                 </div>
             </div>
 
             <nav class="sidebar-menu">
                 <div class="menu-section">
-                    <div class="menu-section-title">Main Menu</div>
+                    <div class="menu-section-title">{{ __('teacher.main_menu') }}</div>
                     <a href="{{ route('teacher.dashboard') }}" class="menu-item {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}">
                         <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
+                        <span>{{ __('teacher.dashboard') }}</span>
                     </a>
                 </div>
 
                 <div class="menu-section">
-                    <div class="menu-section-title">Teaching</div>
+                    <div class="menu-section-title">{{ __('teacher.teaching') }}</div>
                     <a href="{{ route('teacher.courses') }}" class="menu-item {{ request()->routeIs('teacher.courses*') ? 'active' : '' }}">
                         <i class="fas fa-book-open"></i>
-                        <span>Courses</span>
+                        <span>{{ __('teacher.courses') }}</span>
                     </a>
                     <a href="{{ route('teacher.timetable') }}" class="menu-item {{ request()->routeIs('teacher.timetable*') ? 'active' : '' }}">
                         <i class="fas fa-calendar"></i>
-                        <span>Timetable</span>
+                        <span>{{ __('teacher.timetable') }}</span>
                     </a>
                 </div>
 
                 <div class="menu-section">
-                    <div class="menu-section-title">Management</div>
+                    <div class="menu-section-title">{{ __('teacher.management') }}</div>
                     <a href="{{ route('teacher.students') }}" class="menu-item {{ request()->routeIs('teacher.students') ? 'active' : '' }}">
                         <i class="fas fa-user-graduate"></i>
-                        <span>Students</span>
+                        <span>{{ __('teacher.students') }}</span>
                     </a>
                 </div>
             </nav>
@@ -392,14 +423,25 @@
                     </div>
                     <div class="user-info">
                         <h4>{{ Auth::guard('teacher')->user()->name }}</h4>
-                        <p>Teacher</p>
+                        <p>{{ __('teacher.teacher') }}</p>
                     </div>
                 </div>
+                <!-- Language Switcher -->
+                <form method="POST" action="{{ route('teacher.language.switch') }}" style="margin-bottom: 12px;">
+                    @csrf
+                    <div class="language-switcher">
+                        <i class="fas fa-globe" style="color: #5eead4;"></i>
+                        <select name="locale" onchange="this.form.submit()" style="width: 100%;">
+                            <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>🇬🇧 EN</option>
+                            <option value="fr" {{ app()->getLocale() == 'fr' ? 'selected' : '' }}>🇫🇷 FR</option>
+                        </select>
+                    </div>
+                </form>
                 <form method="POST" action="{{ route('teacher.logout') }}">
                     @csrf
                     <button type="submit" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
-                        Logout
+                        {{ __('teacher.logout') }}
                     </button>
                 </form>
             </div>
@@ -410,6 +452,17 @@
             <div class="top-navbar">
                 <h1 class="page-title">@yield('page-title')</h1>
                 <div class="top-navbar-right">
+                    <!-- Language Switcher in Top Navbar -->
+                    <form method="POST" action="{{ route('teacher.language.switch') }}" style="margin-right: 16px;">
+                        @csrf
+                        <div class="language-switcher" style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px;">
+                            <i class="fas fa-globe" style="color: #64748b;"></i>
+                            <select name="locale" onchange="this.form.submit()" style="background: transparent; border: none; color: #1e293b; font-size: 14px; font-weight: 600; cursor: pointer; outline: none;">
+                                <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>🇬🇧 EN</option>
+                                <option value="fr" {{ app()->getLocale() == 'fr' ? 'selected' : '' }}>🇫🇷 FR</option>
+                            </select>
+                        </div>
+                    </form>
                     <div class="notification-icon">
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge"></span>

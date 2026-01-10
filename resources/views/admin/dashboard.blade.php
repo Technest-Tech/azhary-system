@@ -184,10 +184,13 @@
                 <tbody>
                     @forelse($courses as $index => $course)
                         @php
-                            // Calculate completion percentage
+                            // Calculate completion percentage based on total hours taken vs package hours
                             $completionPercentage = 0;
                             if ($course->student && $course->student->package_number > 0) {
-                                $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
+                                // Sum all total_hours from all courses for this student
+                                $totalHoursTaken = $course->student->courses()->sum('total_hours') ?? 0;
+                                // Calculate percentage: (hours taken / package hours) * 100
+                                $completionPercentage = min(100, ($totalHoursTaken / $course->student->package_number) * 100);
                             }
                             
                             // Color coding for student names
@@ -255,8 +258,11 @@
                                 {{ Str::limit($course->notes ?? '-', 20) }}
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
-                                <div style="width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: {{ $completionPercentage }}%; height: 100%; background: #14b8a6; transition: width 0.3s;"></div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                        <div style="width: {{ $completionPercentage }}%; height: 100%; background: #14b8a6; transition: width 0.3s;"></div>
+                                    </div>
+                                    <span style="font-size: 12px; font-weight: 600; color: #1e293b;">{{ number_format($completionPercentage, 1) }}%</span>
                                 </div>
                             </td>
                             <td style="padding: 16px; white-space: nowrap; text-align: center;">

@@ -1,0 +1,183 @@
+<?php
+
+return [
+    // Layout
+    'academy_name' => 'Azhary Academy',
+    'teacher_portal' => 'Teacher Portal',
+    'main_menu' => 'Main Menu',
+    'teaching' => 'Teaching',
+    'management' => 'Management',
+    'teacher' => 'Teacher',
+    'logout' => 'Logout',
+    
+    // Navigation
+    'dashboard' => 'Dashboard',
+    'courses' => 'Courses',
+    'timetable' => 'Timetable',
+    'students' => 'Students',
+    
+    // Dashboard
+    'dashboard_overview' => 'Dashboard Overview',
+    'total_students' => 'Total Students',
+    'hours_this_month' => 'Hours this Month',
+    'monthly_revenue' => 'Monthly Revenue',
+    'teacher_performance_level' => 'Teacher Performance Level',
+    'performance' => 'Performance',
+    'search' => 'Search...',
+    'all_statuses' => 'All Statuses',
+    'present' => 'Present',
+    'pending' => 'Pending',
+    'absent' => 'Absent',
+    'late' => 'Late',
+    'all_months' => 'All Months',
+    'filter' => 'Filter',
+    'number_of_courses' => 'Number of courses: :count',
+    'name' => 'Name',
+    'course' => 'Course',
+    'date' => 'Date',
+    'status' => 'Status',
+    'admin_status' => 'Admin Status',
+    'duration' => 'Duration',
+    'homework' => 'Homework',
+    'evaluation' => 'Evaluation',
+    'content' => 'Content',
+    'notes' => 'Notes',
+    'completed' => 'Completed',
+    'actions' => 'Actions',
+    'no_courses_found' => 'No courses found',
+    'add_a_course' => 'Add a course',
+    'previous' => 'Previous',
+    'next' => 'Next',
+    'approved' => 'Approved',
+    'rejected' => 'Rejected',
+    'delete_confirm' => 'Are you sure you want to delete this course?',
+    
+    // Courses
+    'courses_management' => 'Courses Management',
+    'advanced_filters' => 'Advanced Filters',
+    'student' => 'Student',
+    'all_students' => 'All Students',
+    'all_status' => 'All Status',
+    'course_type' => 'Course Type',
+    'all_types' => 'All Types',
+    'from_date' => 'From Date',
+    'to_date' => 'To Date',
+    'apply_filters' => 'Apply Filters',
+    'clear' => 'Clear',
+    'active_filters' => 'Active Filters',
+    'my_courses' => 'My Courses',
+    'manage_teaching_courses' => 'Manage your teaching courses and track progress',
+    'add_course' => 'Add Course',
+    'no' => 'No.',
+    'course_name' => 'Course Name',
+    'type' => 'Type',
+    'date_time' => 'Date & Time',
+    'income' => 'Income',
+    'earned' => 'Earned',
+    'courses_count' => ':count Courses',
+    'total_hours' => ':hours Total',
+    'earned_amount' => '$:amount Earned',
+    'showing_courses' => 'Showing :count of :total courses',
+    'start_creating' => 'Start by creating your first course to begin tracking your teaching progress and student engagement.',
+    'create_first_course' => 'Create Your First Course',
+    
+    // Create/Edit Course
+    'create_course' => 'Create Course',
+    'create_new_course' => 'Create New Course',
+    'edit_course' => 'Edit Course',
+    'class_time' => 'Class Time',
+    'select_a_course' => 'Select a course',
+    'select_a_student' => 'Select a student',
+    'student_name' => 'Student name',
+    'duration_hours' => 'Hours',
+    'duration_minutes' => 'Minutes',
+    'save' => 'Save',
+    'cancel' => 'Cancel',
+    'update' => 'Update',
+    'delete' => 'Delete',
+    
+    // Students
+    'my_students' => 'My Students',
+    'active_students' => 'Active Students',
+    'view_manage_students' => 'View and manage your students',
+    'package_number' => 'Package Number',
+    'no_students_assigned' => 'No students assigned yet',
+    'students_will_appear' => 'Students will appear here once they are assigned to your classes',
+    
+    // Timetable
+    'timetable' => 'Timetable',
+    
+    // Login
+    'login' => 'Login',
+    'email' => 'Email',
+    'password' => 'Password',
+    'remember_me' => 'Remember Me',
+    'forgot_password' => 'Forgot Password?',
+    
+    // Common
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'close' => 'Close',
+    'submit' => 'Submit',
+    'loading' => 'Loading...',
+    'no_data' => 'No data available',
+    
+    // Form Placeholders
+    'homework_placeholder' => 'Assigned homework',
+    'content_placeholder' => 'Content covered in this course',
+    'notes_placeholder' => 'Additional notes',
+    'souvenir_placeholder' => 'Paste an image here or click on the icon',
+    'souvenir' => 'Souvenir',
+    'search_student_placeholder' => 'Search for a student...',
+    'email_placeholder' => 'teacher@example.com',
+    'password_placeholder' => 'Enter your password',
+    'enter_number' => 'Enter number',
+    
+    // Recurring Course Form
+    'student_name' => 'Student Name',
+    'time' => 'Time',
+    'start_date' => 'Start Date',
+    'day_of_week' => 'Day of the week',
+    'repetition_type' => 'Repetition Type',
+    'number' => 'Number',
+    'generate_recurring_courses' => 'Generate Recurring Courses',
+    'save_course' => 'Save Course',
+    
+    // Days of Week
+    'monday' => 'Monday',
+    'tuesday' => 'Tuesday',
+    'wednesday' => 'Wednesday',
+    'thursday' => 'Thursday',
+    'friday' => 'Friday',
+    'saturday' => 'Saturday',
+    'sunday' => 'Sunday',
+    
+    // Recurrence Types
+    'weekly' => 'Weekly',
+    'weeks_count' => 'For a number of weeks',
+    'months_count' => 'For a number of months',
+    'endless' => 'Always (Endless)',
+    
+    // Select Options
+    'select_an_evaluation' => 'Select an evaluation',
+    
+    // Timetable
+    'today' => 'Today',
+    'course_recurrents' => 'Course Recurrents',
+    'refresh' => 'Refresh',
+    'month' => 'Month',
+    'week' => 'Week',
+    'day' => 'Day',
+    'add_a_course' => 'Add a course',
+    'add_recurring_courses' => 'Add Recurring Courses',
+    
+    // Messages
+    'course_created_success' => 'Course created successfully!',
+    'course_deleted_success' => 'Course deleted successfully!',
+    'error_creating_course' => 'Error creating course. Please check the form.',
+    'error_deleting_course' => 'Error deleting course.',
+    'error_try_again' => 'Error. Please try again.',
+    'generated_recurring' => 'Generated :count recurring course instances!',
+    'error_generating_events' => 'Error generating events: :message',
+    'error_creating_recurring' => 'Error creating recurring course: :message',
+];

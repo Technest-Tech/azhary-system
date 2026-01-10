@@ -10,6 +10,7 @@ use App\Models\Subject;
 use App\Models\RecurringCourse;
 use App\Models\PaymentStatus;
 use App\Models\Notification;
+use App\Models\WaitingList;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -267,40 +268,75 @@ class TeacherController extends Controller
             $validated['admin_status'] = 'pending';
             $validated['name'] = '0';
             $nValue = $previousNValue; // Don't increment n_value for absences until approved
+            
+            // Calculate income based on teacher's hourly rate
+            $income = $currentDuration * $teacher->hourly_rate;
+            
+            $validated['teacher_id'] = $teacher->id;
+            $validated['student_name'] = $validated['student_name'] ?? $student->name;
+            $validated['n_value'] = $nValue;
+            $validated['total_hours'] = $currentDuration;
+            $validated['income'] = $income;
+            
+            $course = Course::create($validated);
         } else {
             $validated['admin_status'] = 'approved';
+            
+            // Calculate income based on teacher's hourly rate
+            $income = $currentDuration * $teacher->hourly_rate;
+            
             if ($packageLimitReached) {
-            // Set lesson name to "0.0" and update payment status
-            $validated['name'] = '0.0';
-            
-            // Set payment status to "EN ATTENTE DE PAYEMENT" (Waiting for payment)
-            $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
-            if ($waitingPaymentStatus) {
-                $student->payment_status_id = $waitingPaymentStatus->id;
-                $student->save();
-            }
-            
-                // Don't increment n_value properly - keep it at previous value
-                $nValue = $previousNValue;
+                // Package limit reached - add to waiting list instead of creating course
+                $waitingListData = [
+                    'teacher_id' => $teacher->id,
+                    'student_id' => $student->id,
+                    'student_name' => $validated['student_name'] ?? $student->name,
+                    'name' => $validated['name'],
+                    'course_date' => $validated['course_date'],
+                    'class_time' => $validated['class_time'],
+                    'duration_hours' => $validated['duration_hours'],
+                    'duration_minutes' => $validated['duration_minutes'],
+                    'total_hours' => $currentDuration,
+                    'course_type' => $validated['course_type'],
+                    'status' => $validated['status'],
+                    'admin_status' => 'approved',
+                    'homework' => $validated['homework'] ?? null,
+                    'evaluation_id' => $validated['evaluation_id'] ?? null,
+                    'content' => $validated['content'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'souvenir_image' => $validated['souvenir_image'] ?? null,
+                    'income' => $income,
+                    'is_recurring' => false,
+                    'recurring_course_id' => null,
+                ];
+                
+                WaitingList::create($waitingListData);
+                
+                // Set payment status to "EN ATTENTE DE PAYEMENT" (Waiting for payment)
+                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+                if ($waitingPaymentStatus) {
+                    $student->payment_status_id = $waitingPaymentStatus->id;
+                    $student->save();
+                }
+                
+                return redirect()->route('teacher.dashboard')
+                                ->with('success', 'Lesson added to waiting list. Package limit reached.');
             } else {
-                // Normal lesson - calculate n_value
+                // Normal lesson - calculate n_value and create course
                 $nValue = $previousNValue + $currentDuration;
+                
+                $validated['teacher_id'] = $teacher->id;
+                $validated['student_name'] = $validated['student_name'] ?? $student->name;
+                $validated['n_value'] = $nValue;
+                $validated['total_hours'] = $currentDuration;
+                $validated['income'] = $income;
+                
+                $course = Course::create($validated);
             }
         }
         
-        // Calculate income based on teacher's hourly rate
-        $income = $currentDuration * $teacher->hourly_rate;
-        
-        $validated['teacher_id'] = $teacher->id;
-        $validated['student_name'] = $validated['student_name'] ?? $student->name;
-        $validated['n_value'] = $nValue;
-        $validated['total_hours'] = $currentDuration;
-        $validated['income'] = $income;
-        
-        $course = Course::create($validated);
-        
         // Create notification for absence if status is Absent (so admin can decide to calculate or not)
-        if ($validated['status'] === 'Absent') {
+        if (isset($course) && $validated['status'] === 'Absent') {
             $message = $student->name . ($validated['notes'] ? ' ' . $validated['notes'] : ' did not attend');
             Notification::create([
                 'type' => 'absence_approval',
@@ -314,7 +350,7 @@ class TeacherController extends Controller
         }
         
         // Check if package is completed (n_value >= package_number) - only for non-absent lessons
-        if ($nValue >= $student->package_number && !$packageLimitReached && $validated['status'] !== 'Absent') {
+        if (isset($course) && isset($nValue) && $nValue >= $student->package_number && !$packageLimitReached && $validated['status'] !== 'Absent') {
             $message = $student->name . ' has completed the course !!';
             Notification::create([
                 'type' => 'progress_update',
@@ -328,13 +364,19 @@ class TeacherController extends Controller
         }
         
         // Check if generate report was requested
-        if ($request->has('generate_report')) {
+        if (isset($course) && $request->has('generate_report')) {
             return redirect()->route('teacher.courses.report', $course)
                             ->with('success', 'Course created and report generated!');
         }
         
+        if (isset($course)) {
+            return redirect()->route('teacher.dashboard')
+                            ->with('success', 'Course created successfully!');
+        }
+        
+        // This should not be reached, but just in case
         return redirect()->route('teacher.dashboard')
-                        ->with('success', 'Course created successfully!');
+                        ->with('success', 'Operation completed successfully!');
     }
 
     public function editCourse(Course $course)

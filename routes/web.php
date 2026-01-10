@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\TeacherAuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\LanguageController;
 
 // Public routes
 Route::get('/', function () {
@@ -99,12 +100,19 @@ Route::prefix('admin')->group(function () {
 
 // Teacher Authentication Routes
 Route::prefix('teacher')->group(function () {
-    Route::get('/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.login');
-    Route::post('/login', [TeacherAuthController::class, 'login']);
+    // Language switching route (accessible without auth for login page)
+    Route::post('/language/switch', [LanguageController::class, 'switchLanguage'])->name('teacher.language.switch');
+    
+    // Apply locale middleware to login routes too
+    Route::middleware(['locale'])->group(function () {
+        Route::get('/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.login');
+        Route::post('/login', [TeacherAuthController::class, 'login']);
+    });
+    
     Route::post('/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');
     
     // Protected teacher routes
-    Route::middleware(['auth.teacher'])->group(function () {
+    Route::middleware(['auth.teacher', 'locale'])->group(function () {
         Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
         Route::get('/students', [TeacherController::class, 'students'])->name('teacher.students');
         

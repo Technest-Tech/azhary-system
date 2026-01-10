@@ -8,17 +8,17 @@
             <div>
                 <label for="recurring_student_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-user" style="color: #3b82f6;"></i>
-                    Student Name
+                    {{ __('teacher.student_name') }}
                 </label>
                 <input type="text" id="recurring_student_name" 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                       placeholder="Search for a student..." readonly>
+                       placeholder="{{ __('teacher.search_student_placeholder') }}" readonly>
                 <input type="hidden" name="student_id" id="recurring_student_id" required>
                 <select id="recurring_student_select" 
                         style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; margin-top: 8px;"
                         onchange="document.getElementById('recurring_student_id').value = this.value; document.getElementById('recurring_student_name').value = this.options[this.selectedIndex].text.split(' (')[0];"
                         required>
-                    <option value="">Select a student</option>
+                    <option value="">{{ __('teacher.select_a_student') }}</option>
                     @foreach($students as $student)
                         <option value="{{ $student->id }}">
                             {{ $student->name }}
@@ -31,7 +31,7 @@
             <div>
                 <label for="recurring_class_time" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-clock" style="color: #3b82f6;"></i>
-                    Time
+                    {{ __('teacher.time') }}
                 </label>
                 <div style="position: relative;">
                     <input type="time" name="class_time" id="recurring_class_time" 
@@ -45,12 +45,12 @@
             <div>
                 <label for="recurring_course_type" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-book" style="color: #3b82f6;"></i>
-                    Course
+                    {{ __('teacher.course') }}
                 </label>
                 <div style="position: relative;">
                     <select name="course_type" id="recurring_course_type" 
                             style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                        <option value="">Select a course</option>
+                        <option value="">{{ __('teacher.select_a_course') }}</option>
                         @foreach($subjects as $subject)
                             <option value="{{ $subject->name }}" {{ old('course_type') == $subject->name ? 'selected' : '' }}>
                                 {{ $subject->name }}
@@ -65,7 +65,7 @@
             <div>
                 <label for="recurring_start_date" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-calendar" style="color: #3b82f6;"></i>
-                    Start Date
+                    {{ __('teacher.start_date') }}
                 </label>
                 <div style="position: relative;">
                     <input type="date" name="start_date" id="recurring_start_date" 
@@ -82,17 +82,17 @@
             <div>
                 <label for="recurring_day_of_week" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-calendar-week" style="color: #3b82f6;"></i>
-                    Day of the week
+                    {{ __('teacher.day_of_week') }}
                 </label>
                 <select name="day_of_week" id="recurring_day_of_week" 
                         style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
+                    <option value="Monday">{{ __('teacher.monday') }}</option>
+                    <option value="Tuesday">{{ __('teacher.tuesday') }}</option>
+                    <option value="Wednesday">{{ __('teacher.wednesday') }}</option>
+                    <option value="Thursday">{{ __('teacher.thursday') }}</option>
+                    <option value="Friday">{{ __('teacher.friday') }}</option>
+                    <option value="Saturday">{{ __('teacher.saturday') }}</option>
+                    <option value="Sunday">{{ __('teacher.sunday') }}</option>
                 </select>
             </div>
 
@@ -100,7 +100,7 @@
             <div>
                 <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-stopwatch" style="color: #3b82f6;"></i>
-                    Duration
+                    {{ __('teacher.duration') }}
                 </label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <select name="duration_hours" id="recurring_duration_hours" 
@@ -123,27 +123,27 @@
             <div>
                 <label for="recurring_repetition_type" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-redo" style="color: #3b82f6;"></i>
-                    Repetition Type
+                    {{ __('teacher.repetition_type') }}
                 </label>
                 <select name="recurrence_type" id="recurring_repetition_type" 
                         style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" 
                         onchange="toggleRecurrenceValue()" required>
-                    <option value="weekly">Weekly</option>
-                    <option value="weeks_count">For a number of weeks</option>
-                    <option value="months_count">For a number of months</option>
-                    <option value="endless">Always (Endless)</option>
+                    <option value="weekly">{{ __('teacher.weekly') }}</option>
+                    <option value="weeks_count">{{ __('teacher.weeks_count') }}</option>
+                    <option value="months_count">{{ __('teacher.months_count') }}</option>
+                    <option value="endless">{{ __('teacher.endless') }}</option>
                 </select>
             </div>
 
             <!-- Recurrence Value (conditional) -->
             <div id="recurrence_value_container" style="display: none;">
                 <label for="recurring_recurrence_value" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                    Number
+                    {{ __('teacher.number') }}
                 </label>
                 <input type="number" name="recurrence_value" id="recurring_recurrence_value" 
                        min="1" 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                       placeholder="Enter number">
+                       placeholder="{{ __('teacher.enter_number') }}">
             </div>
         </div>
     </div>
@@ -153,7 +153,7 @@
         <button type="submit" 
                 style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
             <i class="fas fa-sync-alt"></i>
-            Generate Recurring Courses
+            {{ __('teacher.generate_recurring_courses') }}
         </button>
     </div>
 </form>

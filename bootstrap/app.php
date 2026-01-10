@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => \App\Http\Middleware\RedirectIfNotAuthenticated::class,
             'auth.admin' => \App\Http\Middleware\AdminAuth::class,
             'auth.teacher' => \App\Http\Middleware\TeacherAuth::class,
+            'locale' => \App\Http\Middleware\SetLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
