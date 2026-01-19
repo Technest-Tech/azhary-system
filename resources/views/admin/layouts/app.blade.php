@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -352,42 +352,42 @@
                 <div class="sidebar-logo">
                     <i class="fas fa-graduation-cap"></i>
                     <div class="sidebar-logo-text">
-                        <h2>Azhary Academy</h2>
-                        <p>Admin Panel</p>
+                        <h2>{{ __('admin.academy_name') }}</h2>
+                        <p>{{ __('admin.admin_panel') }}</p>
                     </div>
                 </div>
             </div>
 
             <nav class="sidebar-menu">
                 <div class="menu-section">
-                    <div class="menu-section-title">Main Menu</div>
+                    <div class="menu-section-title">{{ __('admin.main_menu') }}</div>
                     <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
+                        <span>{{ __('admin.dashboard') }}</span>
                     </a>
                 </div>
 
                 <div class="menu-section">
-                    <div class="menu-section-title">Management</div>
+                    <div class="menu-section-title">{{ __('admin.management') }}</div>
                     <a href="{{ route('admin.management') }}" class="menu-item {{ request()->routeIs('admin.management*') || request()->routeIs('admin.students.profile') ? 'active' : '' }}">
                         <i class="fas fa-tasks"></i>
-                        <span>Management</span>
+                        <span>{{ __('admin.management') }}</span>
                     </a>
                     <a href="{{ route('admin.analytics') }}" class="menu-item {{ request()->routeIs('admin.analytics*') ? 'active' : '' }}">
                         <i class="fas fa-chart-bar"></i>
-                        <span>Analytics</span>
+                        <span>{{ __('admin.analytics') }}</span>
                     </a>
                     <a href="{{ route('admin.teachers') }}" class="menu-item {{ request()->routeIs('admin.teachers*') ? 'active' : '' }}">
                         <i class="fas fa-chalkboard-teacher"></i>
-                        <span>Teachers</span>
+                        <span>{{ __('admin.teachers') }}</span>
                     </a>
                     <a href="{{ route('admin.students') }}" class="menu-item {{ request()->routeIs('admin.students*') && !request()->routeIs('admin.students.profile') ? 'active' : '' }}">
                         <i class="fas fa-user-graduate"></i>
-                        <span>Students</span>
+                        <span>{{ __('admin.students') }}</span>
                     </a>
                     <a href="{{ route('admin.notifications') }}" class="menu-item {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}" style="position: relative;">
                         <i class="fas fa-bell"></i>
-                        <span>Notifications</span>
+                        <span>{{ __('admin.notifications') }}</span>
                         @php
                             $unreadCount = \App\Models\Notification::where('is_read', false)->count();
                         @endphp
@@ -397,15 +397,15 @@
                     </a>
                     <a href="{{ route('admin.payment') }}" class="menu-item {{ request()->routeIs('admin.payment*') ? 'active' : '' }}">
                         <i class="fas fa-credit-card"></i>
-                        <span>Payment</span>
+                        <span>{{ __('admin.payment') }}</span>
                     </a>
                 </div>
 
                 <div class="menu-section">
-                    <div class="menu-section-title">Configuration</div>
+                    <div class="menu-section-title">{{ __('admin.configuration') }}</div>
                     <a href="{{ route('admin.settings') }}" class="menu-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
                         <i class="fas fa-cog"></i>
-                        <span>Settings</span>
+                        <span>{{ __('admin.settings') }}</span>
                     </a>
                 </div>
             </nav>
@@ -417,14 +417,14 @@
                     </div>
                     <div class="user-info">
                         <h4>{{ Auth::guard('admin')->user()->name }}</h4>
-                        <p>Administrator</p>
+                        <p>{{ __('admin.administrator') }}</p>
                     </div>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button type="submit" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
-                        Logout
+                        {{ __('admin.logout') }}
                     </button>
                 </form>
             </div>
@@ -435,6 +435,19 @@
             <div class="top-navbar">
                 <h1 class="page-title">@yield('page-title')</h1>
                 <div class="top-navbar-right">
+                    <div class="language-switcher" style="margin-right: 16px;">
+                        <form action="{{ route('language.switch') }}" method="POST" style="display: inline;">
+                            @csrf
+                            <input type="hidden" name="locale" value="{{ app()->getLocale() == 'en' ? 'fr' : 'en' }}">
+                            <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #64748b;">
+                                @if(app()->getLocale() == 'en')
+                                    🇫🇷 FR
+                                @else
+                                    🇬🇧 EN
+                                @endif
+                            </button>
+                        </form>
+                    </div>
                     <a href="{{ route('admin.notifications') }}" class="notification-icon" style="text-decoration: none; color: inherit;">
                         <i class="fas fa-bell"></i>
                         @php

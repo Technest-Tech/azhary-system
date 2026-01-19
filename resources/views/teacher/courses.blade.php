@@ -164,6 +164,10 @@
                                     {{ __('teacher.no') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
+                                    <i class="fas fa-sync-alt" style="color: #8b5cf6; margin-right: 6px;"></i>
+                                    Round
+                                </th>
+                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-user-graduate" style="color: #34d399; margin-right: 6px;"></i>
                                     {{ __('teacher.student') }}
                                 </th>
@@ -207,8 +211,18 @@
                                     <td style="padding: 20px 16px; font-weight: 700; color: #1e293b; font-size: 16px; white-space: nowrap;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
-                                                {{ number_format((($courses->firstItem() ?? 1) - 1 + $index + 0.5), 1) }}
+                                                {{ number_format($course->n_value, 1) }}
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-weight: 600; color: #3b82f6; font-size: 14px;">R{{ $course->round ?? 1 }}</span>
+                                            <button onclick="showRoundsModal({{ $course->student_id }})" 
+                                                    style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;"
+                                                    title="View all rounds">
+                                                <i class="fas fa-history"></i>
+                                            </button>
                                         </div>
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
@@ -360,4 +374,110 @@
             @endif
         </div>
     </div>
+
+    <!-- Rounds Modal -->
+    <div id="roundsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+        <div style="background: white; margin: 50px auto; max-width: 900px; border-radius: 12px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1e293b;" id="roundsModalTitle">Package Rounds</h2>
+                <button onclick="closeRoundsModal()" style="background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <div id="roundsModalContent" style="max-height: 600px; overflow-y: auto;">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRoundsModal(studentId) {
+            const modal = document.getElementById('roundsModal');
+            const content = document.getElementById('roundsModalContent');
+            const title = document.getElementById('roundsModalTitle');
+            
+            modal.style.display = 'flex';
+            content.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #3b82f6;"></i><p style="margin-top: 16px; color: #64748b;">Loading rounds...</p></div>';
+            
+            fetch(`/teacher/students/${studentId}/rounds`)
+                .then(response => response.json())
+                .then(data => {
+                    title.textContent = `Package Rounds - ${data.student.name}`;
+                    
+                    if (data.rounds.length === 0) {
+                        content.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No rounds found.</p>';
+                        return;
+                    }
+                    
+                    let html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+                    
+                    data.rounds.forEach(roundData => {
+                        const isCurrentRound = roundData.round === Math.max(...data.rounds.map(r => r.round));
+                        html += `
+                            <div style="border: 2px solid ${isCurrentRound ? '#3b82f6' : '#e2e8f0'}; border-radius: 8px; padding: 16px; background: ${isCurrentRound ? '#eff6ff' : '#ffffff'};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">
+                                        Round ${roundData.round} ${isCurrentRound ? '<span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">Current</span>' : ''}
+                                    </h3>
+                                    <span style="color: #64748b; font-size: 14px;">${roundData.courses_count} courses</span>
+                                </div>
+                                <div style="color: #64748b; font-size: 12px; margin-bottom: 12px;">
+                                    ${roundData.start_date ? new Date(roundData.start_date).toLocaleDateString() : 'N/A'} - ${roundData.end_date ? new Date(roundData.end_date).toLocaleDateString() : 'N/A'}
+                                </div>
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #f8fafc;">
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Date</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Time</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Type</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Duration</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Status</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">N Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        roundData.courses.forEach(course => {
+                            html += `
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 8px; font-size: 12px; color: #1e293b;">${course.course_date ? new Date(course.course_date).toLocaleDateString() : 'N/A'}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.class_time || 'N/A'}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.course_type || '-'}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.duration_hours}h ${course.duration_minutes}m</td>
+                                    <td style="padding: 8px; font-size: 12px;">
+                                        <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: ${course.status === 'Present' ? '#6ee7b7' : course.status === 'Absent' ? '#fca5a5' : '#fcd34d'}; color: ${course.status === 'Present' ? '#065f46' : course.status === 'Absent' ? '#991b1b' : '#92400e'};">${course.status}</span>
+                                    </td>
+                                    <td style="padding: 8px; font-size: 12px; color: #1e293b; font-weight: 600;">${parseFloat(course.n_value).toFixed(1)}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading rounds:', error);
+                    content.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 40px;">Error loading rounds. Please try again.</p>';
+                });
+        }
+        
+        function closeRoundsModal() {
+            document.getElementById('roundsModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('roundsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRoundsModal();
+            }
+        });
+    </script>
 @endsection

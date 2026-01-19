@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Teachers Management')
-@section('page-title', 'Teachers Management')
+@section('title', __('admin.teachers_management'))
+@section('page-title', __('admin.teachers_management'))
 
 @section('content')
     <!-- Success Message -->
@@ -18,15 +18,15 @@
             <div>
                 <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
                     <i class="fas fa-chalkboard-teacher" style="color: #667eea; margin-right: 8px;"></i>
-                    All Teachers
+                    {{ __('admin.all_teachers') }}
                 </h2>
                 <p style="color: #64748b; font-size: 14px;">
-                    Manage and view all faculty members in the academy
+                    {{ __('admin.manage_view_faculty') }}
                 </p>
             </div>
             <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary" style="text-decoration: none;">
                 <i class="fas fa-plus"></i>
-                Add New Teacher
+                {{ __('admin.add_new_teacher') }}
             </a>
         </div>
     </div>
@@ -39,7 +39,7 @@
                     <i class="fas fa-users"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 13px; font-weight: 600;">Total Teachers</p>
+                    <p style="color: #64748b; font-size: 13px; font-weight: 600;">{{ __('admin.total_teachers') }}</p>
                     <p style="font-size: 24px; font-weight: 700; color: #1e293b;">{{ $teachers->count() }}</p>
                 </div>
             </div>
@@ -51,7 +51,7 @@
                     <i class="fas fa-user-check"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 13px; font-weight: 600;">Active</p>
+                    <p style="color: #64748b; font-size: 13px; font-weight: 600;">{{ __('admin.active') }}</p>
                     <p style="font-size: 24px; font-weight: 700; color: #1e293b;">{{ $teachers->count() }}</p>
                 </div>
             </div>
@@ -63,7 +63,7 @@
                     <i class="fas fa-book-open"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 13px; font-weight: 600;">Total Courses</p>
+                    <p style="color: #64748b; font-size: 13px; font-weight: 600;">{{ __('admin.total_courses') }}</p>
                     <p style="font-size: 24px; font-weight: 700; color: #1e293b;">12</p>
                 </div>
             </div>
@@ -74,12 +74,12 @@
     <div class="card">
         <div class="card-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title">Teachers List</h3>
+                <h3 class="card-title">{{ __('admin.teachers_list') }}</h3>
                 <div style="display: flex; gap: 12px;">
-                    <input type="text" placeholder="Search teachers..." style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; width: 250px;">
+                    <input type="text" placeholder="{{ __('admin.search_teachers') }}" style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; width: 250px;">
                     <button class="btn" style="background: #f1f5f9; color: #475569; padding: 8px 16px;">
                         <i class="fas fa-filter"></i>
-                        Filter
+                        {{ __('admin.filter') }}
                     </button>
                 </div>
             </div>
@@ -91,25 +91,25 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #e2e8f0;">
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                ID
+                                {{ __('admin.id') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Teacher
+                                {{ __('admin.teacher') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Email
+                                {{ __('admin.email') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Phone
+                                {{ __('admin.phone') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Date of Birth
+                                {{ __('admin.date_of_birth') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Currency
+                                {{ __('admin.currency') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Actions
+                                {{ __('admin.actions') }}
                             </th>
                         </tr>
                     </thead>
@@ -126,7 +126,7 @@
                                     </div>
                                     <div>
                                         <p style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $teacher->name }}</p>
-                                        <p style="font-size: 12px; color: #64748b;">Teacher</p>
+                                        <p style="font-size: 12px; color: #64748b;">{{ __('admin.teacher') }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -147,16 +147,16 @@
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 <div style="display: flex; gap: 8px;">
-                                    <button onclick="viewTeacherDetails({{ $teacher->id }})" style="padding: 6px 12px; background: #dbeafe; color: #3b82f6; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;" title="View Details">
+                                    <button onclick="viewTeacherDetails({{ $teacher->id }})" style="padding: 6px 12px; background: #dbeafe; color: #3b82f6; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;" title="{{ __('admin.view_details') }}">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <a href="{{ route('admin.teachers.edit', $teacher->id) }}" style="padding: 6px 12px; background: #dcfce7; color: #16a34a; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block;" title="Edit">
+                                    <a href="{{ route('admin.teachers.edit', $teacher->id) }}" style="padding: 6px 12px; background: #dcfce7; color: #16a34a; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block;" title="{{ __('admin.edit') }}">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form method="POST" action="{{ route('admin.teachers.destroy', $teacher->id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this teacher?');">
+                                    <form method="POST" action="{{ route('admin.teachers.destroy', $teacher->id) }}" style="display: inline;" onsubmit="return confirm('{{ __('admin.delete_teacher_confirm') }}');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" style="padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;" title="Delete">
+                                        <button type="submit" style="padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;" title="{{ __('admin.delete') }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -170,12 +170,12 @@
         @else
             <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
                 <i class="fas fa-user-slash" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-                <p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No teachers found</p>
-                <p style="font-size: 14px; margin-bottom: 24px;">Start by adding your first teacher to the academy</p>
-                <button class="btn btn-primary">
+                <p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">{{ __('admin.no_teachers_found') }}</p>
+                <p style="font-size: 14px; margin-bottom: 24px;">{{ __('admin.start_adding_teacher') }}</p>
+                <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary" style="text-decoration: none;">
                     <i class="fas fa-plus"></i>
-                    Add Teacher
-                </button>
+                    {{ __('admin.add_teacher') }}
+                </a>
             </div>
         @endif
     </div>
@@ -187,8 +187,8 @@
             <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: white; z-index: 10; border-radius: 16px 16px 0 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h2 id="modalTeacherName" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Teacher Details</h2>
-                        <p style="color: #64748b; font-size: 14px;">View teacher statistics and assigned students</p>
+                        <h2 id="modalTeacherName" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">{{ __('admin.teacher_details') }}</h2>
+                        <p style="color: #64748b; font-size: 14px;">{{ __('admin.view_teacher_stats') }}</p>
                     </div>
                     <button onclick="closeTeacherModal()" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; border: none; cursor: pointer; color: #64748b; font-size: 20px;">
                         <i class="fas fa-times"></i>
@@ -207,16 +207,16 @@
                                 <i class="fas fa-users"></i>
                             </div>
                             <div style="flex: 1;">
-                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">Students & Courses</p>
+                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">{{ __('admin.students_courses') }}</p>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #f1f5f9;">
                             <div>
-                                <p style="color: #64748b; font-size: 11px; margin: 0;">Active Students</p>
+                                <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.active_students') }}</p>
                                 <p id="modalActiveStudents" style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">0</p>
                             </div>
                             <div style="text-align: right;">
-                                <p style="color: #64748b; font-size: 11px; margin: 0;">Total Courses</p>
+                                <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.total_courses') }}</p>
                                 <p id="modalTotalCourses" style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">0</p>
                             </div>
                         </div>
@@ -229,16 +229,16 @@
                                 <i class="fas fa-clock"></i>
                             </div>
                             <div style="flex: 1;">
-                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">Hours Statistics</p>
+                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">{{ __('admin.hours_statistics') }}</p>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #f1f5f9;">
                             <div>
-                                <p style="color: #64748b; font-size: 11px; margin: 0;">This Month</p>
+                                <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.this_month') }}</p>
                                 <p id="modalHoursThisMonth" style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">0</p>
                             </div>
                             <div style="text-align: right;">
-                                <p style="color: #64748b; font-size: 11px; margin: 0;">Total Hours</p>
+                                <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.total_hours') }}</p>
                                 <p id="modalTotalHours" style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">0</p>
                             </div>
                         </div>
@@ -251,16 +251,16 @@
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
                             <div style="flex: 1;">
-                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">Income Statistics</p>
+                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">{{ __('admin.income_statistics') }}</p>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #f1f5f9;">
                             <div>
-                                <p style="color: #64748b; font-size: 11px; margin: 0;">This Month</p>
+                                <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.this_month') }}</p>
                                 <p id="modalMonthlyIncome" style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">$0</p>
                             </div>
                             <div style="text-align: right;">
-                                <p style="color: #64748b; font-size: 11px; margin: 0;">Total Income</p>
+                                <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.total_income') }}</p>
                                 <p id="modalTotalIncome" style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">$0</p>
                             </div>
                         </div>
@@ -273,11 +273,11 @@
                                 <i class="fas fa-hand-holding-usd"></i>
                             </div>
                             <div style="flex: 1;">
-                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">Current Rate</p>
+                                <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0;">{{ __('admin.current_rate') }}</p>
                             </div>
                         </div>
                         <div style="padding: 8px 0; border-top: 1px solid #f1f5f9;">
-                            <p style="color: #64748b; font-size: 11px; margin: 0;">Hourly Rate</p>
+                            <p style="color: #64748b; font-size: 11px; margin: 0;">{{ __('admin.hourly_rate_label') }}</p>
                             <p id="modalHourlyRate" style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 0;">$0</p>
                         </div>
                     </div>
@@ -286,24 +286,24 @@
                 <!-- Students Table -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Assigned Students</h3>
+                        <h3 class="card-title">{{ __('admin.assigned_students') }}</h3>
                     </div>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="border-bottom: 2px solid #e2e8f0;">
-                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Student</th>
-                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Course</th>
-                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Package</th>
-                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Rates</th>
-                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">Actions</th>
+                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">{{ __('admin.student') }}</th>
+                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">{{ __('admin.course') }}</th>
+                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">{{ __('admin.package') }}</th>
+                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">{{ __('admin.rates') }}</th>
+                                    <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase;">{{ __('admin.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody id="modalStudentsTableBody">
                                 <tr>
                                     <td colspan="5" style="padding: 40px; text-align: center; color: #94a3b8;">
                                         <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
-                                        <p style="margin-top: 12px;">Loading...</p>
+                                        <p style="margin-top: 12px;">{{ __('admin.loading') }}</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -342,7 +342,7 @@
                             <tr>
                                 <td colspan="5" style="padding: 40px; text-align: center; color: #94a3b8;">
                                     <i class="fas fa-user-slash" style="font-size: 32px; opacity: 0.5;"></i>
-                                    <p style="margin-top: 12px;">No students assigned</p>
+                                    <p style="margin-top: 12px;">{{ __('admin.no_students_assigned') }}</p>
                                 </td>
                             </tr>
                         `;
@@ -356,7 +356,7 @@
                                         </div>
                                         <div>
                                             <p style="font-weight: 600; color: #1e293b; font-size: 14px; margin: 0;">${student.name}</p>
-                                            <p style="font-size: 12px; color: #64748b; margin: 0;">Section ${student.section}</p>
+                                            <p style="font-size: 12px; color: #64748b; margin: 0;">{{ __('admin.section') }} ${student.section}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -365,22 +365,22 @@
                                         <span class="badge" style="background: #f3e8ff; color: #7c3aed; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
                                             ${student.subject.name}
                                         </span>
-                                    ` : '<span style="color: #94a3b8; font-size: 13px;">Not assigned</span>'}
+                                    ` : '<span style="color: #94a3b8; font-size: 13px;">{{ __('admin.not_assigned') }}</span>'}
                                 </td>
                                 <td style="padding: 16px; white-space: nowrap;">
                                     <div style="font-size: 13px;">
-                                        <p style="color: #64748b; margin: 0;">Package #${student.package_number}</p>
+                                        <p style="color: #64748b; margin: 0;">{{ __('admin.package') }} #${student.package_number}</p>
                                     </div>
                                 </td>
                                 <td style="padding: 16px; white-space: nowrap;">
                                     <div style="font-size: 12px;">
                                         <div style="margin-bottom: 4px;">
-                                            <span style="color: #64748b;">Student:</span> 
+                                            <span style="color: #64748b;">{{ __('admin.student') }}:</span> 
                                             <strong style="color: #1e293b;">$${parseFloat(student.hour_rate).toFixed(2)}/hr</strong>
                                         </div>
                                         ${student.teacher_rate ? `
                                             <div>
-                                                <span style="color: #64748b;">Teacher:</span> 
+                                                <span style="color: #64748b;">{{ __('admin.teacher') }}:</span> 
                                                 <strong style="color: #16a34a;">$${parseFloat(student.teacher_rate).toFixed(2)}/hr</strong>
                                             </div>
                                         ` : ''}
@@ -406,7 +406,7 @@
                 })
                 .catch(error => {
                     console.error('Error fetching teacher details:', error);
-                    alert('Failed to load teacher details');
+                    alert('{{ __('admin.error') }}: {{ __('admin.loading') }}');
                 });
         }
 

@@ -1,20 +1,20 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Analytics')
-@section('page-title', 'Analytics')
+@section('title', __('admin.analytics'))
+@section('page-title', __('admin.analytics'))
 
 @section('content')
     <!-- Statistics Section -->
     <div class="card" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 32px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-            <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 0;">Statistics</h2>
+            <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 0;">{{ __('admin.statistics') }}</h2>
             
             <form method="GET" action="{{ route('admin.analytics') }}" style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
                 <!-- Teacher Filter -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Select Teacher</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.select_teacher') }}</label>
                     <select name="teacher_id" id="teacherFilter" style="width: 200px; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                        <option value="">All Teachers</option>
+                        <option value="">{{ __('admin.all_teachers') }}</option>
                         @foreach($teachers as $teacher)
                             <option value="{{ $teacher->id }}" {{ $selectedTeacherId == $teacher->id ? 'selected' : '' }}>
                                 {{ $teacher->name }}
@@ -25,14 +25,14 @@
                 
                 <!-- Date From -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">From</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.from_date') }}</label>
                     <input type="date" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}" 
                            style="padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                 </div>
                 
                 <!-- Date To -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">To</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.to_date') }}</label>
                     <input type="date" name="date_to" value="{{ $dateTo->format('Y-m-d') }}" 
                            style="padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                 </div>
@@ -40,7 +40,7 @@
                 <!-- Submit Button -->
                 <div>
                     <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; height: fit-content;">
-                        <i class="fas fa-filter"></i> Apply Filters
+                        <i class="fas fa-filter"></i> {{ __('admin.apply_filters') }}
                     </button>
                 </div>
             </form>
@@ -50,7 +50,7 @@
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 32px; color: white;">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div>
-                    <p style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; opacity: 0.9;">Total Teaching Hours</p>
+                    <p style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; opacity: 0.9;">{{ __('admin.total_teaching_hours') }}</p>
                     <h3 style="font-size: 48px; font-weight: 700; margin: 0;">{{ number_format($totalHours, 2) }}</h3>
                 </div>
                 <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
@@ -64,20 +64,20 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 32px;">
         <!-- Line Chart: Total Hours Across Months -->
         <div class="card" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">Total Hours Across Months</h3>
+            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">{{ __('admin.total_hours_across_months') }}</h3>
             <canvas id="hoursLineChart" style="max-height: 300px;"></canvas>
         </div>
 
         <!-- Bar Chart: Top 5 Teachers by Hours -->
         <div class="card" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">Top 5 Teachers by Total Hours</h3>
+            <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">{{ __('admin.top_teachers_by_hours') }}</h3>
             <canvas id="topTeachersBarChart" style="max-height: 300px;"></canvas>
         </div>
     </div>
 
     <!-- Donut Chart: Best Days by Number of Courses -->
     <div class="card" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 32px;">
-        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">Best Days by Number of Courses</h3>
+        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px 0;">{{ __('admin.best_days_by_courses') }}</h3>
         <div style="display: flex; align-items: center; gap: 40px; flex-wrap: wrap;">
             <div style="flex: 0 0 300px;">
                 <canvas id="coursesDonutChart"></canvas>
@@ -89,21 +89,21 @@
     <!-- Financial Statistics Table -->
     <div class="card" style="background: white; border-radius: 16px; padding: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
         <div style="padding: 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-            <h3 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0;">Financial Statistics</h3>
-            <p style="color: #64748b; font-size: 14px; margin: 8px 0 0 0;">Calculate net profit after deducting teacher rates, expenses, and advertisements</p>
+            <h3 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0;">{{ __('admin.financial_statistics') }}</h3>
+            <p style="color: #64748b; font-size: 14px; margin: 8px 0 0 0;">{{ __('admin.calculate_net_profit') }}</p>
         </div>
 
         <div style="overflow-x: auto; overflow-y: visible; width: 100%; -webkit-overflow-scrolling: touch;">
             <table style="width: 100%; border-collapse: collapse; white-space: nowrap; table-layout: auto;">
                 <thead>
                     <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Name</th>
-                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Income</th>
-                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Hours</th>
-                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Expenses</th>
-                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Advertisements</th>
-                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Teacher Rate</th>
-                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Net Profit</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.name') }}</th>
+                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.revenue') }}</th>
+                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.total_hours') }}</th>
+                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.expenses') }}</th>
+                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.advertisements') }}</th>
+                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.teacher_rates') }}</th>
+                        <th style="padding: 16px; text-align: right; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.net_profit') }}</th>
                     </tr>
                 </thead>
                 <tbody>

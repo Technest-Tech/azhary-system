@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Student Management')
-@section('page-title', 'Student Management')
+@section('title', __('admin.student_management'))
+@section('page-title', __('admin.student_management'))
 
 @section('content')
     <!-- Summary Cards -->
@@ -12,7 +12,7 @@
                     <i class="fas fa-users" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Total Students</p>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">{{ __('admin.total_students') }}</p>
                     <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ $totalStudents }}</h3>
                 </div>
             </div>
@@ -24,7 +24,7 @@
                     <i class="fas fa-user-check" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Active Students</p>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">{{ __('admin.active_students') }}</p>
                     <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ $activeCount }}</h3>
                 </div>
             </div>
@@ -36,7 +36,7 @@
                     <i class="fas fa-user-slash" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Inactive Students</p>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">{{ __('admin.inactive') }} {{ __('admin.students') }}</p>
                     <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ $inactiveCount }}</h3>
                 </div>
             </div>
@@ -48,16 +48,16 @@
         <form method="GET" action="{{ route('admin.management') }}" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 16px; align-items: end;">
             <!-- Student Search -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Search for a student...</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search for a student..." 
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.search_student_placeholder') }}</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search_student_placeholder') }}" 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
             </div>
 
             <!-- Teacher Filter -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">All teachers</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.all_teachers') }}</label>
                 <select name="teacher_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                    <option value="all" {{ request('teacher_id') == 'all' || !request('teacher_id') ? 'selected' : '' }}>All teachers</option>
+                    <option value="all" {{ request('teacher_id') == 'all' || !request('teacher_id') ? 'selected' : '' }}>{{ __('admin.all_teachers') }}</option>
                     @foreach($teachers as $teacher)
                         <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
                             {{ $teacher->name }}
@@ -68,9 +68,9 @@
 
             <!-- Course Type Filter -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">All courses</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.all_courses') }}</label>
                 <select name="course_type" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                    <option value="all" {{ request('course_type') == 'all' || !request('course_type') ? 'selected' : '' }}>All courses</option>
+                    <option value="all" {{ request('course_type') == 'all' || !request('course_type') ? 'selected' : '' }}>{{ __('admin.all_courses') }}</option>
                     @foreach($subjects as $subject)
                         <option value="{{ $subject->id }}" {{ request('course_type') == $subject->id ? 'selected' : '' }}>
                             {{ $subject->name }}
@@ -81,13 +81,13 @@
 
             <!-- Status Filter -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Status</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.status') }}</label>
                 <select name="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                    <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>All</option>
-                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="Suspended" {{ request('status') == 'Suspended' ? 'selected' : '' }}>Suspended</option>
-                    <option value="Archived" {{ request('status') == 'Archived' ? 'selected' : '' }}>Archived</option>
+                    <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>{{ __('admin.all_statuses') }}</option>
+                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>{{ __('admin.active') }}</option>
+                    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>{{ __('admin.inactive') }}</option>
+                    <option value="Suspended" {{ request('status') == 'Suspended' ? 'selected' : '' }}>{{ __('admin.suspended') }}</option>
+                    <option value="Archived" {{ request('status') == 'Archived' ? 'selected' : '' }}>{{ __('admin.archived') }}</option>
                 </select>
             </div>
 
@@ -103,34 +103,34 @@
                 <thead>
                     <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>NAME
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.name')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>TEACHER
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.teacher')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>COURSE
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.course')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>PHONE
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.phone')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>PACK
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.pack')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>PRICE OF A
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.price_of_a')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>THE REST
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.the_rest')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>REMAINING MONEY (€)
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.remaining_money')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>FARE (€)
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.fare')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                            <i class="fas fa-sort" style="margin-right: 4px;"></i>RECIPE PROF (€)
+                            <i class="fas fa-sort" style="margin-right: 4px;"></i>{{ strtoupper(__('admin.recipe_prof')) }}
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 700; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
                             <i class="fas fa-sort" style="margin-right: 4px;"></i>COURSES TAKEN

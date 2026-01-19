@@ -95,9 +95,41 @@ class TeacherController extends Controller
             ];
         }
         
-        // Course listing with filters and search
+        // Course listing with filters and search - only show courses from current round and pending courses for each student
         $query = Course::where('teacher_id', $teacher->id)
                       ->with(['student', 'evaluation']);
+        
+        // Filter by current round for each student + pending courses
+        // Get max round per student for this teacher (excluding round 0 which is for pending)
+        $maxRounds = Course::where('teacher_id', $teacher->id)
+            ->where('round', '>', 0)
+            ->select('student_id', DB::raw('MAX(round) as max_round'))
+            ->groupBy('student_id')
+            ->pluck('max_round', 'student_id');
+        
+        // Build where clause for current round courses and pending courses
+        // This ensures we only show courses from the highest round for each student
+        $query->where(function($q) use ($maxRounds, $teacher) {
+            // If we have students with rounds, include their current round courses
+            if ($maxRounds->isNotEmpty()) {
+                foreach ($maxRounds as $studentId => $maxRound) {
+                    $q->orWhere(function($subQ) use ($studentId, $maxRound, $teacher) {
+                        $subQ->where('student_id', $studentId)
+                             ->where('round', $maxRound)
+                             ->where('teacher_id', $teacher->id);
+                    });
+                }
+            }
+            // Always include pending courses (round = 0 or admin_status = 'pending') for this teacher
+            // These are courses waiting for package activation
+            $q->orWhere(function($subQ) use ($teacher) {
+                $subQ->where('teacher_id', $teacher->id)
+                     ->where(function($pendingQ) {
+                         $pendingQ->where('round', 0)
+                                  ->orWhere('admin_status', 'pending');
+                     });
+            });
+        });
         
         // Search functionality
         if ($request->filled('search')) {
@@ -170,6 +202,38 @@ class TeacherController extends Controller
         
         $query = Course::where('teacher_id', $teacher->id)
                       ->with(['student', 'evaluation']);
+        
+        // Filter by current round for each student + pending courses
+        // Get max round per student for this teacher (excluding round 0 which is for pending)
+        $maxRounds = Course::where('teacher_id', $teacher->id)
+            ->where('round', '>', 0)
+            ->select('student_id', DB::raw('MAX(round) as max_round'))
+            ->groupBy('student_id')
+            ->pluck('max_round', 'student_id');
+        
+        // Build where clause for current round courses and pending courses
+        // This ensures we only show courses from the highest round for each student
+        $query->where(function($q) use ($maxRounds, $teacher) {
+            // If we have students with rounds, include their current round courses
+            if ($maxRounds->isNotEmpty()) {
+                foreach ($maxRounds as $studentId => $maxRound) {
+                    $q->orWhere(function($subQ) use ($studentId, $maxRound, $teacher) {
+                        $subQ->where('student_id', $studentId)
+                             ->where('round', $maxRound)
+                             ->where('teacher_id', $teacher->id);
+                    });
+                }
+            }
+            // Always include pending courses (round = 0 or admin_status = 'pending') for this teacher
+            // These are courses waiting for package activation
+            $q->orWhere(function($subQ) use ($teacher) {
+                $subQ->where('teacher_id', $teacher->id)
+                     ->where(function($pendingQ) {
+                         $pendingQ->where('round', 0)
+                                  ->orWhere('admin_status', 'pending');
+                     });
+            });
+        });
         
         // Apply filters
         if ($request->filled('student_id')) {
@@ -260,8 +324,13 @@ class TeacherController extends Controller
         $currentDuration = $validated['duration_hours'] + ($validated['duration_minutes'] / 60.0);
         
         // Check if package limit has been reached
-        // If previousNValue is 0 or less than package_number, we're in a new package cycle
         $packageLimitReached = $previousNValue >= $student->package_number;
+        
+        // Check if there's a notification for package completion
+        $hasPackageNotification = Notification::where('student_id', $student->id)
+            ->where('type', 'progress_update')
+            ->where('is_read', false)
+            ->exists();
         
         // Set admin_status: pending for absences, approved for others
         if ($validated['status'] === 'Absent') {
@@ -272,21 +341,107 @@ class TeacherController extends Controller
             // Calculate income based on teacher's hourly rate
             $income = $currentDuration * $teacher->hourly_rate;
             
+            // Get current round for this student
+            $currentRound = Course::where('student_id', $student->id)
+                ->where('teacher_id', $teacher->id)
+                ->max('round') ?? 1;
+            
             $validated['teacher_id'] = $teacher->id;
             $validated['student_name'] = $validated['student_name'] ?? $student->name;
             $validated['n_value'] = $nValue;
             $validated['total_hours'] = $currentDuration;
             $validated['income'] = $income;
+            $validated['round'] = $currentRound;
             
             $course = Course::create($validated);
         } else {
-            $validated['admin_status'] = 'approved';
-            
             // Calculate income based on teacher's hourly rate
             $income = $currentDuration * $teacher->hourly_rate;
             
-            if ($packageLimitReached) {
-                // Package limit reached - add to waiting list instead of creating course
+            // Check if lesson exceeds package limit
+            $remainingInPackage = $student->package_number - $previousNValue;
+            $exceedsPackage = $currentDuration > $remainingInPackage && $remainingInPackage > 0;
+            
+            if ($exceedsPackage) {
+                // Split the lesson: one completes the package, one is pending from new package
+                $hoursToComplete = $remainingInPackage;
+                $hoursPending = $currentDuration - $remainingInPackage;
+                
+                // Convert hours to hours and minutes
+                $completeHours = floor($hoursToComplete);
+                $completeMinutes = round(($hoursToComplete - $completeHours) * 60);
+                
+                $pendingHours = floor($hoursPending);
+                $pendingMinutes = round(($hoursPending - $pendingHours) * 60);
+                
+                // Get current round for this student
+                $currentRound = Course::where('student_id', $student->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->max('round') ?? 1;
+                
+                // First course: completes the package
+                $nValueComplete = $previousNValue + $hoursToComplete;
+                $incomeComplete = $hoursToComplete * $teacher->hourly_rate;
+                
+                $completeCourseData = $validated;
+                $completeCourseData['teacher_id'] = $teacher->id;
+                $completeCourseData['student_name'] = $validated['student_name'] ?? $student->name;
+                $completeCourseData['duration_hours'] = $completeHours;
+                $completeCourseData['duration_minutes'] = $completeMinutes;
+                $completeCourseData['total_hours'] = $hoursToComplete;
+                $completeCourseData['n_value'] = $nValueComplete;
+                $completeCourseData['income'] = $incomeComplete;
+                $completeCourseData['admin_status'] = 'approved';
+                $completeCourseData['round'] = $currentRound;
+                
+                $course = Course::create($completeCourseData);
+                
+                // Second course: pending from new package (will get new round when activated)
+                $pendingCourseData = $validated;
+                $pendingCourseData['teacher_id'] = $teacher->id;
+                $pendingCourseData['student_name'] = $validated['student_name'] ?? $student->name;
+                $pendingCourseData['duration_hours'] = $pendingHours;
+                $pendingCourseData['duration_minutes'] = $pendingMinutes;
+                $pendingCourseData['total_hours'] = $hoursPending;
+                $pendingCourseData['n_value'] = 0; // Will be recalculated when package is activated
+                $pendingCourseData['income'] = $hoursPending * $teacher->hourly_rate;
+                $pendingCourseData['admin_status'] = 'pending';
+                $pendingCourseData['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
+                $pendingCourseData['round'] = 0; // Will be set to new round when package is activated
+                
+                Course::create($pendingCourseData);
+                
+                // Set payment status to "EN ATTENTE DE PAYEMENT"
+                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+                if ($waitingPaymentStatus) {
+                    $student->payment_status_id = $waitingPaymentStatus->id;
+                    $student->save();
+                }
+                
+                $nValue = $nValueComplete;
+            } elseif ($packageLimitReached && $hasPackageNotification) {
+                // Package limit reached and notification exists - create as pending
+                $validated['teacher_id'] = $teacher->id;
+                $validated['student_name'] = $validated['student_name'] ?? $student->name;
+                $validated['n_value'] = 0; // Will be recalculated when package is activated
+                $validated['total_hours'] = $currentDuration;
+                $validated['income'] = $income;
+                $validated['admin_status'] = 'pending';
+                $validated['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
+                $validated['round'] = 0; // Will be set to new round when package is activated
+                
+                $course = Course::create($validated);
+                
+                // Set payment status to "EN ATTENTE DE PAYEMENT"
+                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+                if ($waitingPaymentStatus) {
+                    $student->payment_status_id = $waitingPaymentStatus->id;
+                    $student->save();
+                }
+                
+                $nValue = null; // Not set for pending courses
+            } elseif ($packageLimitReached) {
+                // Package limit reached but no notification - add to waiting list
                 $waitingListData = [
                     'teacher_id' => $teacher->id,
                     'student_id' => $student->id,
@@ -312,7 +467,7 @@ class TeacherController extends Controller
                 
                 WaitingList::create($waitingListData);
                 
-                // Set payment status to "EN ATTENTE DE PAYEMENT" (Waiting for payment)
+                // Set payment status to "EN ATTENTE DE PAYEMENT"
                 $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
                 if ($waitingPaymentStatus) {
                     $student->payment_status_id = $waitingPaymentStatus->id;
@@ -330,6 +485,7 @@ class TeacherController extends Controller
                 $validated['n_value'] = $nValue;
                 $validated['total_hours'] = $currentDuration;
                 $validated['income'] = $income;
+                $validated['admin_status'] = 'approved';
                 
                 $course = Course::create($validated);
             }
@@ -365,7 +521,7 @@ class TeacherController extends Controller
         
         // Check if generate report was requested
         if (isset($course) && $request->has('generate_report')) {
-            return redirect()->route('teacher.courses.report', $course)
+            return redirect()->route('teacher.courses')
                             ->with('success', 'Course created and report generated!');
         }
         
@@ -680,6 +836,62 @@ class TeacherController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Recurring course deleted successfully',
+        ]);
+    }
+
+    public function getStudentRounds(Student $student)
+    {
+        $teacher = Auth::guard('teacher')->user();
+        
+        // Ensure student belongs to this teacher
+        if ($student->teacher_id !== $teacher->id) {
+            abort(403, 'Unauthorized access to student.');
+        }
+        
+        // Get all rounds for this student with their courses
+        $rounds = Course::where('student_id', $student->id)
+            ->where('teacher_id', $teacher->id)
+            ->select('round', DB::raw('COUNT(*) as courses_count'), DB::raw('MIN(course_date) as start_date'), DB::raw('MAX(course_date) as end_date'))
+            ->groupBy('round')
+            ->orderBy('round', 'desc')
+            ->get()
+            ->map(function($round) use ($student, $teacher) {
+                $courses = Course::where('student_id', $student->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->where('round', $round->round)
+                    ->orderBy('course_date', 'asc')
+                    ->orderBy('class_time', 'asc')
+                    ->get();
+                
+                return [
+                    'round' => $round->round,
+                    'courses_count' => $round->courses_count,
+                    'start_date' => $round->start_date,
+                    'end_date' => $round->end_date,
+                    'courses' => $courses->map(function($course) {
+                        return [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                            'course_date' => $course->course_date->format('Y-m-d'),
+                            'class_time' => $course->class_time ? \Carbon\Carbon::parse($course->class_time)->format('H:i') : null,
+                            'course_type' => $course->course_type,
+                            'duration_hours' => $course->duration_hours,
+                            'duration_minutes' => $course->duration_minutes,
+                            'total_hours' => $course->total_hours,
+                            'status' => $course->status,
+                            'n_value' => $course->n_value,
+                        ];
+                    })
+                ];
+            });
+        
+        return response()->json([
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'package_number' => $student->package_number,
+            ],
+            'rounds' => $rounds
         ]);
     }
 }

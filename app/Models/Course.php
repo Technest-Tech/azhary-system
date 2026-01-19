@@ -9,6 +9,7 @@ class Course extends Model
     protected $fillable = [
         'teacher_id',
         'student_id',
+        'round',
         'student_name',
         'n_value',
         'class_time',

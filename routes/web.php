@@ -8,6 +8,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\LanguageController;
 
+// Language Switcher Route (accessible from both admin and teacher panels)
+Route::post('language/switch', [LanguageController::class, 'switchLanguage'])->name('language.switch');
+
 // Public routes
 Route::get('/', function () {
     // Check if user is authenticated as admin
@@ -26,12 +29,14 @@ Route::get('/', function () {
 
 // Admin Authentication Routes
 Route::prefix('admin')->group(function () {
-    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::middleware(['locale'])->group(function () {
+        Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+        Route::post('/login', [AdminAuthController::class, 'login']);
+    });
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
     
     // Protected admin routes
-    Route::middleware(['auth.admin'])->group(function () {
+    Route::middleware(['auth.admin', 'locale'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         
         // Teachers Management
@@ -95,6 +100,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/management', [AdminController::class, 'management'])->name('admin.management');
         Route::get('/students/{student}/profile', [AdminController::class, 'showStudentProfile'])->name('admin.students.profile');
         Route::put('/students/{student}/quick-update', [AdminController::class, 'quickUpdateStudent'])->name('admin.students.quick-update');
+        
+        // Student Rounds API
+        Route::get('/students/{student}/rounds', [AdminController::class, 'getStudentRounds'])->name('admin.students.rounds');
     });
 });
 
@@ -133,5 +141,8 @@ Route::prefix('teacher')->group(function () {
         Route::post('/recurring-courses', [TeacherController::class, 'storeRecurringCourse'])->name('teacher.recurring-courses.store');
         Route::post('/recurring-courses/generate', [TeacherController::class, 'generateRecurringEvents'])->name('teacher.recurring-courses.generate');
         Route::delete('/recurring-courses/{id}', [TeacherController::class, 'destroyRecurringCourse'])->name('teacher.recurring-courses.destroy');
+        
+        // Student Rounds API
+        Route::get('/students/{student}/rounds', [TeacherController::class, 'getStudentRounds'])->name('teacher.students.rounds');
     });
 });

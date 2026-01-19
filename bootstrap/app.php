@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.teacher' => \App\Http\Middleware\TeacherAuth::class,
             'locale' => \App\Http\Middleware\SetLocale::class,
         ]);
+        
+        // Apply SetLocale middleware globally to all web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Academy Settings')
-@section('page-title', 'Academy Settings')
+@section('title', __('admin.academy_settings'))
+@section('page-title', __('admin.academy_settings'))
 
 @section('content')
     <!-- Success Message -->
@@ -26,17 +26,17 @@
             <button onclick="switchTab('subjects')" id="subjectsTab" 
                 style="padding: 16px 24px; border: none; background: {{ $activeTab === 'subjects' ? '#8b5cf6' : 'transparent' }}; color: {{ $activeTab === 'subjects' ? 'white' : '#64748b' }}; cursor: pointer; font-weight: 600; border-bottom: 2px solid {{ $activeTab === 'subjects' ? '#8b5cf6' : 'transparent' }}; transition: all 0.2s;">
                 <i class="fas fa-book" style="margin-right: 8px;"></i>
-                Subjects
+                {{ __('admin.subjects') }}
             </button>
             <button onclick="switchTab('evaluations')" id="evaluationsTab" 
                 style="padding: 16px 24px; border: none; background: {{ $activeTab === 'evaluations' ? '#8b5cf6' : 'transparent' }}; color: {{ $activeTab === 'evaluations' ? 'white' : '#64748b' }}; cursor: pointer; font-weight: 600; border-bottom: 2px solid {{ $activeTab === 'evaluations' ? '#8b5cf6' : 'transparent' }}; transition: all 0.2s;">
                 <i class="fas fa-star" style="margin-right: 8px;"></i>
-                Evaluations
+                {{ __('admin.evaluations') }}
             </button>
             <button onclick="switchTab('payment-statuses')" id="paymentStatusesTab" 
                 style="padding: 16px 24px; border: none; background: {{ $activeTab === 'payment-statuses' ? '#8b5cf6' : 'transparent' }}; color: {{ $activeTab === 'payment-statuses' ? 'white' : '#64748b' }}; cursor: pointer; font-weight: 600; border-bottom: 2px solid {{ $activeTab === 'payment-statuses' ? '#8b5cf6' : 'transparent' }}; transition: all 0.2s;">
                 <i class="fas fa-credit-card" style="margin-right: 8px;"></i>
-                Payment Statuses
+                {{ __('admin.payment_statuses') }}
             </button>
         </div>
     </div>
@@ -49,15 +49,15 @@
                 <div>
                     <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
                         <i class="fas fa-book" style="color: #8b5cf6; margin-right: 8px;"></i>
-                        Course/Subject Management
+                        {{ __('admin.course_subject_management') }}
                     </h2>
                     <p style="color: #64748b; font-size: 14px;">
-                        Manage all available courses and subjects in the academy
+                        {{ __('admin.manage_courses_subjects') }}
                     </p>
                 </div>
                 <button onclick="openAddSubjectModal()" class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
                     <i class="fas fa-plus"></i>
-                    Add New Subject
+                    {{ __('admin.add_new_subject') }}
                 </button>
             </div>
         </div>
@@ -65,7 +65,7 @@
     <!-- Subjects Table -->
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">All Subjects</h3>
+            <h3 class="card-title">{{ __('admin.all_subjects') }}</h3>
         </div>
 
         @if($subjects->count() > 0)
@@ -74,22 +74,22 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #e2e8f0;">
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                ID
+                                {{ __('admin.id') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Subject Name
+                                {{ __('admin.subject_name') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Description
+                                {{ __('admin.description') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Status
+                                {{ __('admin.status') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Students Count
+                                {{ __('admin.students_count') }}
                             </th>
                             <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                Actions
+                                {{ __('admin.actions') }}
                             </th>
                         </tr>
                     </thead>
@@ -110,13 +110,13 @@
                                 </div>
                             </td>
                             <td style="padding: 16px; white-space: nowrap; color: #475569; font-size: 14px; max-width: 300px;">
-                                {{ $subject->description ?? 'No description' }}
+                                {{ $subject->description ?? __('admin.no_description') }}
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 @if($subject->is_active)
-                                    <span class="badge badge-success">Active</span>
+                                    <span class="badge badge-success">{{ __('admin.active') }}</span>
                                 @else
-                                    <span class="badge badge-warning">Inactive</span>
+                                    <span class="badge badge-warning">{{ __('admin.inactive') }}</span>
                                 @endif
                             </td>
                             <td style="padding: 16px; white-space: nowrap; color: #475569; font-size: 14px;">
@@ -258,15 +258,15 @@
                 <div>
                     <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
                         <i class="fas fa-star" style="color: #8b5cf6; margin-right: 8px;"></i>
-                        Evaluation Management
+                        {{ __('admin.evaluation_management') }}
                     </h2>
                     <p style="color: #64748b; font-size: 14px;">
-                        Manage evaluation criteria and grading scales for courses
+                        {{ __('admin.manage_evaluation_criteria') }}
                     </p>
                 </div>
                 <button onclick="openAddEvaluationModal()" class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
                     <i class="fas fa-plus"></i>
-                    Add New Evaluation
+                    {{ __('admin.add_new_evaluation') }}
                 </button>
             </div>
         </div>
@@ -274,7 +274,7 @@
         <!-- Evaluations Table -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">All Evaluations</h3>
+                <h3 class="card-title">{{ __('admin.all_evaluations') }}</h3>
             </div>
 
             @if($evaluations->count() > 0)
@@ -283,25 +283,25 @@
                         <thead>
                             <tr style="border-bottom: 2px solid #e2e8f0;">
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    ID
+                                    {{ __('admin.id') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Name
+                                    {{ __('admin.name') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Description
+                                    {{ __('admin.description') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Range
+                                    {{ __('admin.range') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Status
+                                    {{ __('admin.status') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Usage
+                                    {{ __('admin.usage') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Actions
+                                    {{ __('admin.actions') }}
                                 </th>
                             </tr>
                         </thead>
@@ -511,15 +511,15 @@
                 <div>
                     <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
                         <i class="fas fa-credit-card" style="color: #8b5cf6; margin-right: 8px;"></i>
-                        Payment Status Management
+                        {{ __('admin.payment_status_management') }}
                     </h2>
                     <p style="color: #64748b; font-size: 14px;">
-                        Manage available payment statuses for students
+                        {{ __('admin.manage_payment_statuses_desc') }}
                     </p>
                 </div>
                 <button onclick="openAddPaymentStatusModal()" class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
                     <i class="fas fa-plus"></i>
-                    Add New Payment Status
+                    {{ __('admin.add_new_payment_status') }}
                 </button>
             </div>
         </div>
@@ -527,7 +527,7 @@
         <!-- Payment Statuses Table -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Available Payment Statuses</h3>
+                <h3 class="card-title">{{ __('admin.available_payment_statuses') }}</h3>
             </div>
 
             @if($paymentStatuses->count() > 0)
@@ -536,22 +536,22 @@
                         <thead>
                             <tr style="border-bottom: 2px solid #e2e8f0;">
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Status Name
+                                    {{ __('admin.status_name') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Display Name
+                                    {{ __('admin.display_name') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Color Badge
+                                    {{ __('admin.color_badge') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Status
+                                    {{ __('admin.status') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Usage
+                                    {{ __('admin.usage') }}
                                 </th>
                                 <th style="padding: 16px; text-align: left; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                                    Actions
+                                    {{ __('admin.actions') }}
                                 </th>
                             </tr>
                         </thead>

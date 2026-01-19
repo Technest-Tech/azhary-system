@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard Overview')
+@section('title', __('admin.dashboard'))
+@section('page-title', __('admin.dashboard_overview'))
 
 @section('content')
     <!-- Top Metrics Cards -->
@@ -13,7 +13,7 @@
                     <i class="fas fa-users" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Total Students</p>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">{{ __('admin.total_students') }}</p>
                     <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ $totalStudents }}</h3>
                 </div>
             </div>
@@ -26,7 +26,7 @@
                     <i class="fas fa-clock" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Total Hours</p>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">{{ __('admin.total_hours') }}</p>
                     <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ number_format($totalHours, 1) }}</h3>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                     <i class="fas fa-dollar-sign" style="color: white; font-size: 20px;"></i>
                 </div>
                 <div>
-                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">Monthly Revenue</p>
+                    <p style="color: #64748b; font-size: 12px; font-weight: 600; margin: 0; text-transform: uppercase;">{{ __('admin.monthly_revenue') }}</p>
                     <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 4px 0 0 0;">{{ number_format($monthlyRevenue, 2) }}</h3>
                 </div>
             </div>
@@ -53,9 +53,9 @@
             <form method="GET" action="{{ route('admin.dashboard') }}" style="display: grid; grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr auto; gap: 16px; align-items: end;">
                 <!-- Teacher Filter (First) -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Teacher</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.teacher') }}</label>
                     <select name="teacher_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                        <option value="">All Teachers</option>
+                        <option value="">{{ __('admin.all_teachers') }}</option>
                         @foreach($teachers as $teacher)
                             <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
                                 {{ $teacher->name }}
@@ -66,9 +66,9 @@
                 
                 <!-- Student Filter (Second) -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Student</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.students') }}</label>
                     <select name="student_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                        <option value="">All Students</option>
+                        <option value="">{{ __('admin.all_students') }}</option>
                         @foreach($students as $student)
                             <option value="{{ $student->id }}" {{ request('student_id') == $student->id ? 'selected' : '' }}>
                                 {{ $student->name }}
@@ -79,26 +79,26 @@
                 
                 <!-- Search -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Search</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..." 
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.search') }}</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}" 
                            style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
                 </div>
                 
                 <!-- Status Filter -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Status</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.status') }}</label>
                     <select name="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                        <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>All statuses</option>
-                        <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>Present</option>
-                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>Absent</option>
-                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>Late</option>
+                        <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>{{ __('admin.all_statuses') }}</option>
+                        <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>{{ __('admin.present') }}</option>
+                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>{{ __('admin.pending') }}</option>
+                        <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>{{ __('admin.absent') }}</option>
+                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>{{ __('admin.late') }}</option>
                     </select>
                 </div>
                 
                 <!-- Per Page Selector -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Show</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.show') }}</label>
                     <select name="per_page" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="10" {{ request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>
                         <option value="20" {{ request('per_page', 20) == 20 ? 'selected' : '' }}>20</option>
@@ -108,7 +108,7 @@
                 
                 <!-- Date picker -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Date</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.date') }}</label>
                     <input type="date" name="date" value="{{ request('date') }}" 
                            style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                 </div>
@@ -116,7 +116,7 @@
                 <!-- Submit button -->
                 <div>
                     <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; height: fit-content;">
-                        <i class="fas fa-search"></i> Filter
+                        <i class="fas fa-search"></i> {{ __('admin.filter') }}
                     </button>
                 </div>
             </form>
@@ -155,7 +155,7 @@
         <!-- Table Header -->
         <div style="padding: 20px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
             <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">
-                Number of courses: {{ $courses->total() }}
+                {{ __('admin.courses_management') }}: {{ $courses->total() }}
             </h3>
         </div>
 
@@ -168,29 +168,29 @@
                             <input type="checkbox" style="cursor: pointer;">
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">No.</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Name</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Course</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Date</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Status</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Duration</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Homework</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Evaluation</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Content</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Notes</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Round</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.name') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.course') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.date') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.status') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.duration') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.homework') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.evaluation') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.content') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.notes') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Completed</th>
-                        <th style="padding: 16px; text-align: center; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">Actions</th>
+                        <th style="padding: 16px; text-align: center; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('admin.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($courses as $index => $course)
                         @php
-                            // Calculate completion percentage based on total hours taken vs package hours
+                            // Calculate completion percentage based on n_value (cumulative hours) vs package hours
                             $completionPercentage = 0;
                             if ($course->student && $course->student->package_number > 0) {
-                                // Sum all total_hours from all courses for this student
-                                $totalHoursTaken = $course->student->courses()->sum('total_hours') ?? 0;
-                                // Calculate percentage: (hours taken / package hours) * 100
-                                $completionPercentage = min(100, ($totalHoursTaken / $course->student->package_number) * 100);
+                                // Use n_value which represents cumulative hours up to this course
+                                // Calculate percentage: (cumulative hours / package hours) * 100
+                                $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
                             }
                             
                             // Color coding for student names
@@ -203,7 +203,17 @@
                                 <input type="checkbox" style="cursor: pointer;">
                             </td>
                             <td style="padding: 16px; white-space: nowrap; font-weight: 600; color: #1e293b;">
-                                {{ number_format((($courses->firstItem() ?? 1) - 1 + $index + 0.5), 1) }}
+                                {{ number_format($course->n_value, 1) }}
+                            </td>
+                            <td style="padding: 16px; white-space: nowrap;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-weight: 600; color: #3b82f6;">R{{ $course->round ?? 1 }}</span>
+                                    <button onclick="showRoundsModal({{ $course->student_id }})" 
+                                            style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;"
+                                            title="View all rounds">
+                                        <i class="fas fa-history"></i>
+                                    </button>
+                                </div>
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 <span style="color: {{ $nameColor }}; font-weight: 600;">{{ $course->student->name ?? $course->student_name ?? 'N/A' }}</span>
@@ -223,13 +233,13 @@
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 @if($course->status === 'Present')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">Present</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.present') }}</span>
                                 @elseif($course->status === 'Pending')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">Pending</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.pending') }}</span>
                                 @elseif($course->status === 'Absent')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">Absent</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.absent') }}</span>
                                 @elseif($course->status === 'Late')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">Late</span>
+                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.late') }}</span>
                                 @else
                                     <span style="display: inline-block; padding: 6px 12px; background: #cbd5e1; color: #475569; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ $course->status ?? '-' }}</span>
                                 @endif
@@ -274,7 +284,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" style="display: inline;" 
-                                          onsubmit="return confirm('Are you sure you want to delete this course?')">
+                                          onsubmit="return confirm('{{ __('admin.delete_course_confirm') }}')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
@@ -291,7 +301,7 @@
                         <tr>
                             <td colspan="13" style="padding: 40px; text-align: center; color: #64748b;">
                                 <i class="fas fa-book-open" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-                                <p>No courses found</p>
+                                <p>{{ __('admin.no_courses_found') }}</p>
                             </td>
                         </tr>
                     @endforelse
@@ -305,20 +315,126 @@
                 @if($courses->previousPageUrl())
                     <a href="{{ $courses->previousPageUrl() }}&{{ http_build_query(request()->except('page')) }}" 
                        style="padding: 10px 20px; background: #06b6d4; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                        < Previous
+                        {{ __('admin.previous') }}
                     </a>
                 @endif
                 @if($courses->nextPageUrl())
                     <a href="{{ $courses->nextPageUrl() }}&{{ http_build_query(request()->except('page')) }}" 
                        style="padding: 10px 20px; background: #06b6d4; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                        Next >
+                        {{ __('admin.next') }}
                     </a>
                 @endif
             </div>
             <a href="{{ route('admin.courses.create') }}" 
                style="padding: 12px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-plus"></i> Add a course
+                <i class="fas fa-plus"></i> {{ __('admin.add_course') }}
             </a>
         </div>
     </div>
+
+    <!-- Rounds Modal -->
+    <div id="roundsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+        <div style="background: white; margin: 50px auto; max-width: 900px; border-radius: 12px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1e293b;" id="roundsModalTitle">Package Rounds</h2>
+                <button onclick="closeRoundsModal()" style="background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <div id="roundsModalContent" style="max-height: 600px; overflow-y: auto;">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRoundsModal(studentId) {
+            const modal = document.getElementById('roundsModal');
+            const content = document.getElementById('roundsModalContent');
+            const title = document.getElementById('roundsModalTitle');
+            
+            modal.style.display = 'flex';
+            content.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #3b82f6;"></i><p style="margin-top: 16px; color: #64748b;">Loading rounds...</p></div>';
+            
+            fetch(`/admin/students/${studentId}/rounds`)
+                .then(response => response.json())
+                .then(data => {
+                    title.textContent = `Package Rounds - ${data.student.name}`;
+                    
+                    if (data.rounds.length === 0) {
+                        content.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No rounds found.</p>';
+                        return;
+                    }
+                    
+                    let html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+                    
+                    data.rounds.forEach(roundData => {
+                        const isCurrentRound = roundData.round === Math.max(...data.rounds.map(r => r.round));
+                        html += `
+                            <div style="border: 2px solid ${isCurrentRound ? '#3b82f6' : '#e2e8f0'}; border-radius: 8px; padding: 16px; background: ${isCurrentRound ? '#eff6ff' : '#ffffff'};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">
+                                        Round ${roundData.round} ${isCurrentRound ? '<span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">Current</span>' : ''}
+                                    </h3>
+                                    <span style="color: #64748b; font-size: 14px;">${roundData.courses_count} courses</span>
+                                </div>
+                                <div style="color: #64748b; font-size: 12px; margin-bottom: 12px;">
+                                    ${roundData.start_date ? new Date(roundData.start_date).toLocaleDateString() : 'N/A'} - ${roundData.end_date ? new Date(roundData.end_date).toLocaleDateString() : 'N/A'}
+                                </div>
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #f8fafc;">
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Date</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Time</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Type</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Duration</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">Status</th>
+                                                <th style="padding: 8px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">N Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        roundData.courses.forEach(course => {
+                            html += `
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 8px; font-size: 12px; color: #1e293b;">${course.course_date ? new Date(course.course_date).toLocaleDateString() : 'N/A'}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.class_time || 'N/A'}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.course_type || '-'}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.duration_hours}h ${course.duration_minutes}m</td>
+                                    <td style="padding: 8px; font-size: 12px;">
+                                        <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: ${course.status === 'Present' ? '#6ee7b7' : course.status === 'Absent' ? '#fca5a5' : '#fcd34d'}; color: ${course.status === 'Present' ? '#065f46' : course.status === 'Absent' ? '#991b1b' : '#92400e'};">${course.status}</span>
+                                    </td>
+                                    <td style="padding: 8px; font-size: 12px; color: #1e293b; font-weight: 600;">${parseFloat(course.n_value).toFixed(1)}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading rounds:', error);
+                    content.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 40px;">Error loading rounds. Please try again.</p>';
+                });
+        }
+        
+        function closeRoundsModal() {
+            document.getElementById('roundsModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('roundsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRoundsModal();
+            }
+        });
+    </script>
 @endsection

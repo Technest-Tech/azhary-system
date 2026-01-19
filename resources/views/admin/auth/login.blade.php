@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -142,8 +142,8 @@
     <div class="login-container">
         <div class="login-header">
             <h1>🎓 Azhary Academy</h1>
-            <p style="font-size: 18px; font-weight: 600; color: #667eea; margin-bottom: 8px;">Login Portal</p>
-            <p>Welcome back! Please select your account type and login.</p>
+            <p style="font-size: 18px; font-weight: 600; color: #667eea; margin-bottom: 8px;">{{ __('admin.login_portal') }}</p>
+            <p>{{ __('admin.welcome_back') }}</p>
         </div>
 
         @if ($errors->any())
@@ -158,11 +158,11 @@
             @csrf
 
             <div class="form-group @error('user_type') error @enderror">
-                <label for="user_type">Account Type</label>
+                <label for="user_type">{{ __('admin.account_type') }}</label>
                 <select name="user_type" id="user_type" required>
-                    <option value="">Select account type</option>
-                    <option value="admin" {{ old('user_type') == 'admin' ? 'selected' : '' }}>Administrator</option>
-                    <option value="teacher" {{ old('user_type') == 'teacher' ? 'selected' : '' }}>Teacher</option>
+                    <option value="">{{ __('admin.select_account_type') }}</option>
+                    <option value="admin" {{ old('user_type') == 'admin' ? 'selected' : '' }}>{{ __('admin.administrator') }}</option>
+                    <option value="teacher" {{ old('user_type') == 'teacher' ? 'selected' : '' }}>{{ __('admin.teacher') }}</option>
                 </select>
                 @error('user_type')
                     <div class="error-message">{{ $message }}</div>
@@ -170,7 +170,7 @@
             </div>
 
             <div class="form-group @error('email') error @enderror">
-                <label for="email">Email Address</label>
+                <label for="email">{{ __('admin.email_address') }}</label>
                 <input 
                     type="email" 
                     id="email" 
@@ -178,7 +178,7 @@
                     value="{{ old('email') }}" 
                     required 
                     autofocus
-                    placeholder="Enter your email address"
+                    placeholder="{{ __('admin.email_placeholder') }}"
                 >
                 @error('email')
                     <div class="error-message">{{ $message }}</div>
@@ -186,13 +186,13 @@
             </div>
 
             <div class="form-group @error('password') error @enderror">
-                <label for="password">Password</label>
+                <label for="password">{{ __('admin.password') }}</label>
                 <input 
                     type="password" 
                     id="password" 
                     name="password" 
                     required
-                    placeholder="Enter your password"
+                    placeholder="{{ __('admin.password_placeholder') }}"
                 >
                 @error('password')
                     <div class="error-message">{{ $message }}</div>
@@ -201,11 +201,11 @@
 
             <div class="remember-me">
                 <input type="checkbox" id="remember" name="remember">
-                <label for="remember">Remember me</label>
+                <label for="remember">{{ __('admin.remember_me') }}</label>
             </div>
 
             <button type="submit" class="submit-btn">
-                <i class="fas fa-sign-in-alt"></i> Login
+                <i class="fas fa-sign-in-alt"></i> {{ __('admin.login') }}
             </button>
         </form>
     </div>

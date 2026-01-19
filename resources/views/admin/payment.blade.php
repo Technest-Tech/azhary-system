@@ -1,17 +1,17 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Payment Management')
-@section('page-title', 'Payment Management')
+@section('title', __('admin.payment_management'))
+@section('page-title', __('admin.payment_management'))
 
 @section('content')
     <!-- Summary Statistics -->
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px;">
         <div class="card" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <p style="color: #64748b; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Total pending</p>
+            <p style="color: #64748b; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">{{ __('admin.total_pending') }}</p>
             <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 0;">{{ $totalPending }}</h3>
         </div>
         <div class="card" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <p style="color: #64748b; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Total amount due</p>
+            <p style="color: #64748b; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">{{ __('admin.total_amount_due') }}</p>
             <h3 style="font-size: 28px; font-weight: 700; color: #1e293b; margin: 0;">{{ number_format($totalAmountDue, 0) }} €</h3>
         </div>
     </div>
@@ -21,16 +21,16 @@
         <form method="GET" action="{{ route('admin.payment') }}" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 16px; align-items: end;">
             <!-- Student Search -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Search for a student...</label>
-                <input type="text" name="student_search" value="{{ request('student_search') }}" placeholder="Search for a student..." 
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.search_student_placeholder') }}</label>
+                <input type="text" name="student_search" value="{{ request('student_search') }}" placeholder="{{ __('admin.search_student_placeholder') }}" 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
             </div>
 
             <!-- Teacher Filter -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Teacher</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.teacher') }}</label>
                 <select name="teacher_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                    <option value="">All teachers</option>
+                    <option value="">{{ __('admin.all_teachers') }}</option>
                     @foreach($teachers as $teacher)
                         <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
                             {{ $teacher->name }}
@@ -41,9 +41,9 @@
 
             <!-- Pack Filter -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Pack</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.pack') }}</label>
                 <select name="pack" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                    <option value="all" {{ request('pack') == 'all' || !request('pack') ? 'selected' : '' }}>All packs</option>
+                    <option value="all" {{ request('pack') == 'all' || !request('pack') ? 'selected' : '' }}>{{ __('admin.all_packs') }}</option>
                     @foreach($packs as $pack)
                         <option value="{{ $pack }}" {{ request('pack') == $pack ? 'selected' : '' }}>
                             {{ $pack }}
@@ -54,10 +54,10 @@
 
             <!-- Reminder Filter -->
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">Reminder</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.reminder') }}</label>
                 <select name="reminder" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                    <option value="all" {{ request('reminder') == 'all' || !request('reminder') ? 'selected' : '' }}>All reminders</option>
-                    <option value="nothing" {{ request('reminder') == 'nothing' ? 'selected' : '' }}>Nothing</option>
+                    <option value="all" {{ request('reminder') == 'all' || !request('reminder') ? 'selected' : '' }}>{{ __('admin.all_reminders') }}</option>
+                    <option value="nothing" {{ request('reminder') == 'nothing' ? 'selected' : '' }}>{{ __('admin.nothing') }}</option>
                 </select>
             </div>
 
@@ -72,24 +72,24 @@
             <table style="width: 100%; border-collapse: collapse; white-space: nowrap; table-layout: auto;">
                 <thead>
                     <tr style="background: #10b981; color: white;">
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Student Name</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Teacher</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Phone</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Pack</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Price (€)</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Payment Status</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Reminder</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Last action</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">Notes</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.student_name_header') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.teacher') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.phone') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.pack') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.price') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.payment_status_header') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.reminder_header') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.last_action') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; font-size: 14px; white-space: nowrap;">{{ __('admin.notes') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($students as $student)
                         @php
                             $lastCourse = $student->courses->first();
-                            // Only count courses with name "0.0" (reached package limit, need payment)
+                            // Count courses with name "0.0" or admin_status='pending' (reached package limit, need payment)
                             $coursesBeyondLimit = $student->courses->filter(function($course) {
-                                return $course->name === '0.0';
+                                return $course->name === '0.0' || $course->admin_status === 'pending';
                             });
                             $totalPrice = $coursesBeyondLimit->sum('income');
                         @endphp
@@ -106,13 +106,13 @@
                                         <option value="{{ $status->id }}" 
                                                 {{ $student->payment_status_id == $status->id ? 'selected' : '' }}>
                                             @if($status->name === 'EN ATTENTE DE PAYEMENT')
-                                                Awaiting payment
+                                                {{ __('admin.awaiting_payment') }}
                                             @elseif($status->name === 'PAYÉ')
-                                                Active
+                                                {{ __('admin.active_status') }}
                                             @elseif($status->name === 'SUSPENDU')
-                                                Suspended
+                                                {{ __('admin.suspended') }}
                                             @elseif($status->name === 'ARRÊTÉ')
-                                                Arrested
+                                                {{ __('admin.arrested') }}
                                             @else
                                                 {{ $status->display_name }}
                                             @endif
@@ -122,7 +122,7 @@
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 <select style="width: 100%; min-width: 120px; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
-                                    <option>Nothing</option>
+                                    <option>{{ __('admin.nothing') }}</option>
                                 </select>
                             </td>
                             <td style="padding: 16px; color: #64748b; font-size: 13px; white-space: nowrap;">
@@ -135,7 +135,7 @@
                             <td style="padding: 16px; white-space: nowrap;">
                                 <input type="text" class="student-notes" data-student-id="{{ $student->id }}" 
                                        value="" 
-                                       placeholder="Add notes..." 
+                                       placeholder="{{ __('admin.add_notes') }}" 
                                        style="width: 100%; min-width: 150px; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
                             </td>
                         </tr>
@@ -143,7 +143,7 @@
                         <tr>
                             <td colspan="9" style="padding: 40px; text-align: center; color: #94a3b8;">
                                 <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5; display: block;"></i>
-                                <p style="font-size: 16px; font-weight: 600;">No students with pending payments</p>
+                                <p style="font-size: 16px; font-weight: 600;">{{ __('admin.no_pending_payments') }}</p>
                             </td>
                         </tr>
                     @endforelse
