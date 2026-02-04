@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Spatie\LaravelPdf\Facades\Pdf;
+use App\Services\WhatsAppService;
 
 class TeacherController extends Controller
 {
@@ -519,6 +521,11 @@ class TeacherController extends Controller
             ]);
         }
         
+        // Generate PDF and send via WhatsApp if course was created
+        if (isset($course) && $course->status === 'Present') {
+            $this->generateAndSendReport($course);
+        }
+        
         // Check if generate report was requested
         if (isset($course) && $request->has('generate_report')) {
             return redirect()->route('teacher.courses')
@@ -616,6 +623,11 @@ class TeacherController extends Controller
         // Recalculate all n_values for this student to ensure consistency
         $this->recalculateNValues($student->id, $teacher->id);
         
+        // Generate PDF and send via WhatsApp if course status is Present
+        if ($course->status === 'Present') {
+            $this->generateAndSendReport($course);
+        }
+        
         // Check if generate report was requested
         if ($request->has('generate_report')) {
             return redirect()->route('teacher.courses.report', $course)
@@ -671,7 +683,7 @@ class TeacherController extends Controller
     /**
      * Generate report for a course
      */
-    public function generateReport(Course $course)
+    public function generateReport(Course $course, Request $request)
     {
         $teacher = Auth::guard('teacher')->user();
         
@@ -680,9 +692,306 @@ class TeacherController extends Controller
             abort(403, 'Unauthorized access to course.');
         }
         
-        $course->load(['student', 'evaluation', 'teacher']);
+        $course->load(['student.subject', 'evaluation', 'teacher']);
         
-        return view('teacher.courses.report', compact('course'));
+        // Generate PDF
+        $pdf = Pdf::view('teacher.courses.report-pdf', ['course' => $course])
+            ->format('a4');
+        
+        // If preview is requested, show in browser, otherwise download
+        if ($request->has('preview')) {
+            return $pdf->inline('rapport-cours-' . $course->id . '.pdf');
+        }
+        
+        return $pdf->download('rapport-cours-' . $course->id . '.pdf');
+    }
+
+    /**
+     * Generate PDF report and send via WhatsApp
+     */
+    private function generateAndSendReport(Course $course)
+    {
+        try {
+            // Load relationships if not already loaded
+            if (!$course->relationLoaded('student')) {
+                $course->load(['student.subject', 'evaluation', 'teacher']);
+            }
+            
+            // Check if student exists and has phone number
+            if (!$course->student) {
+                \Log::warning('Cannot send report: Student not found', [
+                    'course_id' => $course->id,
+                    'student_id' => $course->student_id
+                ]);
+                return false;
+            }
+            
+            if (!$course->student->phone) {
+                \Log::warning('Cannot send report: Student has no phone number', [
+                    'course_id' => $course->id,
+                    'student_id' => $course->student_id,
+                    'student_name' => $course->student->name
+                ]);
+                return false;
+            }
+            
+            // Generate PDF - save to public storage directly
+            try {
+                $pdf = Pdf::view('teacher.courses.report-pdf', ['course' => $course])
+                    ->format('a4');
+                
+                // Create filename
+                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.pdf';
+                
+                // Save to public storage directory (not temp)
+                $savePath = storage_path('app/public/reports/' . $fileName);
+                
+                // Ensure reports directory exists
+                if (!file_exists(storage_path('app/public/reports'))) {
+                    mkdir(storage_path('app/public/reports'), 0755, true);
+                }
+                
+                // Save PDF
+                $pdf->save($savePath);
+                
+                // Wait for file to be written
+                $maxWait = 10;
+                $waited = 0;
+                while (!file_exists($savePath) && $waited < $maxWait) {
+                    usleep(500000);
+                    $waited += 0.5;
+                }
+                
+                if (!file_exists($savePath)) {
+                    throw new \Exception('PDF file was not created at: ' . $savePath);
+                }
+                
+                // Read PDF content for WhatsApp
+                $pdfContent = file_get_contents($savePath);
+                
+                if (empty($pdfContent)) {
+                    throw new \Exception('PDF file is empty');
+                }
+                
+                // Verify it's a valid PDF
+                if (substr($pdfContent, 0, 4) !== '%PDF') {
+                    throw new \Exception('Generated content is not a valid PDF');
+                }
+                
+            } catch (\Exception $pdfError) {
+                \Log::error('PDF generation failed', [
+                    'course_id' => $course->id,
+                    'error' => $pdfError->getMessage(),
+                    'trace' => $pdfError->getTraceAsString()
+                ]);
+                throw new \Exception('Failed to generate PDF: ' . $pdfError->getMessage());
+            }
+            
+            // Initialize WhatsApp service
+            $whatsappService = new WhatsAppService();
+            
+            // Create caption message
+            $caption = "📚 Rapport de cours - " . ($course->student_name ?? $course->student->name) . "\n";
+            $caption .= "Date: " . $course->course_date->format('d/m/Y') . "\n";
+            if ($course->evaluation) {
+                $caption .= "Évaluation: " . $course->evaluation->name;
+            }
+            
+            // Send PDF directly via WhatsApp (not as a link)
+            $result = $whatsappService->sendDocument(
+                $course->student->phone,
+                $pdfContent,
+                $fileName,
+                $caption
+            );
+            
+            if ($result['success']) {
+                \Log::info('Report sent successfully via WhatsApp', [
+                    'course_id' => $course->id,
+                    'student_phone' => $course->student->phone
+                ]);
+                return true;
+            } else {
+                \Log::error('Failed to send report via WhatsApp', [
+                    'course_id' => $course->id,
+                    'error' => $result['error'] ?? 'Unknown error'
+                ]);
+                return false;
+            }
+        } catch (\Exception $e) {
+            \Log::error('Exception while generating and sending report', [
+                'course_id' => $course->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Test sending text message to WhatsApp - Public route for testing
+     */
+    public function testSendWhatsAppText(Request $request)
+    {
+        try {
+            $whatsappService = new WhatsAppService();
+            
+            $phoneNumber = '+201207220414';
+            $testMessage = "🧪 Test message from Azhary Academy System\n\nThis is a test to verify WhatsApp integration is working correctly.";
+            
+            $result = $whatsappService->sendText($phoneNumber, $testMessage);
+            
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Text message sent successfully to ' . $phoneNumber,
+                    'details' => 'Please check your WhatsApp to confirm receipt',
+                    'response' => $result['data'] ?? null
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send text message',
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'full_response' => $result
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Exception occurred',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test sending PDF to WhatsApp - Public route for testing
+     */
+    public function testSendWhatsApp(Request $request)
+    {
+        // Create a mock course object with sample data
+        $mockCourse = new Course();
+        $mockCourse->id = 999;
+        $mockCourse->student_name = 'Khadidiatou DRAME';
+        $mockCourse->course_date = Carbon::parse('2026-01-31');
+        $mockCourse->duration_hours = 0;
+        $mockCourse->duration_minutes = 30;
+        $mockCourse->status = 'Present';
+        $mockCourse->content = 'Lire les lettres arabes avec la Prolongation Alif';
+        $mockCourse->notes = 'Cora';
+        $mockCourse->homework = 'Fait';
+        $mockCourse->souvenir_image = null;
+        
+        // Create mock student with subject and phone
+        $mockStudent = new Student();
+        $mockStudent->id = 1;
+        $mockStudent->name = 'Khadidiatou DRAME';
+        $mockStudent->phone = '+201207220414'; // Test phone number
+        
+        $mockSubject = new Subject();
+        $mockSubject->id = 1;
+        $mockSubject->name = 'Arabe';
+        $mockStudent->setRelation('subject', $mockSubject);
+        
+        // Set the student relation on the course
+        $mockCourse->setRelation('student', $mockStudent);
+        $mockCourse->student_id = 1;
+        
+        // Create mock evaluation
+        $mockEvaluation = new Evaluation();
+        $mockEvaluation->name = 'MashAllah';
+        $mockEvaluation->description = '100%';
+        $mockCourse->setRelation('evaluation', $mockEvaluation);
+        
+        // Generate and send report
+        try {
+            $result = $this->generateAndSendReport($mockCourse);
+            
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'PDF report sent successfully to +201207220414',
+                    'details' => 'Please check your WhatsApp to confirm receipt. The PDF should appear as a document attachment, not a link.'
+                ]);
+            } else {
+                // Get last error from logs
+                $logFile = storage_path('logs/laravel.log');
+                $lastError = 'Unknown error';
+                if (file_exists($logFile)) {
+                    $lines = file($logFile);
+                    $lastLines = array_slice($lines, -10);
+                    foreach (array_reverse($lastLines) as $line) {
+                        if (stripos($line, 'WhatsApp') !== false || stripos($line, 'error') !== false) {
+                            $lastError = trim($line);
+                            break;
+                        }
+                    }
+                }
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send PDF report',
+                    'error' => $lastError,
+                    'note' => 'Check storage/logs/laravel.log for full details'
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Exception occurred',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test PDF Report - Public route for testing
+     * Creates a mock course object with sample data
+     */
+    public function testPdfReport(Request $request)
+    {
+        // Create a mock course object with sample data
+        $mockCourse = new Course();
+        $mockCourse->id = 999;
+        $mockCourse->student_name = 'Khadidiatou DRAME';
+        $mockCourse->course_date = Carbon::parse('2026-01-31');
+        $mockCourse->duration_hours = 0;
+        $mockCourse->duration_minutes = 30;
+        $mockCourse->status = 'Present';
+        $mockCourse->content = 'Lire les lettres arabes avec la Prolongation Alif';
+        $mockCourse->notes = 'Cora';
+        $mockCourse->homework = 'Fait';
+        $mockCourse->souvenir_image = null; // Can be set to a test image path if needed
+        
+        // Create mock student with subject
+        $mockStudent = new Student();
+        $mockStudent->name = 'Khadidiatou DRAME';
+        
+        $mockSubject = new Subject();
+        $mockSubject->name = 'Arabe';
+        $mockStudent->setRelation('subject', $mockSubject);
+        
+        $mockCourse->setRelation('student', $mockStudent);
+        
+        // Create mock evaluation
+        $mockEvaluation = new Evaluation();
+        $mockEvaluation->name = 'MashAllah';
+        $mockEvaluation->description = '100%';
+        $mockCourse->setRelation('evaluation', $mockEvaluation);
+        
+        // Generate PDF with cache busting
+        $pdf = Pdf::view('teacher.courses.report-pdf', ['course' => $mockCourse])
+            ->format('a4');
+        
+        // If preview is requested, show in browser, otherwise download
+        if ($request->has('preview')) {
+            return $pdf->inline('test-rapport-cours-' . time() . '.pdf');
+        }
+        
+        return $pdf->download('test-rapport-cours-' . time() . '.pdf');
     }
 
     /**

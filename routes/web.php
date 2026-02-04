@@ -27,6 +27,13 @@ Route::get('/', function () {
     return redirect()->route('admin.login');
 });
 
+// Test PDF Report Route (Public - for testing)
+Route::get('/test-pdf-report', [TeacherController::class, 'testPdfReport'])->name('test.pdf.report');
+
+// Test Send WhatsApp Routes (Public - for testing)
+Route::get('/test-send-whatsapp-text', [TeacherController::class, 'testSendWhatsAppText'])->name('test.send.whatsapp.text');
+Route::get('/test-send-whatsapp', [TeacherController::class, 'testSendWhatsApp'])->name('test.send.whatsapp');
+
 // Admin Authentication Routes
 Route::prefix('admin')->group(function () {
     Route::middleware(['locale'])->group(function () {
