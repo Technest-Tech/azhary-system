@@ -1,0 +1,85 @@
+===========================================
+Laravel Spatie PDF Installation Commands
+For Hostinger Server
+===========================================
+
+STEP 1: Connect to your server via SSH
+--------------------------------------
+ssh your-username@your-server-ip
+
+STEP 2: Navigate to your Laravel project
+----------------------------------------
+cd /home/username/domains/yourdomain.com/public_html
+# OR
+cd /home/username/public_html/your-project
+
+STEP 3: Check Node.js (if not installed, install it)
+-----------------------------------------------------
+node --version
+
+# If Node.js is not installed, install using nvm:
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.bashrc
+nvm install 18
+nvm use 18
+
+STEP 4: Install Puppeteer
+--------------------------
+npm install puppeteer
+
+STEP 5: Create storage symlink
+-------------------------------
+php artisan storage:link
+
+STEP 6: Clear caches
+--------------------
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+
+STEP 7: Set permissions
+------------------------
+chmod -R 755 storage
+chmod -R 755 bootstrap/cache
+
+STEP 8: Create reports directory
+---------------------------------
+mkdir -p storage/app/public/reports
+chmod -R 755 storage/app/public/reports
+
+STEP 9: Update .env file (if needed)
+-------------------------------------
+# Add to .env file:
+WASENDER_API_KEY=8b40f461c42db71793ddff8e42887837b0367ab11ccddbffc02e7b833b2ab39e
+APP_URL=https://yourdomain.com
+
+STEP 10: Test the installation
+-------------------------------
+# Visit in browser:
+https://yourdomain.com/test-pdf-report
+
+# Or test WhatsApp text:
+https://yourdomain.com/test-send-whatsapp-text
+
+===========================================
+Quick Copy-Paste Commands (All in one):
+===========================================
+
+cd /home/username/domains/yourdomain.com/public_html && \
+npm install puppeteer && \
+php artisan storage:link && \
+php artisan config:clear && \
+php artisan cache:clear && \
+php artisan view:clear && \
+mkdir -p storage/app/public/reports && \
+chmod -R 755 storage bootstrap/cache storage/app/public/reports && \
+echo "Installation complete!"
+
+===========================================
+Notes:
+===========================================
+- Replace 'yourdomain.com' with your actual domain
+- Replace 'username' with your Hostinger username
+- If Node.js is not available, contact Hostinger support to enable it
+- Make sure your server has at least 1GB RAM for Puppeteer
+- The PDF will be accessible at: https://yourdomain.com/storage/reports/

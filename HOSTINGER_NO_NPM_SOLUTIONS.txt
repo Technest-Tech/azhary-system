@@ -1,0 +1,88 @@
+===========================================
+Solutions for Hostinger without npm
+===========================================
+
+OPTION 1: Install Node.js/npm manually on Hostinger
+----------------------------------------------------
+
+Step 1: Download Node.js binary for Linux
+-------------------------------------------
+# SSH into your Hostinger server, then:
+
+cd ~
+wget https://nodejs.org/dist/v18.20.0/node-v18.20.0-linux-x64.tar.xz
+tar -xf node-v18.20.0-linux-x64.tar.xz
+mv node-v18.20.0-linux-x64 nodejs
+
+Step 2: Add to PATH (add to ~/.bashrc)
+---------------------------------------
+echo 'export PATH=$HOME/nodejs/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+
+Step 3: Verify installation
+----------------------------
+node --version
+npm --version
+
+Step 4: Install Puppeteer
+--------------------------
+cd /home/username/domains/yourdomain.com/public_html
+npm install puppeteer
+
+===========================================
+
+OPTION 2: Use NVM (Node Version Manager)
+------------------------------------------
+
+# Install NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Reload shell
+source ~/.bashrc
+
+# Install Node.js
+nvm install 18
+nvm use 18
+
+# Verify
+node --version
+npm --version
+
+# Install Puppeteer
+cd /home/username/domains/yourdomain.com/public_html
+npm install puppeteer
+
+===========================================
+
+OPTION 3: Contact Hostinger Support
+------------------------------------
+Ask them to:
+1. Enable Node.js/npm on your hosting account
+2. Or upgrade to VPS/Cloud hosting which includes Node.js
+
+===========================================
+
+OPTION 4: Use Alternative PDF Library (No Node.js needed)
+----------------------------------------------------------
+Switch to a PHP-based PDF library like:
+- DomPDF (pure PHP, no Node.js)
+- TCPDF (pure PHP, no Node.js)
+- mPDF (pure PHP, no Node.js)
+
+This requires code changes but works on shared hosting.
+
+===========================================
+
+OPTION 5: Use External PDF Service
+------------------------------------
+Use a cloud service for PDF generation:
+- PDFShift API
+- HTML/CSS to PDF API
+- Browserless.io
+
+This requires API integration but no server-side Node.js.
+
+===========================================
+
+RECOMMENDED: Try Option 1 or 2 first
+=====================================

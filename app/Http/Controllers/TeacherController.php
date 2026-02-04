@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\Browsershot\Browsershot;
 use App\Services\WhatsAppService;
 
 class TeacherController extends Controller
@@ -735,15 +736,21 @@ class TeacherController extends Controller
                 return false;
             }
             
-            // Generate PDF - save to public storage directly
+            // Generate image from PDF template - easier for WhatsApp (shows inline preview)
             try {
-                $pdf = Pdf::view('teacher.courses.report-pdf', ['course' => $course])
-                    ->format('a4');
+                // Use Browsershot to generate screenshot/image directly from HTML
+                $browsershot = \Spatie\Browsershot\Browsershot::html(
+                    view('teacher.courses.report-pdf', ['course' => $course])->render()
+                )
+                    ->setOption('viewport', ['width' => 1240, 'height' => 1754]) // A4 size at 150dpi
+                    ->waitUntilNetworkIdle()
+                    ->dismissDialogs()
+                    ->screenshot();
                 
                 // Create filename
-                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.pdf';
+                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.png';
                 
-                // Save to public storage directory (not temp)
+                // Save to public storage directory
                 $savePath = storage_path('app/public/reports/' . $fileName);
                 
                 // Ensure reports directory exists
@@ -751,8 +758,8 @@ class TeacherController extends Controller
                     mkdir(storage_path('app/public/reports'), 0755, true);
                 }
                 
-                // Save PDF
-                $pdf->save($savePath);
+                // Save image
+                file_put_contents($savePath, $browsershot);
                 
                 // Wait for file to be written
                 $maxWait = 10;
@@ -763,28 +770,23 @@ class TeacherController extends Controller
                 }
                 
                 if (!file_exists($savePath)) {
-                    throw new \Exception('PDF file was not created at: ' . $savePath);
+                    throw new \Exception('Image file was not created at: ' . $savePath);
                 }
                 
-                // Read PDF content for WhatsApp
-                $pdfContent = file_get_contents($savePath);
+                // Read image content for WhatsApp
+                $imageContent = file_get_contents($savePath);
                 
-                if (empty($pdfContent)) {
-                    throw new \Exception('PDF file is empty');
+                if (empty($imageContent)) {
+                    throw new \Exception('Image file is empty');
                 }
                 
-                // Verify it's a valid PDF
-                if (substr($pdfContent, 0, 4) !== '%PDF') {
-                    throw new \Exception('Generated content is not a valid PDF');
-                }
-                
-            } catch (\Exception $pdfError) {
-                \Log::error('PDF generation failed', [
+            } catch (\Exception $imageError) {
+                \Log::error('Image generation failed', [
                     'course_id' => $course->id,
-                    'error' => $pdfError->getMessage(),
-                    'trace' => $pdfError->getTraceAsString()
+                    'error' => $imageError->getMessage(),
+                    'trace' => $imageError->getTraceAsString()
                 ]);
-                throw new \Exception('Failed to generate PDF: ' . $pdfError->getMessage());
+                throw new \Exception('Failed to generate image: ' . $imageError->getMessage());
             }
             
             // Initialize WhatsApp service
@@ -797,10 +799,10 @@ class TeacherController extends Controller
                 $caption .= "Évaluation: " . $course->evaluation->name;
             }
             
-            // Send PDF directly via WhatsApp (not as a link)
-            $result = $whatsappService->sendDocument(
+            // Send image via WhatsApp (better UX - shows inline preview)
+            $result = $whatsappService->sendImage(
                 $course->student->phone,
-                $pdfContent,
+                $imageContent,
                 $fileName,
                 $caption
             );

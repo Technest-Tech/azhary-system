@@ -1,0 +1,148 @@
+===========================================
+How to Test on Hostinger Server
+===========================================
+
+STEP 1: Test PDF Generation
+-----------------------------
+Visit this URL in your browser:
+https://yourdomain.com/test-pdf-report
+
+Expected Result:
+- PDF should download or display in browser
+- Should show the report template with sample data
+
+If it works: ✅ PDF generation is working
+If it fails: Check Laravel logs: tail -f storage/logs/laravel.log
+
+===========================================
+
+STEP 2: Test WhatsApp Text Message
+------------------------------------
+Visit this URL in your browser:
+https://yourdomain.com/test-send-whatsapp-text
+
+Expected Result:
+JSON response:
+{
+  "success": true,
+  "message": "Text message sent successfully to +201207220414",
+  "details": "Please check your WhatsApp to confirm receipt"
+}
+
+Then check WhatsApp number +201207220414 for the test message.
+
+If it works: ✅ WhatsApp integration is working
+If it fails: Check the error message in the JSON response
+
+===========================================
+
+STEP 3: Test PDF Sending via WhatsApp
+---------------------------------------
+Visit this URL in your browser:
+https://yourdomain.com/test-send-whatsapp
+
+Expected Result:
+JSON response:
+{
+  "success": true,
+  "message": "PDF report sent successfully to +201207220414",
+  "details": "Please check your WhatsApp to confirm receipt..."
+}
+
+Then check WhatsApp number +201207220414 for the PDF document.
+
+If it works: ✅ Complete system is working!
+If it fails: Check the error message in the JSON response
+
+===========================================
+
+STEP 4: Check Logs (if something fails)
+-----------------------------------------
+SSH into your server and run:
+
+# View recent errors
+tail -50 storage/logs/laravel.log | grep -i "error\|exception"
+
+# View all recent logs
+tail -100 storage/logs/laravel.log
+
+# Follow logs in real-time
+tail -f storage/logs/laravel.log
+
+===========================================
+
+STEP 5: Verify Files and Permissions
+-------------------------------------
+# Check if storage link exists
+ls -la public/storage
+
+# Check if reports directory exists
+ls -la storage/app/public/reports
+
+# Check if Puppeteer is installed
+ls -la node_modules/puppeteer
+
+# Check Node.js
+node --version
+npm --version
+
+===========================================
+
+STEP 6: Test with Real Course Data
+------------------------------------
+After confirming test routes work:
+
+1. Log into your admin/teacher panel
+2. Create or update a course with status "Present"
+3. The system should automatically:
+   - Generate PDF report
+   - Send it to student's WhatsApp number
+
+Check logs to see if it worked:
+tail -f storage/logs/laravel.log
+
+===========================================
+
+TROUBLESHOOTING
+===============
+
+Issue: PDF generation fails
+Solution:
+- Check if Puppeteer is installed: ls node_modules/puppeteer
+- Check Node.js: node --version
+- Check logs: tail -50 storage/logs/laravel.log
+
+Issue: WhatsApp text works but PDF doesn't
+Solution:
+- Check if PDF file is created: ls -la storage/app/public/reports/
+- Check if storage link works: ls -la public/storage
+- Verify APP_URL in .env matches your domain
+
+Issue: "Cannot find module 'puppeteer'"
+Solution:
+- Run: npm install puppeteer
+- Check node_modules_path in config/laravel-pdf.php
+
+Issue: "Document URL must be publicly accessible"
+Solution:
+- Make sure APP_URL in .env is: https://yourdomain.com (not localhost)
+- Verify storage link is working: https://yourdomain.com/storage/reports/
+
+===========================================
+
+QUICK TEST COMMANDS (via SSH)
+==============================
+
+# Test PDF generation via curl
+curl -I https://yourdomain.com/test-pdf-report
+
+# Test WhatsApp text via curl
+curl https://yourdomain.com/test-send-whatsapp-text
+
+# Test WhatsApp PDF via curl
+curl https://yourdomain.com/test-send-whatsapp
+
+# Check if storage is accessible
+curl -I https://yourdomain.com/storage/reports/
+
+===========================================

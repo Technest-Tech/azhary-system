@@ -1,0 +1,67 @@
+===========================================
+Fix for storage:link on Hostinger
+===========================================
+
+The exec() function is disabled on Hostinger shared hosting.
+You need to create the storage link manually.
+
+SOLUTION: Create symlink manually via SSH
+-------------------------------------------
+
+# Navigate to your Laravel project's public directory
+cd /home/u221047993/domains/yourdomain.com/public_html/public
+# OR if your project structure is different:
+cd /home/u221047993/domains/yourdomain.com/public_html
+
+# Check if 'storage' directory exists in public folder
+ls -la | grep storage
+
+# If storage doesn't exist, create the symlink manually:
+ln -s ../storage/app/public storage
+
+# Verify it was created
+ls -la storage
+
+# You should see something like:
+# storage -> ../storage/app/public
+
+===========================================
+Alternative: If symlink doesn't work
+===========================================
+
+Some shared hosts don't allow symlinks. In that case:
+
+1. Create the reports directory in public folder:
+   mkdir -p public/reports
+   chmod -R 755 public/reports
+
+2. Update WhatsAppService.php to save PDFs to public/reports instead
+
+===========================================
+Complete Setup Commands:
+===========================================
+
+cd /home/u221047993/domains/yourdomain.com/public_html
+
+# Create storage symlink manually
+cd public
+ln -s ../storage/app/public storage
+
+# Go back to project root
+cd ..
+
+# Create reports directory
+mkdir -p storage/app/public/reports
+chmod -R 755 storage/app/public/reports
+
+# Clear caches
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+
+# Set permissions
+chmod -R 755 storage bootstrap/cache
+
+echo "Setup complete!"
+
+===========================================

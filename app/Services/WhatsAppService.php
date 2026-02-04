@@ -50,6 +50,88 @@ class WhatsAppService
     }
 
     /**
+     * Upload image to a publicly accessible location and get URL
+     */
+    public function uploadImage($imageContent, $filename)
+    {
+        // Save image to storage
+        $path = 'reports/' . $filename;
+        Storage::disk('public')->put($path, $imageContent);
+        
+        // Get public URL - ensure it's a full URL
+        $baseUrl = config('app.url');
+        $url = $baseUrl . '/storage/' . $path;
+        
+        return $url;
+    }
+
+    /**
+     * Send image via WhatsApp
+     */
+    public function sendImage($phoneNumber, $imageContent, $fileName, $caption = null)
+    {
+        try {
+            $jid = $this->formatPhoneToJid($phoneNumber);
+            
+            // Upload image to get a publicly accessible URL
+            $imageUrl = $this->uploadImage($imageContent, $fileName);
+            
+            $payload = [
+                'to' => $jid,
+                'imageUrl' => $imageUrl,
+            ];
+            
+            if ($caption) {
+                $payload['caption'] = $caption;
+            }
+            
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->timeout(30)->post($this->apiUrl . '/send-message', $payload);
+            
+            $responseData = $response->json();
+            $statusCode = $response->status();
+            
+            if ($response->successful()) {
+                Log::info('WhatsApp image sent successfully', [
+                    'phone' => $phoneNumber,
+                    'file' => $fileName,
+                    'status' => $statusCode,
+                    'response' => $responseData
+                ]);
+                return [
+                    'success' => true, 
+                    'data' => $responseData,
+                    'message_id' => $responseData['id'] ?? null
+                ];
+            } else {
+                $errorMessage = $responseData['message'] ?? $response->body() ?? 'Unknown error';
+                Log::error('WhatsApp API error', [
+                    'phone' => $phoneNumber,
+                    'status' => $statusCode,
+                    'payload' => $payload,
+                    'response' => $responseData,
+                    'body' => $response->body()
+                ]);
+                return [
+                    'success' => false, 
+                    'error' => $errorMessage,
+                    'status_code' => $statusCode,
+                    'full_response' => $responseData
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('WhatsApp service exception', [
+                'phone' => $phoneNumber,
+                'error' => $e->getMessage()
+            ]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Send PDF document via WhatsApp - sends file directly, not as link
      */
     public function sendDocument($phoneNumber, $pdfContent, $fileName, $caption = null)

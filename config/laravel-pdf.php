@@ -15,7 +15,7 @@ return [
         'npm_binary' => env('LARAVEL_PDF_NPM_BINARY'),
         'include_path' => env('LARAVEL_PDF_INCLUDE_PATH'),
         'chrome_path' => env('LARAVEL_PDF_CHROME_PATH'),
-        'node_modules_path' => env('LARAVEL_PDF_NODE_MODULES_PATH', '/Users/ahmedomar/Documents/technest/azhary-academy/new_system/academy-system/node_modules'),
+        'node_modules_path' => env('LARAVEL_PDF_NODE_MODULES_PATH', base_path('node_modules')),
         'bin_path' => env('LARAVEL_PDF_BIN_PATH'),
         'temp_path' => env('LARAVEL_PDF_TEMP_PATH'),
 
