@@ -736,6 +736,7 @@ class TeacherController extends Controller
             }
             
             // Generate PDF using DomPDF (pure PHP, no Node.js required)
+            // Then convert to image using Imagick
             try {
                 // Load DomPDF
                 $dompdf = new \Dompdf\Dompdf([
@@ -763,10 +764,37 @@ class TeacherController extends Controller
                     throw new \Exception('PDF content is empty');
                 }
                 
-                // Create filename
-                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.pdf';
+                // Convert PDF to Image using Imagick
+                if (!extension_loaded('imagick')) {
+                    throw new \Exception('Imagick extension is not installed. Please contact your hosting provider.');
+                }
                 
-                // Save to public storage directory
+                $imagick = new \Imagick();
+                $imagick->setResolution(150, 150); // 150 DPI for good quality
+                $imagick->readImageBlob($pdfContent);
+                $imagick->setImageFormat('png');
+                
+                // Get first page (if multi-page, you can loop through pages)
+                $imagick->setIteratorIndex(0);
+                
+                // Merge all pages into one image (if multiple pages)
+                $imagick = $imagick->mergeImageLayers(\Imagick::LAYER_METHOD_FLATTEN);
+                
+                // Get image content
+                $imageContent = $imagick->getImageBlob();
+                
+                // Clean up
+                $imagick->clear();
+                $imagick->destroy();
+                
+                if (empty($imageContent)) {
+                    throw new \Exception('Image conversion failed');
+                }
+                
+                // Create filename
+                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.png';
+                
+                // Save to public storage directory (optional, for debugging)
                 $savePath = storage_path('app/public/reports/' . $fileName);
                 
                 // Ensure reports directory exists
@@ -774,20 +802,16 @@ class TeacherController extends Controller
                     mkdir(storage_path('app/public/reports'), 0755, true);
                 }
                 
-                // Save PDF
-                file_put_contents($savePath, $pdfContent);
+                // Save image (optional, for debugging)
+                file_put_contents($savePath, $imageContent);
                 
-                if (!file_exists($savePath)) {
-                    throw new \Exception('PDF file was not created at: ' . $savePath);
-                }
-                
-            } catch (\Exception $pdfError) {
-                \Log::error('PDF generation failed', [
+            } catch (\Exception $error) {
+                \Log::error('PDF/Image generation failed', [
                     'course_id' => $course->id,
-                    'error' => $pdfError->getMessage(),
-                    'trace' => $pdfError->getTraceAsString()
+                    'error' => $error->getMessage(),
+                    'trace' => $error->getTraceAsString()
                 ]);
-                throw new \Exception('Failed to generate PDF: ' . $pdfError->getMessage());
+                throw new \Exception('Failed to generate image: ' . $error->getMessage());
             }
             
             // Initialize WhatsApp service
@@ -800,10 +824,10 @@ class TeacherController extends Controller
                 $caption .= "Évaluation: " . $course->evaluation->name;
             }
             
-            // Send PDF as document via WhatsApp
-            $result = $whatsappService->sendDocument(
+            // Send image via WhatsApp (better UX - shows inline preview)
+            $result = $whatsappService->sendImage(
                 $course->student->phone,
-                $pdfContent,
+                $imageContent,
                 $fileName,
                 $caption
             );
