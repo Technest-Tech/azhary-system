@@ -769,35 +769,50 @@ class TeacherController extends Controller
                     throw new \Exception('Imagick extension is not installed. Please contact your hosting provider.');
                 }
                 
-                $imagick = new \Imagick();
-                $imagick->setResolution(150, 150); // 150 DPI for good quality
-                $imagick->readImageBlob($pdfContent);
+                // Save PDF to temporary file (Imagick works better with files)
+                $tempPdfPath = sys_get_temp_dir() . '/report_' . uniqid() . '.pdf';
+                file_put_contents($tempPdfPath, $pdfContent);
                 
-                // Get first page (for single-page PDFs, this is all we need)
-                $imagick->setIteratorIndex(0);
-                
-                // Set format to PNG
-                $imagick->setImageFormat('png');
-                
-                // If multiple pages, combine them vertically into one image
-                if ($imagick->getNumberImages() > 1) {
-                    $combined = new \Imagick();
-                    foreach ($imagick as $page) {
-                        $combined->addImage($page->getImage());
+                try {
+                    $imagick = new \Imagick();
+                    $imagick->setResolution(150, 150); // 150 DPI for good quality
+                    $imagick->setBackgroundColor(new \ImagickPixel('white'));
+                    $imagick->readImage($tempPdfPath);
+                    
+                    // Get first page (for single-page PDFs, this is all we need)
+                    $imagick->setIteratorIndex(0);
+                    
+                    // If multiple pages, combine them vertically into one image
+                    if ($imagick->getNumberImages() > 1) {
+                        $combined = new \Imagick();
+                        foreach ($imagick as $page) {
+                            $combined->addImage($page->getImage());
+                        }
+                        $imagick->clear();
+                        $imagick->destroy();
+                        $imagick = $combined->appendImages(true);
+                        $combined->clear();
+                        $combined->destroy();
                     }
+                    
+                    // Set format to PNG and ensure proper settings
+                    $imagick->setImageFormat('png');
+                    $imagick->setImageCompressionQuality(95);
+                    $imagick->stripImage(); // Remove metadata
+                    
+                    // Get image content
+                    $imageContent = $imagick->getImageBlob();
+                    
+                    // Clean up
                     $imagick->clear();
                     $imagick->destroy();
-                    $imagick = $combined->appendImages(true);
-                    $combined->clear();
-                    $combined->destroy();
+                    
+                } finally {
+                    // Clean up temporary PDF file
+                    if (file_exists($tempPdfPath)) {
+                        unlink($tempPdfPath);
+                    }
                 }
-                
-                // Get image content
-                $imageContent = $imagick->getImageBlob();
-                
-                // Clean up
-                $imagick->clear();
-                $imagick->destroy();
                 
                 if (empty($imageContent)) {
                     throw new \Exception('Image conversion failed');
