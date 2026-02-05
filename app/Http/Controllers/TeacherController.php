@@ -738,10 +738,16 @@ class TeacherController extends Controller
             
             // Generate image from PDF template - easier for WhatsApp (shows inline preview)
             try {
+                // Get Node.js binary path from config or .env
+                $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
+                    ?: env('LARAVEL_PDF_NODE_BINARY') 
+                    ?: '/home/u221047993/nodejs/bin/node';
+                
                 // Use Browsershot to generate screenshot/image directly from HTML
                 $browsershot = \Spatie\Browsershot\Browsershot::html(
                     view('teacher.courses.report-pdf', ['course' => $course])->render()
                 )
+                    ->setNodeBinary($nodeBinary)
                     ->setOption('viewport', ['width' => 1240, 'height' => 1754]) // A4 size at 150dpi
                     ->waitUntilNetworkIdle()
                     ->dismissDialogs()
