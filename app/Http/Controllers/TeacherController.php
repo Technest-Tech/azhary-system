@@ -951,8 +951,9 @@ class TeacherController extends Controller
             if ($result) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'PDF report sent successfully to +201207220414',
-                    'details' => 'Please check your WhatsApp to confirm receipt. The PDF should appear as a document attachment, not a link.'
+                    'message' => 'Image report sent successfully to +201207220414',
+                    'details' => 'Please check your WhatsApp to confirm receipt. The report should appear as an image.',
+                    'note' => 'Check storage/logs/laravel.log for detailed WhatsApp API response'
                 ]);
             } else {
                 // Get last error from logs

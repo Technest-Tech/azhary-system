@@ -76,6 +76,22 @@ class WhatsAppService
             // Upload image to get a publicly accessible URL
             $imageUrl = $this->uploadImage($imageContent, $fileName);
             
+            // Verify the URL is accessible (test if it's publicly accessible)
+            try {
+                $testResponse = Http::timeout(10)->head($imageUrl);
+                if (!$testResponse->successful()) {
+                    Log::warning('Image URL may not be publicly accessible', [
+                        'url' => $imageUrl,
+                        'status' => $testResponse->status()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not verify image URL accessibility', [
+                    'url' => $imageUrl,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
             $payload = [
                 'to' => $jid,
                 'imageUrl' => $imageUrl,
@@ -84,6 +100,12 @@ class WhatsAppService
             if ($caption) {
                 $payload['caption'] = $caption;
             }
+            
+            Log::info('Sending image via WhatsApp', [
+                'phone' => $phoneNumber,
+                'url' => $imageUrl,
+                'file' => $fileName
+            ]);
             
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
@@ -98,19 +120,22 @@ class WhatsAppService
                 Log::info('WhatsApp image sent successfully', [
                     'phone' => $phoneNumber,
                     'file' => $fileName,
+                    'url' => $imageUrl,
                     'status' => $statusCode,
                     'response' => $responseData
                 ]);
                 return [
                     'success' => true, 
                     'data' => $responseData,
-                    'message_id' => $responseData['id'] ?? null
+                    'message_id' => $responseData['id'] ?? null,
+                    'image_url' => $imageUrl
                 ];
             } else {
                 $errorMessage = $responseData['message'] ?? $response->body() ?? 'Unknown error';
                 Log::error('WhatsApp API error', [
                     'phone' => $phoneNumber,
                     'status' => $statusCode,
+                    'url' => $imageUrl,
                     'payload' => $payload,
                     'response' => $responseData,
                     'body' => $response->body()
@@ -119,13 +144,15 @@ class WhatsAppService
                     'success' => false, 
                     'error' => $errorMessage,
                     'status_code' => $statusCode,
-                    'full_response' => $responseData
+                    'full_response' => $responseData,
+                    'image_url' => $imageUrl
                 ];
             }
         } catch (\Exception $e) {
             Log::error('WhatsApp service exception', [
                 'phone' => $phoneNumber,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
