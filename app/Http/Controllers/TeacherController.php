@@ -772,13 +772,25 @@ class TeacherController extends Controller
                 $imagick = new \Imagick();
                 $imagick->setResolution(150, 150); // 150 DPI for good quality
                 $imagick->readImageBlob($pdfContent);
-                $imagick->setImageFormat('png');
                 
-                // Get first page (if multi-page, you can loop through pages)
+                // Get first page (for single-page PDFs, this is all we need)
                 $imagick->setIteratorIndex(0);
                 
-                // Merge all pages into one image (if multiple pages)
-                $imagick = $imagick->mergeImageLayers(\Imagick::LAYER_METHOD_FLATTEN);
+                // Set format to PNG
+                $imagick->setImageFormat('png');
+                
+                // If multiple pages, combine them vertically into one image
+                if ($imagick->getNumberImages() > 1) {
+                    $combined = new \Imagick();
+                    foreach ($imagick as $page) {
+                        $combined->addImage($page->getImage());
+                    }
+                    $imagick->clear();
+                    $imagick->destroy();
+                    $imagick = $combined->appendImages(true);
+                    $combined->clear();
+                    $combined->destroy();
+                }
                 
                 // Get image content
                 $imageContent = $imagick->getImageBlob();
