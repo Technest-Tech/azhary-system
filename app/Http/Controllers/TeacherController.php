@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Spatie\LaravelPdf\Facades\Pdf;
-use Spatie\Browsershot\Browsershot;
 use App\Services\WhatsAppService;
 
 class TeacherController extends Controller
@@ -736,25 +735,36 @@ class TeacherController extends Controller
                 return false;
             }
             
-            // Generate image from PDF template - easier for WhatsApp (shows inline preview)
+            // Generate PDF using DomPDF (pure PHP, no Node.js required)
             try {
-                // Get Node.js binary path from config or .env
-                $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
-                    ?: env('LARAVEL_PDF_NODE_BINARY') 
-                    ?: '/home/u221047993/nodejs/bin/node';
+                // Load DomPDF
+                $dompdf = new \Dompdf\Dompdf([
+                    'enable_remote' => true,
+                    'isHtml5ParserEnabled' => true,
+                    'isPhpEnabled' => true,
+                ]);
                 
-                // Use Browsershot to generate screenshot/image directly from HTML
-                $browsershot = \Spatie\Browsershot\Browsershot::html(
-                    view('teacher.courses.report-pdf', ['course' => $course])->render()
-                )
-                    ->setNodeBinary($nodeBinary)
-                    ->setOption('viewport', ['width' => 1240, 'height' => 1754]) // A4 size at 150dpi
-                    ->waitUntilNetworkIdle()
-                    ->dismissDialogs()
-                    ->screenshot();
+                // Load HTML content
+                $html = view('teacher.courses.report-pdf', ['course' => $course])->render();
+                
+                // Load HTML into DomPDF
+                $dompdf->loadHtml($html);
+                
+                // Set paper size to A4
+                $dompdf->setPaper('A4', 'portrait');
+                
+                // Render PDF
+                $dompdf->render();
+                
+                // Get PDF content
+                $pdfContent = $dompdf->output();
+                
+                if (empty($pdfContent)) {
+                    throw new \Exception('PDF content is empty');
+                }
                 
                 // Create filename
-                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.png';
+                $fileName = 'rapport-cours-' . $course->id . '-' . time() . '.pdf';
                 
                 // Save to public storage directory
                 $savePath = storage_path('app/public/reports/' . $fileName);
@@ -764,35 +774,20 @@ class TeacherController extends Controller
                     mkdir(storage_path('app/public/reports'), 0755, true);
                 }
                 
-                // Save image
-                file_put_contents($savePath, $browsershot);
-                
-                // Wait for file to be written
-                $maxWait = 10;
-                $waited = 0;
-                while (!file_exists($savePath) && $waited < $maxWait) {
-                    usleep(500000);
-                    $waited += 0.5;
-                }
+                // Save PDF
+                file_put_contents($savePath, $pdfContent);
                 
                 if (!file_exists($savePath)) {
-                    throw new \Exception('Image file was not created at: ' . $savePath);
+                    throw new \Exception('PDF file was not created at: ' . $savePath);
                 }
                 
-                // Read image content for WhatsApp
-                $imageContent = file_get_contents($savePath);
-                
-                if (empty($imageContent)) {
-                    throw new \Exception('Image file is empty');
-                }
-                
-            } catch (\Exception $imageError) {
-                \Log::error('Image generation failed', [
+            } catch (\Exception $pdfError) {
+                \Log::error('PDF generation failed', [
                     'course_id' => $course->id,
-                    'error' => $imageError->getMessage(),
-                    'trace' => $imageError->getTraceAsString()
+                    'error' => $pdfError->getMessage(),
+                    'trace' => $pdfError->getTraceAsString()
                 ]);
-                throw new \Exception('Failed to generate image: ' . $imageError->getMessage());
+                throw new \Exception('Failed to generate PDF: ' . $pdfError->getMessage());
             }
             
             // Initialize WhatsApp service
@@ -805,10 +800,10 @@ class TeacherController extends Controller
                 $caption .= "Évaluation: " . $course->evaluation->name;
             }
             
-            // Send image via WhatsApp (better UX - shows inline preview)
-            $result = $whatsappService->sendImage(
+            // Send PDF as document via WhatsApp
+            $result = $whatsappService->sendDocument(
                 $course->student->phone,
-                $imageContent,
+                $pdfContent,
                 $fileName,
                 $caption
             );
