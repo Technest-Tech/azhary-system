@@ -768,6 +768,12 @@ class TeacherController extends Controller
                 $browsershot->setNodeBinary($nodeBinary);
             }
             
+            // Set Chrome executable path if configured
+            $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
+            if ($chromePath && file_exists($chromePath)) {
+                $browsershot->setChromePath($chromePath);
+            }
+            
             // Generate high-quality image (A4 size at 150dpi = 1240x1754)
             $imageContent = $browsershot->windowSize(1240, 1754)
                 ->waitUntilNetworkIdle()
@@ -865,6 +871,12 @@ class TeacherController extends Controller
                 // Set Node.js binary if found
                 if ($nodeBinary && file_exists($nodeBinary)) {
                     $browsershot->setNodeBinary($nodeBinary);
+                }
+                
+                // Set Chrome executable path if configured
+                $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
+                if ($chromePath && file_exists($chromePath)) {
+                    $browsershot->setChromePath($chromePath);
                 }
                 
                 // Configure for high-quality image (A4 size at 150dpi = 1240x1754)
@@ -1134,6 +1146,12 @@ class TeacherController extends Controller
             // Set Node.js binary if found
             if ($nodeBinary && file_exists($nodeBinary)) {
                 $browsershot->setNodeBinary($nodeBinary);
+            }
+            
+            // Set Chrome executable path if configured
+            $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
+            if ($chromePath && file_exists($chromePath)) {
+                $browsershot->setChromePath($chromePath);
             }
             
                 // Configure for high-quality image (A4 size at 150dpi = 1240x1754)
