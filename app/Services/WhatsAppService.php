@@ -54,13 +54,25 @@ class WhatsAppService
      */
     public function uploadImage($imageContent, $filename)
     {
-        // Save image to storage
-        $path = 'reports/' . $filename;
-        Storage::disk('public')->put($path, $imageContent);
+        // Save image directly to public/reports/ for better accessibility
+        // This bypasses storage symlink issues and CDN blocks
+        $publicPath = public_path('reports');
         
-        // Get public URL - ensure it's a full URL
+        // Ensure reports directory exists
+        if (!file_exists($publicPath)) {
+            mkdir($publicPath, 0755, true);
+        }
+        
+        // Save file
+        $filePath = $publicPath . '/' . $filename;
+        file_put_contents($filePath, $imageContent);
+        
+        // Set proper permissions
+        chmod($filePath, 0644);
+        
+        // Get public URL - direct access without /storage/ prefix
         $baseUrl = config('app.url');
-        $url = $baseUrl . '/storage/' . $path;
+        $url = $baseUrl . '/reports/' . $filename;
         
         return $url;
     }
