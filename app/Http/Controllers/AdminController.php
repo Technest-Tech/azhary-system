@@ -592,7 +592,11 @@ class AdminController extends Controller
         $teachers = Teacher::all();
         $students = Student::all();
         
-        return view('admin.courses', compact('courses', 'teachers', 'students'));
+        // Redirect to dashboard which shows courses
+        return redirect()->route('admin.dashboard')
+                        ->with('courses', $courses)
+                        ->with('teachers', $teachers)
+                        ->with('students', $students);
     }
 
     public function createCourse()
@@ -677,7 +681,20 @@ class AdminController extends Controller
             $validated['income'] = $income;
             $validated['round'] = $currentRound;
             
-            Course::create($validated);
+            $course = Course::create($validated);
+            
+            // Generate and download report if course status is Present
+            if ($course->status === 'Present') {
+                // Use TeacherController's method to generate and send report
+                $teacherController = new \App\Http\Controllers\TeacherController();
+                $teacherController->generateAndSendReport($course);
+                
+                // Store course ID in session for automatic download
+                session(['download_report_id' => $course->id]);
+                
+                return redirect()->route('admin.dashboard')
+                                ->with('success', 'Course created successfully! Report is being downloaded...');
+            }
         } else {
             // Check if lesson exceeds package limit
             $remainingInPackage = $student->package_number - $previousNValue;
@@ -808,7 +825,20 @@ class AdminController extends Controller
                 $validated['admin_status'] = 'approved';
                 $validated['round'] = $currentRound;
                 
-                Course::create($validated);
+                $course = Course::create($validated);
+                
+                // Generate and download report if course status is Present
+                if ($course->status === 'Present') {
+                    // Use TeacherController's method to generate and send report
+                    $teacherController = new \App\Http\Controllers\TeacherController();
+                    $teacherController->generateAndSendReport($course);
+                    
+                    // Store course ID in session for automatic download
+                    session(['download_report_id' => $course->id]);
+                    
+                    return redirect()->route('admin.dashboard')
+                                    ->with('success', 'Course created successfully! Report is being downloaded...');
+                }
             }
         }
         
@@ -881,6 +911,19 @@ class AdminController extends Controller
         $validated['student_name'] = $validated['student_name'] ?? $student->name;
         
         $course->update($validated);
+        
+        // Generate and download report if course status is Present
+        if ($course->status === 'Present') {
+            // Use TeacherController's method to generate and send report
+            $teacherController = new \App\Http\Controllers\TeacherController();
+            $teacherController->generateAndSendReport($course);
+            
+            // Store course ID in session for automatic download
+            session(['download_report_id' => $course->id]);
+            
+                return redirect()->route('admin.dashboard')
+                            ->with('success', 'Course updated successfully! Report is being downloaded...');
+        }
         
         return redirect()->route('admin.dashboard')
                         ->with('success', 'Course updated successfully!');

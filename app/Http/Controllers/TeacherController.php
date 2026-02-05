@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Spatie\LaravelPdf\Facades\Pdf;
 use App\Services\WhatsAppService;
+use Spatie\Browsershot\Browsershot;
 
 class TeacherController extends Controller
 {
@@ -521,15 +522,16 @@ class TeacherController extends Controller
             ]);
         }
         
-        // Generate PDF and send via WhatsApp if course was created
+        // Generate and download report if course was created with Present status
         if (isset($course) && $course->status === 'Present') {
+            // Generate WhatsApp report in background (doesn't block the response)
             $this->generateAndSendReport($course);
-        }
-        
-        // Check if generate report was requested
-        if (isset($course) && $request->has('generate_report')) {
+            
+            // Store course ID in session for automatic download
+            session(['download_report_id' => $course->id]);
+            
             return redirect()->route('teacher.courses')
-                            ->with('success', 'Course created and report generated!');
+                            ->with('success', 'Course created successfully! Report is being downloaded...');
         }
         
         if (isset($course)) {
@@ -623,15 +625,16 @@ class TeacherController extends Controller
         // Recalculate all n_values for this student to ensure consistency
         $this->recalculateNValues($student->id, $teacher->id);
         
-        // Generate PDF and send via WhatsApp if course status is Present
+        // Generate and download report if course status is Present
         if ($course->status === 'Present') {
+            // Generate WhatsApp report in background
             $this->generateAndSendReport($course);
-        }
-        
-        // Check if generate report was requested
-        if ($request->has('generate_report')) {
-            return redirect()->route('teacher.courses.report', $course)
-                            ->with('success', 'Course updated and report generated!');
+            
+            // Store course ID in session for automatic download
+            session(['download_report_id' => $course->id]);
+            
+            return redirect()->route('teacher.courses')
+                            ->with('success', 'Course updated successfully! Report is being downloaded...');
         }
         
         return redirect()->route('teacher.dashboard')
@@ -707,9 +710,103 @@ class TeacherController extends Controller
     }
 
     /**
-     * Generate PDF report and send via WhatsApp
+     * Download report as image for a course
+     * This generates a high-quality PNG image of the report
      */
-    private function generateAndSendReport(Course $course)
+    public function downloadReportImage(Course $course)
+    {
+        // Check if user is admin or teacher
+        $admin = Auth::guard('admin')->user();
+        $teacher = Auth::guard('teacher')->user();
+        
+        // If admin, allow access to any course
+        // If teacher, ensure the course belongs to this teacher
+        if ($admin) {
+            // Admin can access any course - no restriction
+        } elseif ($teacher) {
+            // Teacher can only access their own courses
+            if ($course->teacher_id !== $teacher->id) {
+                abort(403, 'Unauthorized access to course.');
+            }
+        } else {
+            // Not authenticated as admin or teacher
+            abort(403, 'Unauthorized access.');
+        }
+        
+        $course->load(['student.subject', 'evaluation', 'teacher']);
+        
+        try {
+            // Get Node.js binary path
+            $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
+                ?: env('LARAVEL_PDF_NODE_BINARY');
+            
+            // Try to find Node.js in common locations if not set
+            if (!$nodeBinary || !file_exists($nodeBinary)) {
+                $possiblePaths = [
+                    getenv('HOME') . '/nodejs/bin/node',
+                    '/opt/homebrew/bin/node',
+                    '/usr/local/bin/node',
+                    '/usr/bin/node',
+                ];
+                
+                foreach ($possiblePaths as $path) {
+                    if (file_exists($path) && is_executable($path)) {
+                        $nodeBinary = $path;
+                        break;
+                    }
+                }
+            }
+            
+            // Load HTML content with course data
+            $html = view('teacher.courses.report-pdf', ['course' => $course])->render();
+            
+            // Use Browsershot to generate screenshot/image directly from HTML
+            $browsershot = Browsershot::html($html);
+            
+            // Set Node.js binary if found
+            if ($nodeBinary && file_exists($nodeBinary)) {
+                $browsershot->setNodeBinary($nodeBinary);
+            }
+            
+            // Generate high-quality image (A4 size at 150dpi = 1240x1754)
+            $imageContent = $browsershot->windowSize(1240, 1754)
+                ->waitUntilNetworkIdle()
+                ->delay(1000)
+                ->dismissDialogs()
+                ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
+                ->setOption('captureBeyondViewport', true)
+                ->screenshot();
+            
+            if (empty($imageContent)) {
+                throw new \Exception('Image generation failed');
+            }
+            
+            // Create filename with student name and date
+            $studentName = str_replace(' ', '-', $course->student_name ?? $course->student->name ?? 'student');
+            $date = $course->course_date->format('Y-m-d');
+            $fileName = "rapport-{$studentName}-{$date}.png";
+            
+            // Return as download
+            return response($imageContent)
+                ->header('Content-Type', 'image/png')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Content-Length', strlen($imageContent));
+                
+        } catch (\Exception $e) {
+            \Log::error('Report image generation failed', [
+                'course_id' => $course->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->with('error', 'Failed to generate report image: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate PDF report and send via WhatsApp
+     * Public method so it can be called from AdminController as well
+     */
+    public function generateAndSendReport(Course $course)
     {
         try {
             // Load relationships if not already loaded
@@ -735,87 +832,55 @@ class TeacherController extends Controller
                 return false;
             }
             
-            // Generate PDF using DomPDF (pure PHP, no Node.js required)
-            // Then convert to image using Imagick
+            // Generate image directly using Browsershot (real browser rendering - perfect CSS support)
             try {
-                // Load DomPDF
-                $dompdf = new \Dompdf\Dompdf([
-                    'enable_remote' => true,
-                    'isHtml5ParserEnabled' => true,
-                    'isPhpEnabled' => true,
-                ]);
+                // Get Node.js binary path from config or .env
+                $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
+                    ?: env('LARAVEL_PDF_NODE_BINARY');
+                
+                // Try to find Node.js in common locations if not set
+                if (!$nodeBinary || !file_exists($nodeBinary)) {
+                    $possiblePaths = [
+                        getenv('HOME') . '/nodejs/bin/node',
+                        '/opt/homebrew/bin/node',
+                        '/usr/local/bin/node',
+                        '/usr/bin/node',
+                    ];
+                    
+                    foreach ($possiblePaths as $path) {
+                        if (file_exists($path) && is_executable($path)) {
+                            $nodeBinary = $path;
+                            break;
+                        }
+                    }
+                }
                 
                 // Load HTML content
                 $html = view('teacher.courses.report-pdf', ['course' => $course])->render();
                 
-                // Load HTML into DomPDF
-                $dompdf->loadHtml($html);
+                // Use Browsershot to generate screenshot/image directly from HTML
+                // This uses a real browser engine (Chrome), so all CSS and images render perfectly
+                $browsershot = Browsershot::html($html);
                 
-                // Set paper size to A4
-                $dompdf->setPaper('A4', 'portrait');
-                
-                // Render PDF
-                $dompdf->render();
-                
-                // Get PDF content
-                $pdfContent = $dompdf->output();
-                
-                if (empty($pdfContent)) {
-                    throw new \Exception('PDF content is empty');
+                // Set Node.js binary if found
+                if ($nodeBinary && file_exists($nodeBinary)) {
+                    $browsershot->setNodeBinary($nodeBinary);
                 }
                 
-                // Convert PDF to Image using Imagick
-                if (!extension_loaded('imagick')) {
-                    throw new \Exception('Imagick extension is not installed. Please contact your hosting provider.');
-                }
-                
-                // Save PDF to temporary file (Imagick works better with files)
-                $tempPdfPath = sys_get_temp_dir() . '/report_' . uniqid() . '.pdf';
-                file_put_contents($tempPdfPath, $pdfContent);
-                
-                try {
-                    $imagick = new \Imagick();
-                    $imagick->setResolution(150, 150); // 150 DPI for good quality
-                    $imagick->setBackgroundColor(new \ImagickPixel('white'));
-                    $imagick->readImage($tempPdfPath);
-                    
-                    // Get first page (for single-page PDFs, this is all we need)
-                    $imagick->setIteratorIndex(0);
-                    
-                    // If multiple pages, combine them vertically into one image
-                    if ($imagick->getNumberImages() > 1) {
-                        $combined = new \Imagick();
-                        foreach ($imagick as $page) {
-                            $combined->addImage($page->getImage());
-                        }
-                        $imagick->clear();
-                        $imagick->destroy();
-                        $imagick = $combined->appendImages(true);
-                        $combined->clear();
-                        $combined->destroy();
-                    }
-                    
-                    // Set format to PNG and ensure proper settings
-                    $imagick->setImageFormat('png');
-                    $imagick->setImageCompressionQuality(95);
-                    $imagick->stripImage(); // Remove metadata
-                    
-                    // Get image content
-                    $imageContent = $imagick->getImageBlob();
-                    
-                    // Clean up
-                    $imagick->clear();
-                    $imagick->destroy();
-                    
-                } finally {
-                    // Clean up temporary PDF file
-                    if (file_exists($tempPdfPath)) {
-                        unlink($tempPdfPath);
-                    }
-                }
+                // Configure for high-quality image (A4 size at 150dpi = 1240x1754)
+                // Use windowSize for full page capture
+                // screenshot() returns binary PNG image data directly
+                // Using report_background.jpg as background - wait for images to load
+                $imageContent = $browsershot->windowSize(1240, 1754) // A4 at 150dpi
+                    ->waitUntilNetworkIdle()
+                    ->delay(1000) // Longer delay to ensure base64 images are fully loaded
+                    ->dismissDialogs()
+                    ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
+                    ->setOption('captureBeyondViewport', true) // Capture beyond viewport
+                    ->screenshot(); // Generate PNG image directly - returns binary data
                 
                 if (empty($imageContent)) {
-                    throw new \Exception('Image conversion failed');
+                    throw new \Exception('Image generation failed - empty content');
                 }
                 
                 // Create filename
@@ -999,6 +1064,190 @@ class TeacherController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ], 500);
+        }
+    }
+
+    /**
+     * Test Image Generation - Public route for local testing
+     * Generates and displays the image directly in browser
+     */
+    public function testGenerateImage(Request $request)
+    {
+        // Create a mock course object with sample data
+        $mockCourse = new Course();
+        $mockCourse->id = 999;
+        $mockCourse->student_name = 'Khadidiatou DRAME';
+        $mockCourse->course_date = Carbon::parse('2026-01-31');
+        $mockCourse->duration_hours = 0;
+        $mockCourse->duration_minutes = 30;
+        $mockCourse->status = 'Present';
+        $mockCourse->content = 'Lire les lettres arabes avec la Prolongation Alif';
+        $mockCourse->notes = 'Cora';
+        $mockCourse->homework = 'Fait';
+        $mockCourse->souvenir_image = null;
+        
+        // Create mock student with subject
+        $mockStudent = new Student();
+        $mockStudent->name = 'Khadidiatou DRAME';
+        
+        $mockSubject = new Subject();
+        $mockSubject->name = 'Arabe';
+        $mockStudent->setRelation('subject', $mockSubject);
+        
+        $mockCourse->setRelation('student', $mockStudent);
+        
+        // Create mock evaluation
+        $mockEvaluation = new Evaluation();
+        $mockEvaluation->name = 'MashAllah';
+        $mockEvaluation->description = '100%';
+        $mockCourse->setRelation('evaluation', $mockEvaluation);
+        
+        try {
+            // Get Node.js binary path
+            $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
+                ?: env('LARAVEL_PDF_NODE_BINARY');
+            
+            // Try to find Node.js in common locations if not set
+            if (!$nodeBinary || !file_exists($nodeBinary)) {
+                $possiblePaths = [
+                    getenv('HOME') . '/nodejs/bin/node',
+                    '/opt/homebrew/bin/node',
+                    '/usr/local/bin/node',
+                    '/usr/bin/node',
+                ];
+                
+                foreach ($possiblePaths as $path) {
+                    if (file_exists($path) && is_executable($path)) {
+                        $nodeBinary = $path;
+                        break;
+                    }
+                }
+            }
+            
+            // Load HTML content
+            $html = view('teacher.courses.report-pdf', ['course' => $mockCourse])->render();
+            
+            // Use Browsershot to generate screenshot/image directly from HTML
+            // This uses a real browser engine (Chrome), so all CSS and images render perfectly
+            $browsershot = Browsershot::html($html);
+            
+            // Set Node.js binary if found
+            if ($nodeBinary && file_exists($nodeBinary)) {
+                $browsershot->setNodeBinary($nodeBinary);
+            }
+            
+                // Configure for high-quality image (A4 size at 150dpi = 1240x1754)
+                // Use windowSize for full page capture
+                // screenshot() returns binary PNG image data directly
+                // Using report_background.jpg as background - wait for images to load
+                $imageContent = $browsershot->windowSize(1240, 1754) // A4 at 150dpi
+                    ->waitUntilNetworkIdle()
+                    ->delay(1000) // Longer delay to ensure base64 images are fully loaded
+                    ->dismissDialogs()
+                    ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
+                    ->setOption('captureBeyondViewport', true) // Capture beyond viewport
+                    ->screenshot(); // Generate PNG image directly - returns binary data
+            
+            if (empty($imageContent)) {
+                return response('Image generation failed - empty content', 500);
+            }
+            
+            // Display image directly in browser
+            return response($imageContent, 200)
+                ->header('Content-Type', 'image/png')
+                ->header('Content-Disposition', 'inline; filename="test-report.png"');
+                
+        } catch (\Exception $e) {
+            return response('Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), 500);
+        }
+    }
+
+    /**
+     * Test PDF Only - Public route to view PDF before image conversion
+     */
+    public function testGeneratePdfOnly(Request $request)
+    {
+        // Create a mock course object with sample data
+        $mockCourse = new Course();
+        $mockCourse->id = 999;
+        $mockCourse->student_name = 'Khadidiatou DRAME';
+        $mockCourse->course_date = Carbon::parse('2026-01-31');
+        $mockCourse->duration_hours = 0;
+        $mockCourse->duration_minutes = 30;
+        $mockCourse->status = 'Present';
+        $mockCourse->content = 'Lire les lettres arabes avec la Prolongation Alif';
+        $mockCourse->notes = 'Cora';
+        $mockCourse->homework = 'Fait';
+        $mockCourse->souvenir_image = null;
+        
+        // Create mock student with subject
+        $mockStudent = new Student();
+        $mockStudent->name = 'Khadidiatou DRAME';
+        
+        $mockSubject = new Subject();
+        $mockSubject->name = 'Arabe';
+        $mockStudent->setRelation('subject', $mockSubject);
+        
+        $mockCourse->setRelation('student', $mockStudent);
+        
+        // Create mock evaluation
+        $mockEvaluation = new Evaluation();
+        $mockEvaluation->name = 'MashAllah';
+        $mockEvaluation->description = '100%';
+        $mockCourse->setRelation('evaluation', $mockEvaluation);
+        
+        try {
+            // Get Node.js binary path
+            $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
+                ?: env('LARAVEL_PDF_NODE_BINARY');
+            
+            // Try to find Node.js in common locations if not set
+            if (!$nodeBinary || !file_exists($nodeBinary)) {
+                $possiblePaths = [
+                    getenv('HOME') . '/nodejs/bin/node',
+                    '/opt/homebrew/bin/node',
+                    '/usr/local/bin/node',
+                    '/usr/bin/node',
+                ];
+                
+                foreach ($possiblePaths as $path) {
+                    if (file_exists($path) && is_executable($path)) {
+                        $nodeBinary = $path;
+                        break;
+                    }
+                }
+            }
+            
+            // Load HTML content
+            $html = view('teacher.courses.report-pdf', ['course' => $mockCourse])->render();
+            
+            // Use Browsershot to generate PDF directly from HTML
+            $browsershot = Browsershot::html($html);
+            
+            // Set Node.js binary if found
+            if ($nodeBinary && file_exists($nodeBinary)) {
+                $browsershot->setNodeBinary($nodeBinary);
+            }
+            
+            // Generate PDF with high quality
+            $pdfContent = $browsershot->format('A4')
+                ->margins(0, 0, 0, 0)
+                ->waitUntilNetworkIdle()
+                ->dismissDialogs()
+                ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
+                ->pdf(); // Generate PDF directly - returns binary data
+            
+            if (empty($pdfContent)) {
+                return response('PDF content is empty', 500);
+            }
+            
+            // Display PDF directly in browser
+            return response($pdfContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="test-report.pdf"');
+                
+        } catch (\Exception $e) {
+            return response('Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), 500);
         }
     }
 

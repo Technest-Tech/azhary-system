@@ -34,6 +34,12 @@ Route::get('/test-pdf-report', [TeacherController::class, 'testPdfReport'])->nam
 Route::get('/test-send-whatsapp-text', [TeacherController::class, 'testSendWhatsAppText'])->name('test.send.whatsapp.text');
 Route::get('/test-send-whatsapp', [TeacherController::class, 'testSendWhatsApp'])->name('test.send.whatsapp');
 
+// Test Image Generation Route (Public - for local testing)
+Route::get('/test-generate-image', [TeacherController::class, 'testGenerateImage'])->name('test.generate.image');
+
+// Test PDF Generation Route (Public - to check PDF before image conversion)
+Route::get('/test-generate-pdf-only', [TeacherController::class, 'testGeneratePdfOnly'])->name('test.generate.pdf.only');
+
 // Admin Authentication Routes
 Route::prefix('admin')->group(function () {
     Route::middleware(['locale'])->group(function () {
@@ -88,6 +94,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/courses/{course}/edit', [AdminController::class, 'editCourse'])->name('admin.courses.edit');
         Route::put('/courses/{course}', [AdminController::class, 'updateCourse'])->name('admin.courses.update');
         Route::delete('/courses/{course}', [AdminController::class, 'destroyCourse'])->name('admin.courses.destroy');
+        Route::get('/courses/{course}/report-image', [TeacherController::class, 'downloadReportImage'])->name('admin.courses.report-image');
         
         // Notifications Management
         Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications');
@@ -139,6 +146,7 @@ Route::prefix('teacher')->group(function () {
         Route::put('/courses/{course}', [TeacherController::class, 'updateCourse'])->name('teacher.courses.update');
         Route::delete('/courses/{course}', [TeacherController::class, 'destroyCourse'])->name('teacher.courses.destroy');
         Route::get('/courses/{course}/report', [TeacherController::class, 'generateReport'])->name('teacher.courses.report');
+        Route::get('/courses/{course}/report-image', [TeacherController::class, 'downloadReportImage'])->name('teacher.courses.report-image');
         
         // Timetable
         Route::get('/timetable', [TeacherController::class, 'timetable'])->name('teacher.timetable');

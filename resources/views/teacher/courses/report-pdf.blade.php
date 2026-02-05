@@ -4,6 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapport de Cours</title>
+    @php
+        // Convert public images to base64 for PDF compatibility
+        // Using report_background.jpg as the background image
+        $backgroundPath = public_path('report_background.jpg');
+        $topBranchPath = public_path('top-right-branch.png');
+        $bottomBranchPath = public_path('bootom-left-branch.png');
+        $leftMusclePath = public_path('left-muscle.png');
+        $rightMusclePath = public_path('right-muscle.png');
+        $titleFramePath = public_path('title-bocorative.png');
+        
+        function imageToBase64($path) {
+            if (file_exists($path)) {
+                $imageData = base64_encode(file_get_contents($path));
+                $ext = pathinfo($path, PATHINFO_EXTENSION);
+                $mime = $ext === 'jpg' ? 'jpeg' : $ext;
+                return 'data:image/' . $mime . ';base64,' . $imageData;
+            }
+            return null;
+        }
+        
+        $backgroundSrc = imageToBase64($backgroundPath);
+        $topBranchSrc = imageToBase64($topBranchPath);
+        $bottomBranchSrc = imageToBase64($bottomBranchPath);
+        $leftMuscleSrc = imageToBase64($leftMusclePath);
+        $rightMuscleSrc = imageToBase64($rightMusclePath);
+        $titleFrameSrc = imageToBase64($titleFramePath);
+    @endphp
     <style>
         @page {
             margin: 0;
@@ -18,20 +45,29 @@
         
         body {
             font-family: 'Arial', 'Helvetica', sans-serif;
-            background: #0d9488;
+            background-color: #0d9488; /* Fallback color if image doesn't load */
             color: #000;
             position: relative;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 5mm 15mm 10mm 15mm;
+            width: 1240px; /* A4 width at 150dpi */
+            min-height: 1754px; /* A4 height at 150dpi */
+            height: 1754px; /* Fixed height to match A4 page */
+            padding: 19px 57px 38px 57px; /* Converted from mm to px (5mm, 15mm, 10mm) */
+            margin: 0;
+            overflow: hidden; /* Prevent overflow */
+        }
+        
+        html {
+            width: 1240px;
+            height: 1754px;
+            overflow: hidden;
         }
         
         .background-image {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 1240px;
+            height: 1754px;
             z-index: 0;
             object-fit: cover;
         }
@@ -84,8 +120,8 @@
         /* Title Section */
         .title-section {
             text-align: center;
-            margin-bottom: 20px;
-            margin-top: 0;
+            margin-bottom: 35px;
+            margin-top: 15px;
             position: relative;
             z-index: 5;
         }
@@ -93,7 +129,7 @@
         .title-frame-wrapper {
             position: relative;
             display: inline-block;
-            margin: 0 auto 15px;
+            margin: 0 auto 25px;
         }
         
         .title-with-muscles {
@@ -101,18 +137,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 20px;
         }
         
         .title-muscle-left,
         .title-muscle-right {
-            width: 90px;
+            width: 110px;
             height: auto;
             flex-shrink: 0;
         }
         
         .title-frame-image {
-            width: 350px;
+            width: 450px;
             height: auto;
             position: relative;
         }
@@ -122,27 +158,27 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 20px;
+            font-size: 28px;
             font-weight: bold;
             color: white;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 2.5px;
             white-space: nowrap;
         }
         
         .student-name-box {
             background: white;
             border-radius: 50px;
-            padding: 10px 25px;
+            padding: 16px 40px;
             display: inline-block;
             margin: 0 auto;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .student-name-box span {
-            font-size: 18px;
+            font-size: 26px;
             font-weight: 600;
-            color: #000;
+            color: #f97316;
             text-transform: uppercase;
         }
         
@@ -150,7 +186,7 @@
         .info-section {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 22px;
+            margin-bottom: 40px;
             position: relative;
             z-index: 3;
         }
@@ -158,36 +194,36 @@
         .info-left {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 20px;
         }
         
         .info-right {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 20px;
             align-items: center;
         }
         
         .info-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
         }
         
         .info-icon {
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 26px;
         }
         
         .info-box {
             background: white;
             border-radius: 50px;
-            padding: 8px 18px;
-            font-size: 13px;
+            padding: 14px 28px;
+            font-size: 18px;
             font-weight: 500;
             color: #000;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -196,8 +232,8 @@
         /* Main Content Section */
         .main-content {
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 25px;
+            margin-bottom: 35px;
             position: relative;
             z-index: 3;
         }
@@ -205,36 +241,37 @@
         .content-card, .notes-card {
             flex: 1;
             background: white;
-            border-radius: 15px;
-            padding: 15px;
+            border-radius: 18px;
+            padding: 25px;
+            min-height: 180px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .card-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 8px;
+            gap: 14px;
+            margin-bottom: 18px;
+            border-bottom: 3px solid #e5e7eb;
+            padding-bottom: 14px;
         }
         
         .card-title {
-            font-size: 14px;
+            font-size: 22px;
             font-weight: bold;
             color: #000;
             text-transform: uppercase;
         }
         
         .card-icon {
-            font-size: 18px;
+            font-size: 26px;
         }
         
         .card-content {
-            font-size: 12px;
+            font-size: 18px;
             color: #374151;
-            line-height: 1.6;
-            margin-top: 5px;
+            line-height: 1.8;
+            margin-top: 10px;
         }
         
         .divider-line {
@@ -246,9 +283,9 @@
         /* Bottom Section */
         .bottom-section {
             display: flex;
-            gap: 15px;
-            margin-bottom: 18px;
-            margin-top: 15px;
+            gap: 25px;
+            margin-bottom: 30px;
+            margin-top: 25px;
             position: relative;
             z-index: 3;
         }
@@ -256,51 +293,53 @@
         .souvenir-card, .homework-card {
             flex: 1;
             background: white;
-            border-radius: 15px;
-            padding: 15px;
+            border-radius: 18px;
+            padding: 25px;
+            min-height: 220px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .souvenir-image-container {
-            margin-top: 12px;
+            margin-top: 20px;
             text-align: center;
         }
         
         .souvenir-image-container img {
             max-width: 100%;
-            max-height: 140px;
-            border-radius: 10px;
-            border: 2px solid #e5e7eb;
+            max-height: 180px;
+            border-radius: 12px;
+            border: 3px solid #e5e7eb;
         }
         
         .homework-content {
-            font-size: 12px;
+            font-size: 20px;
             color: #374151;
-            line-height: 1.6;
-            margin-top: 12px;
+            line-height: 1.8;
+            margin-top: 20px;
         }
         
         .homework-done {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             font-weight: 600;
+            font-size: 22px;
             color: #059669;
         }
         
         /* Footer */
         .footer {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 30px;
             position: relative;
             z-index: 3;
         }
         
         .footer-message {
             color: #f97316;
-            font-size: 14px;
+            font-size: 22px;
             font-weight: 600;
-            margin-top: 8px;
+            margin-top: 15px;
         }
         
         .footer-message span {
@@ -309,44 +348,17 @@
         
         /* Section Dividers */
         .section-divider {
-            height: 2px;
-            background: rgba(255, 255, 255, 0.3);
-            margin: 15px 0;
-            border-radius: 1px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.4);
+            margin: 25px 0;
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
-    @php
-        // Convert public images to base64 for PDF compatibility
-        $backgroundPath = public_path('report_background.jpg');
-        $topBranchPath = public_path('top-right-branch.png');
-        $bottomBranchPath = public_path('bootom-left-branch.png');
-        $leftMusclePath = public_path('left-muscle.png');
-        $rightMusclePath = public_path('right-muscle.png');
-        $titleFramePath = public_path('title-bocorative.png');
-        
-        function imageToBase64($path) {
-            if (file_exists($path)) {
-                $imageData = base64_encode(file_get_contents($path));
-                $ext = pathinfo($path, PATHINFO_EXTENSION);
-                $mime = $ext === 'jpg' ? 'jpeg' : $ext;
-                return 'data:image/' . $mime . ';base64,' . $imageData;
-            }
-            return null;
-        }
-        
-        $backgroundSrc = imageToBase64($backgroundPath);
-        $topBranchSrc = imageToBase64($topBranchPath);
-        $bottomBranchSrc = imageToBase64($bottomBranchPath);
-        $leftMuscleSrc = imageToBase64($leftMusclePath);
-        $rightMuscleSrc = imageToBase64($rightMusclePath);
-        $titleFrameSrc = imageToBase64($titleFramePath);
-    @endphp
-    
     <!-- Background Image -->
     @if($backgroundSrc)
-        <img src="{{ $backgroundSrc }}" alt="Background" class="background-image">
+        <img src="{!! $backgroundSrc !!}" alt="Background" class="background-image">
     @endif
     
     <!-- Transparent Overlay Layers -->
@@ -355,10 +367,10 @@
     
     <!-- Decorative Elements -->
     @if($topBranchSrc)
-        <img src="{{ $topBranchSrc }}" alt="Branch" class="top-right-branch">
+        <img src="{!! $topBranchSrc !!}" alt="Branch" class="top-right-branch">
     @endif
     @if($bottomBranchSrc)
-        <img src="{{ $bottomBranchSrc }}" alt="Branch" class="bottom-left-branch">
+        <img src="{!! $bottomBranchSrc !!}" alt="Branch" class="bottom-left-branch">
     @endif
     
     <div class="content-wrapper">
@@ -366,16 +378,16 @@
         <div class="title-section">
             <div class="title-with-muscles">
                 @if($leftMuscleSrc)
-                    <img src="{{ $leftMuscleSrc }}" alt="Muscle" class="title-muscle-left">
+                    <img src="{!! $leftMuscleSrc !!}" alt="Muscle" class="title-muscle-left">
                 @endif
                 <div class="title-frame-wrapper">
                     @if($titleFrameSrc)
-                        <img src="{{ $titleFrameSrc }}" alt="Title Frame" class="title-frame-image">
+                        <img src="{!! $titleFrameSrc !!}" alt="Title Frame" class="title-frame-image">
                     @endif
                     <div class="title-text">LE RAPPORT D'AUJOURD'HUI</div>
                 </div>
                 @if($rightMuscleSrc)
-                    <img src="{{ $rightMuscleSrc }}" alt="Muscle" class="title-muscle-right">
+                    <img src="{!! $rightMuscleSrc !!}" alt="Muscle" class="title-muscle-right">
                 @endif
             </div>
             <div class="student-name-box">
@@ -463,12 +475,12 @@
                             }
                         @endphp
                         @if($imageSrc)
-                            <img src="{{ $imageSrc }}" alt="Souvenir">
+                            <img src="{!! $imageSrc !!}" alt="Souvenir">
                         @else
-                            <p style="color: #9ca3af; font-size: 12px;">Image non trouvée</p>
+                            <p style="color: #9ca3af; font-size: 14px;">Image non trouvée</p>
                         @endif
                     @else
-                        <p style="color: #9ca3af; font-size: 12px;">Aucune image disponible</p>
+                        <p style="color: #9ca3af; font-size: 14px;">Aucune image disponible</p>
                     @endif
                 </div>
             </div>

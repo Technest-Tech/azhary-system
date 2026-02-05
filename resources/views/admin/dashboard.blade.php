@@ -280,9 +280,19 @@
                                     <a href="{{ route('admin.courses.edit', $course) }}" 
                                        style="padding: 8px; color: #f59e0b; text-decoration: none; border-radius: 4px;"
                                        onmouseover="this.style.background='#fef3c7'" 
-                                       onmouseout="this.style.background='transparent'">
+                                       onmouseout="this.style.background='transparent'"
+                                       title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @if($course->status === 'Present')
+                                    <a href="{{ route('admin.courses.report-image', $course) }}" 
+                                       style="padding: 8px; color: #059669; text-decoration: none; border-radius: 4px;"
+                                       onmouseover="this.style.background='#d1fae5'" 
+                                       onmouseout="this.style.background='transparent'"
+                                       title="Download Report">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    @endif
                                     <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" style="display: inline;" 
                                           onsubmit="return confirm('{{ __('admin.delete_course_confirm') }}')">
                                         @csrf
@@ -290,7 +300,8 @@
                                         <button type="submit" 
                                                 style="padding: 8px; color: #ef4444; background: none; border: none; cursor: pointer; border-radius: 4px;"
                                                 onmouseover="this.style.background='#fee2e2'" 
-                                                onmouseout="this.style.background='transparent'">
+                                                onmouseout="this.style.background='transparent'"
+                                                title="Delete">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </form>
@@ -436,5 +447,22 @@
                 closeRoundsModal();
             }
         });
+        
+        // Auto-download report after course creation/update
+        @if(session('download_report_id'))
+            (function() {
+                var courseId = {{ session('download_report_id') }};
+                // Create hidden iframe to trigger download
+                var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = '{{ url("/admin/courses") }}/' + courseId + '/report-image';
+                document.body.appendChild(iframe);
+                
+                // Remove iframe after download starts
+                setTimeout(function() {
+                    document.body.removeChild(iframe);
+                }, 5000);
+            })();
+        @endif
     </script>
 @endsection
