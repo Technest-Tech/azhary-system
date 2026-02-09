@@ -744,7 +744,7 @@ class AdminController extends Controller
                 $completeCourseData['admin_status'] = 'approved';
                 $completeCourseData['round'] = $currentRound;
                 
-                Course::create($completeCourseData);
+                $completeCourse = Course::create($completeCourseData);
                 
                 // Second course: pending from new package (will get new round when activated)
                 $pendingCourseData = $validated;
@@ -790,6 +790,18 @@ class AdminController extends Controller
                     $student->payment_status_id = $waitingPaymentStatus->id;
                     $student->save();
                 }
+                
+                // Create notification for package completion (so admin can activate payment)
+                $message = $student->name . ' has completed the course !!';
+                Notification::create([
+                    'type' => 'progress_update',
+                    'course_id' => $completeCourse->id,
+                    'student_id' => $student->id,
+                    'teacher_id' => $teacher->id,
+                    'message' => $message,
+                    'is_read' => false,
+                    'is_approved' => null,
+                ]);
                 
                 $nValue = $nValueComplete;
             } elseif ($packageLimitReached && $hasPackageNotification) {

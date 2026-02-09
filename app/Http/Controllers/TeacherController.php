@@ -535,7 +535,20 @@ class TeacherController extends Controller
                     $student->save();
                 }
                 
+                // Create notification for package completion (so admin can activate payment)
+                $message = $student->name . ' has completed the course !!';
+                Notification::create([
+                    'type' => 'progress_update',
+                    'course_id' => $course->id,
+                    'student_id' => $student->id,
+                    'teacher_id' => $teacher->id,
+                    'message' => $message,
+                    'is_read' => false,
+                    'is_approved' => null,
+                ]);
+                
                 $nValue = $nValueComplete;
+                $packageCompletionNotified = true; // Prevent duplicate notification
             } elseif ($packageLimitReached && $hasPackageNotification) {
                 // Package limit reached and notification exists - create as pending
                 $validated['teacher_id'] = $teacher->id;
@@ -648,7 +661,8 @@ class TeacherController extends Controller
         }
         
         // Check if package is completed (n_value >= package_number) - only for non-absent lessons
-        if (isset($course) && isset($nValue) && $nValue >= $student->package_number && !$packageLimitReached && $validated['status'] !== 'Absent') {
+        // Skip if notification was already created during split
+        if (isset($course) && isset($nValue) && $nValue >= $student->package_number && !$packageLimitReached && $validated['status'] !== 'Absent' && !isset($packageCompletionNotified)) {
             $message = $student->name . ' has completed the course !!';
             Notification::create([
                 'type' => 'progress_update',
