@@ -5,31 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapport de Cours</title>
     @php
-        // Convert public images to base64 for PDF compatibility
-        // Using report_background.jpg as the background image
-        $backgroundPath = public_path('report_background.jpg');
-        $topBranchPath = public_path('top-right-branch.png');
-        $bottomBranchPath = public_path('bootom-left-branch.png');
-        $leftMusclePath = public_path('left-muscle.png');
-        $rightMusclePath = public_path('right-muscle.png');
-        $titleFramePath = public_path('title-bocorative.png');
+        // Convert logo to base64 for PDF compatibility
+        $logoPath = public_path('logo.png');
         
         function imageToBase64($path) {
             if (file_exists($path)) {
                 $imageData = base64_encode(file_get_contents($path));
                 $ext = pathinfo($path, PATHINFO_EXTENSION);
-                $mime = $ext === 'jpg' ? 'jpeg' : $ext;
+                $mime = $ext === 'jpg' ? 'jpeg' : ($ext === 'png' ? 'png' : $ext);
                 return 'data:image/' . $mime . ';base64,' . $imageData;
             }
             return null;
         }
         
-        $backgroundSrc = imageToBase64($backgroundPath);
-        $topBranchSrc = imageToBase64($topBranchPath);
-        $bottomBranchSrc = imageToBase64($bottomBranchPath);
-        $leftMuscleSrc = imageToBase64($leftMusclePath);
-        $rightMuscleSrc = imageToBase64($rightMusclePath);
-        $titleFrameSrc = imageToBase64($titleFramePath);
+        $logoSrc = imageToBase64($logoPath);
     @endphp
     <style>
         @page {
@@ -45,169 +34,185 @@
         
         body {
             font-family: 'Arial', 'Helvetica', sans-serif;
-            background-color: #0d9488; /* Fallback color if image doesn't load */
+            background-color: #e0f2fe; /* Light pastel blue background */
             color: #000;
             position: relative;
             width: 1240px; /* A4 width at 150dpi */
             min-height: 1754px; /* A4 height at 150dpi */
             height: 1754px; /* Fixed height to match A4 page */
-            padding: 19px 57px 38px 57px; /* Converted from mm to px (5mm, 15mm, 10mm) */
+            padding: 20px 50px 30px 50px;
             margin: 0;
-            overflow: hidden; /* Prevent overflow */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         html {
             width: 1240px;
             height: 1754px;
-            overflow: hidden;
+            overflow: visible;
         }
         
-        .background-image {
+        /* Logo Section - Top Left */
+        .logo-container {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 1240px;
-            height: 1754px;
-            z-index: 0;
-            object-fit: cover;
+            top: 30px;
+            left: 50px;
+            z-index: 10;
         }
         
-        .transparent-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(13, 148, 136, 0.5);
-            z-index: 1;
+        .logo-wrapper {
+            background: white;
+            border: 3px solid #0d9488; /* Teal border */
+            border-radius: 15px;
+            padding: 15px 20px;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .overlay-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(13, 148, 136, 0.2);
-            z-index: 1.5;
-        }
-        
-        .content-wrapper {
-            position: relative;
-            z-index: 2;
-        }
-        
-        /* Decorative elements */
-        .top-right-branch {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 280px;
+        .logo-wrapper img {
+            width: 84px;
             height: auto;
-            z-index: 3;
+            display: block;
         }
         
-        .bottom-left-branch {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 280px;
-            height: auto;
-            z-index: 3;
-        }
-        
-        
-        /* Title Section */
+        /* Title Banner Section - Centered Top */
         .title-section {
             text-align: center;
-            margin-bottom: 35px;
-            margin-top: 15px;
+            margin-top: 5px;
+            margin-bottom: 12px;
             position: relative;
             z-index: 5;
-        }
-        
-        .title-frame-wrapper {
-            position: relative;
-            display: inline-block;
-            margin: 0 auto 25px;
-        }
-        
-        .title-with-muscles {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        .title-muscle-left,
-        .title-muscle-right {
-            width: 110px;
-            height: auto;
             flex-shrink: 0;
         }
         
-        .title-frame-image {
-            width: 450px;
-            height: auto;
+        .title-banner {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); /* Teal gradient background */
+            color: white;
+            padding: 25px 60px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 3px solid #0d9488;
             position: relative;
+            overflow: visible;
+        }
+        
+        .title-banner::before,
+        .title-banner::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid white;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .title-banner::before {
+            top: -8px;
+            left: -8px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 5px 0 0 0;
+        }
+        
+        .title-banner::after {
+            bottom: -8px;
+            right: -8px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 5px 0;
+            box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .title-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 28px;
+            font-size: 38px;
             font-weight: bold;
             color: white;
             text-transform: uppercase;
-            letter-spacing: 2.5px;
+            letter-spacing: 4px;
             white-space: nowrap;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Student Name Section */
+        .student-name-section {
+            text-align: center;
+            margin: 15px 0 10px 0;
+            position: relative;
+            z-index: 3;
+            flex-shrink: 0;
         }
         
         .student-name-box {
-            background: white;
-            border-radius: 50px;
-            padding: 16px 40px;
             display: inline-block;
-            margin: 0 auto;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            padding: 18px 50px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+            border: 3px solid #0d9488;
         }
         
-        .student-name-box span {
-            font-size: 26px;
-            font-weight: 600;
-            color: #f97316;
+        .student-name-text {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Warning/Evaluation Section */
+        .evaluation-warning {
+            text-align: center;
+            margin: 8px 0 8px 0;
+            position: relative;
+            z-index: 3;
+            flex-shrink: 0;
+        }
+        
+        .evaluation-warning-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .warning-icon {
+            font-size: 28px;
+        }
+        
+        /* Horizontal Divider Line */
+        .divider-line {
+            width: 100%;
+            height: 2px;
+            background: #0d9488;
+            margin: 8px 0 15px 0;
+            flex-shrink: 0;
         }
         
         /* Info Section */
         .info-section {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
             position: relative;
             z-index: 3;
-        }
-        
-        .info-left {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .info-right {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: wrap;
         }
         
         .info-item {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
         
         .info-icon {
@@ -217,300 +222,269 @@
             align-items: center;
             justify-content: center;
             font-size: 26px;
+            flex-shrink: 0;
         }
         
         .info-box {
-            background: white;
-            border-radius: 50px;
+            background: #0d9488; /* Teal background */
+            border-radius: 25px;
             padding: 14px 28px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            white-space: nowrap;
         }
         
-        /* Main Content Section */
+        .info-box.white {
+            background: white;
+            color: #000;
+            border: 2px solid #0d9488;
+        }
+        
+        .info-box.blank {
+            background: white;
+            color: transparent;
+            border: 2px solid #e5e7eb;
+        }
+        
+        /* Main Content Section - 2x2 Grid */
         .main-content {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
             gap: 25px;
-            margin-bottom: 35px;
+            margin-bottom: 20px;
+            flex: 1;
+            min-height: 0;
             position: relative;
             z-index: 3;
         }
         
-        .content-card, .notes-card {
-            flex: 1;
+        .content-card {
             background: white;
+            border: 3px solid #0d9488; /* Teal border */
             border-radius: 18px;
             padding: 25px;
-            min-height: 180px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            min-height: 0;
+            height: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .card-header {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             margin-bottom: 18px;
-            border-bottom: 3px solid #e5e7eb;
-            padding-bottom: 14px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 15px;
         }
         
         .card-title {
-            font-size: 22px;
+            font-size: 26px;
             font-weight: bold;
             color: #000;
             text-transform: uppercase;
         }
         
         .card-icon {
-            font-size: 26px;
+            font-size: 30px;
         }
         
         .card-content {
-            font-size: 18px;
+            font-size: 22px;
             color: #374151;
-            line-height: 1.8;
-            margin-top: 10px;
-        }
-        
-        .divider-line {
-            width: 3px;
-            background: #fbbf24;
-            margin: 0 10px;
-        }
-        
-        /* Bottom Section */
-        .bottom-section {
-            display: flex;
-            gap: 25px;
-            margin-bottom: 30px;
-            margin-top: 25px;
-            position: relative;
-            z-index: 3;
-        }
-        
-        .souvenir-card, .homework-card {
+            line-height: 2;
             flex: 1;
-            background: white;
-            border-radius: 18px;
-            padding: 25px;
-            min-height: 220px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
+        /* Souvenir Image Container */
         .souvenir-image-container {
-            margin-top: 20px;
+            margin-top: 10px;
             text-align: center;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .souvenir-image-container img {
             max-width: 100%;
-            max-height: 180px;
-            border-radius: 12px;
-            border: 3px solid #e5e7eb;
+            max-height: 240px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            object-fit: contain;
         }
         
-        .homework-content {
-            font-size: 20px;
-            color: #374151;
-            line-height: 1.8;
-            margin-top: 20px;
-        }
-        
-        .homework-done {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            font-size: 22px;
-            color: #059669;
+        .souvenir-placeholder {
+            color: #9ca3af;
+            font-size: 18px;
+            font-style: italic;
         }
         
         /* Footer */
         .footer {
             text-align: center;
-            margin-top: 30px;
+            margin-top: auto;
+            padding-top: 15px;
             position: relative;
             z-index: 3;
+            flex-shrink: 0;
         }
         
         .footer-message {
-            color: #f97316;
-            font-size: 22px;
+            color: #000;
+            font-size: 24px;
             font-weight: 600;
-            margin-top: 15px;
+            line-height: 1.8;
         }
         
-        .footer-message span {
-            margin: 0 5px;
-        }
-        
-        /* Section Dividers */
-        .section-divider {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.4);
-            margin: 25px 0;
-            border-radius: 2px;
+        .footer-message .emoji {
+            font-size: 26px;
+            margin: 0 4px;
         }
     </style>
 </head>
 <body>
-    <!-- Background Image -->
-    @if($backgroundSrc)
-        <img src="{!! $backgroundSrc !!}" alt="Background" class="background-image">
-    @endif
-    
-    <!-- Transparent Overlay Layers -->
-    <div class="transparent-overlay"></div>
-    <div class="overlay-layer"></div>
-    
-    <!-- Decorative Elements -->
-    @if($topBranchSrc)
-        <img src="{!! $topBranchSrc !!}" alt="Branch" class="top-right-branch">
-    @endif
-    @if($bottomBranchSrc)
-        <img src="{!! $bottomBranchSrc !!}" alt="Branch" class="bottom-left-branch">
-    @endif
-    
-    <div class="content-wrapper">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-with-muscles">
-                @if($leftMuscleSrc)
-                    <img src="{!! $leftMuscleSrc !!}" alt="Muscle" class="title-muscle-left">
-                @endif
-                <div class="title-frame-wrapper">
-                    @if($titleFrameSrc)
-                        <img src="{!! $titleFrameSrc !!}" alt="Title Frame" class="title-frame-image">
-                    @endif
-                    <div class="title-text">LE RAPPORT D'AUJOURD'HUI</div>
-                </div>
-                @if($rightMuscleSrc)
-                    <img src="{!! $rightMuscleSrc !!}" alt="Muscle" class="title-muscle-right">
-                @endif
+    <!-- Logo - Top Left -->
+    <div class="logo-container">
+        @if($logoSrc)
+            <div class="logo-wrapper">
+                <img src="{!! $logoSrc !!}" alt="Azhary Logo">
             </div>
-            <div class="student-name-box">
-                <span>{{ $course->student_name ?? ($course->student->name ?? 'N/A') }}</span>
+        @endif
+    </div>
+    
+    <!-- Title Section -->
+    <div class="title-section">
+        <div class="title-banner">
+            <div class="title-text">LE RAPPORT D'AUJOURD'HUI</div>
+        </div>
+    </div>
+    
+    <!-- Student Name Section -->
+    <div class="student-name-section">
+        <div class="student-name-box">
+            <div class="student-name-text">{{ $course->student_name ?? ($course->student->name ?? 'N/A') }}</div>
+        </div>
+    </div>
+    
+    <!-- Evaluation Warning -->
+    <div class="evaluation-warning">
+        <div class="evaluation-warning-content">
+            <span class="warning-icon">⚠️</span>
+            <span>{{ $course->evaluation ? $course->evaluation->name : 'Mutawassit (Moyen)' }}</span>
+        </div>
+    </div>
+    
+    <!-- Divider Line -->
+    <div class="divider-line"></div>
+    
+    <!-- Info Section -->
+    <div class="info-section">
+        <div class="info-item">
+            <div class="info-icon">📅</div>
+            <div class="info-box">{{ $course->course_date ? $course->course_date->format('Y/m/d') : 'N/A' }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">📚</div>
+            <div class="info-box">{{ $course->student && $course->student->subject ? $course->student->subject->name : 'N/A' }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">🕐</div>
+            <div class="info-box">{{ $course->duration_hours ?? 0 }}h {{ $course->duration_minutes ?? 0 }}m</div>
+        </div>
+        @if($course->evaluation)
+        <div class="info-item">
+            <div class="info-box">{{ $course->evaluation->name }}</div>
+        </div>
+        @endif
+        <div class="info-item">
+            <div class="info-box white">{{ ucfirst(strtolower($course->status ?? 'N/A')) }}</div>
+        </div>
+    </div>
+    
+    <!-- Main Content Section - 2x2 Grid -->
+    <div class="main-content">
+        <!-- Top Left: CONTENU -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon">📄</div>
+                <div class="card-title">CONTENU</div>
+            </div>
+            <div class="card-content">
+                {{ $course->content ?? 'Aucun contenu disponible' }}
             </div>
         </div>
         
-        <!-- Divider -->
-        <div class="section-divider"></div>
-        
-        <!-- Info Section -->
-        <div class="info-section">
-            <div class="info-left">
-                <div class="info-item">
-                    <div class="info-icon">📅</div>
-                    <div class="info-box">{{ $course->course_date ? $course->course_date->format('Y-m-d') : 'N/A' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">📚</div>
-                    <div class="info-box">{{ $course->student && $course->student->subject ? $course->student->subject->name : 'N/A' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">🕐</div>
-                    <div class="info-box">{{ $course->duration_hours ?? 0 }}h {{ $course->duration_minutes ?? 0 }}m</div>
-                </div>
+        <!-- Top Right: NOTES -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon">∞</div>
+                <div class="card-title">NOTES</div>
             </div>
-            <div class="info-right">
-                @if($course->evaluation)
-                <div class="info-item" style="justify-content: center;">
-                    <div class="info-icon">🌙</div>
-                    <div class="info-box">{{ $course->evaluation->name }}</div>
-                </div>
-                @endif
-                <div class="info-item" style="justify-content: center;">
-                    <div class="info-box">{{ ucfirst(strtolower($course->status ?? 'N/A')) }}</div>
-                </div>
+            <div class="card-content">
+                {{ $course->notes ?? 'Aucune note disponible' }}
             </div>
         </div>
         
-        <!-- Divider -->
-        <div class="section-divider"></div>
-        
-        <!-- Main Content Section -->
-        <div class="main-content">
-            <div class="content-card">
-                <div class="card-header">
-                    <div class="card-icon">📄</div>
-                    <div class="card-title">Contenu</div>
-                </div>
-                <div class="card-content">
-                    {{ $course->content ?? 'Aucun contenu disponible' }}
-                </div>
+        <!-- Bottom Left: SOUVENIR -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon">📷</div>
+                <div class="card-title">SOUVENIR</div>
             </div>
-            <div class="divider-line"></div>
-            <div class="notes-card">
-                <div class="card-header">
-                    <div class="card-icon">👓</div>
-                    <div class="card-title">Notes</div>
-                </div>
-                <div class="card-content">
-                    {{ $course->notes ?? 'Aucune note disponible' }}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Divider -->
-        <div class="section-divider"></div>
-        
-        <!-- Bottom Section -->
-        <div class="bottom-section">
-            <div class="souvenir-card">
-                <div class="card-header">
-                    <div class="card-icon">📷</div>
-                    <div class="card-title">Souvenir</div>
-                </div>
-                <div class="souvenir-image-container">
-                    @if($course->souvenir_image)
-                        @php
-                            $imagePath = storage_path('app/public/' . $course->souvenir_image);
-                            if (file_exists($imagePath)) {
-                                $imageData = base64_encode(file_get_contents($imagePath));
-                                $imageSrc = 'data:image/' . pathinfo($imagePath, PATHINFO_EXTENSION) . ';base64,' . $imageData;
-                            } else {
-                                $imageSrc = null;
-                            }
-                        @endphp
-                        @if($imageSrc)
-                            <img src="{!! $imageSrc !!}" alt="Souvenir">
-                        @else
-                            <p style="color: #9ca3af; font-size: 14px;">Image non trouvée</p>
-                        @endif
+            <div class="souvenir-image-container">
+                @if($course->souvenir_image)
+                    @php
+                        $imagePath = storage_path('app/public/' . $course->souvenir_image);
+                        if (file_exists($imagePath)) {
+                            $imageData = base64_encode(file_get_contents($imagePath));
+                            $ext = pathinfo($imagePath, PATHINFO_EXTENSION);
+                            $mime = $ext === 'jpg' ? 'jpeg' : ($ext === 'png' ? 'png' : $ext);
+                            $imageSrc = 'data:image/' . $mime . ';base64,' . $imageData;
+                        } else {
+                            $imageSrc = null;
+                        }
+                    @endphp
+                    @if($imageSrc)
+                        <img src="{!! $imageSrc !!}" alt="Souvenir">
                     @else
-                        <p style="color: #9ca3af; font-size: 14px;">Aucune image disponible</p>
+                        <p class="souvenir-placeholder">Image non trouvée</p>
                     @endif
-                </div>
-            </div>
-            <div class="homework-card">
-                <div class="card-header">
-                    <div class="card-icon">🏠</div>
-                    <div class="card-title">Le Devoir</div>
-                </div>
-                <div class="homework-content">
-                    @if($course->homework)
-                        @if(strtolower(trim($course->homework)) === 'fait' || strtolower(trim($course->homework)) === 'done')
-                            <div class="homework-done">Fait ✨ 👓</div>
-                        @else
-                            {{ $course->homework }}
-                        @endif
-                    @else
-                        Aucun devoir assigné
-                    @endif
-                </div>
+                @else
+                    <p class="souvenir-placeholder">Aucune image disponible</p>
+                @endif
             </div>
         </div>
         
-        <!-- Divider -->
-        <div class="section-divider"></div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-message">
-                Merci d'avoir rejoint la famille 'Madrassat Elkarim' <span>👨‍👩‍👧‍👦</span> <span>😍</span>
+        <!-- Bottom Right: LE DEVOIR -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon">⛰️</div>
+                <div class="card-title">LE DEVOIR</div>
             </div>
+            <div class="card-content" style="text-align: center;">
+                @if($course->homework)
+                    @if(strtolower(trim($course->homework)) === 'fait' || strtolower(trim($course->homework)) === 'done')
+                        <div style="font-weight: 600; font-size: 24px; color: #059669;">Fait ✨ 👓</div>
+                    @else
+                        {{ $course->homework }}
+                    @endif
+                @else
+                    Aucun devoir assigné
+                @endif
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-message">
+            Merci d'avoir rejoint la famille 'Azhary' <span class="emoji">✨</span> <span class="emoji">😍</span>
         </div>
     </div>
 </body>

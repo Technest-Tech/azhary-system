@@ -21,6 +21,98 @@ use Spatie\Browsershot\Browsershot;
 
 class TeacherController extends Controller
 {
+    /**
+     * Configure a Browsershot instance with proper Node.js, npm, and Chrome paths.
+     * Centralizes all path configuration to avoid "npm: command not found" errors.
+     */
+    private function configureBrowsershot(Browsershot $browsershot): Browsershot
+    {
+        // Node.js binary
+        $nodeBinary = config('laravel-pdf.browsershot.node_binary') ?: env('LARAVEL_PDF_NODE_BINARY');
+        if (!$nodeBinary || !file_exists($nodeBinary)) {
+            $possiblePaths = [
+                getenv('HOME') . '/nodejs/bin/node',
+                '/opt/homebrew/bin/node',
+                '/usr/local/bin/node',
+                '/usr/bin/node',
+            ];
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path) && is_executable($path)) {
+                    $nodeBinary = $path;
+                    break;
+                }
+            }
+        }
+        if ($nodeBinary && file_exists($nodeBinary)) {
+            $browsershot->setNodeBinary($nodeBinary);
+        }
+
+        // npm binary
+        $npmBinary = config('laravel-pdf.browsershot.npm_binary') ?: env('LARAVEL_PDF_NPM_BINARY');
+        if (!$npmBinary || !file_exists($npmBinary)) {
+            $possiblePaths = [
+                getenv('HOME') . '/nodejs/bin/npm',
+                '/opt/homebrew/bin/npm',
+                '/usr/local/bin/npm',
+                '/usr/bin/npm',
+            ];
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path) && is_executable($path)) {
+                    $npmBinary = $path;
+                    break;
+                }
+            }
+        }
+        if ($npmBinary && file_exists($npmBinary)) {
+            $browsershot->setNpmBinary($npmBinary);
+        }
+
+        // Node module path — setting this bypasses the `npm root -g` shell call entirely
+        $nodeModulePath = config('laravel-pdf.browsershot.node_modules_path') ?: base_path('node_modules');
+        if (is_dir($nodeModulePath)) {
+            $browsershot->setNodeModulePath($nodeModulePath);
+        }
+
+        // Chrome executable path (prefer chrome-headless-shell for server environments)
+        $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
+        if (!$chromePath || !file_exists($chromePath)) {
+            // Try to find Chrome/chrome-headless-shell in common locations
+            $possibleChromePaths = [
+                '/var/www/.cache/puppeteer/chrome-headless-shell/linux-145.0.7632.46/chrome-headless-shell-linux64/chrome-headless-shell',
+                '/var/www/.cache/puppeteer/chrome/linux-145.0.7632.46/chrome-linux64/chrome',
+                '/root/.cache/puppeteer/chrome-headless-shell/linux-145.0.7632.46/chrome-headless-shell-linux64/chrome-headless-shell',
+                '/root/.cache/puppeteer/chrome/linux-145.0.7632.46/chrome-linux64/chrome',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+            ];
+            foreach ($possibleChromePaths as $path) {
+                if (file_exists($path) && is_executable($path)) {
+                    $chromePath = $path;
+                    break;
+                }
+            }
+        }
+        if ($chromePath && file_exists($chromePath)) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        // Set Puppeteer cache directory environment variable
+        $puppeteerCacheDir = env('PUPPETEER_CACHE_DIR', '/var/www/.cache/puppeteer');
+        if (is_dir($puppeteerCacheDir)) {
+            putenv('PUPPETEER_CACHE_DIR=' . $puppeteerCacheDir);
+        }
+
+        // Include nodejs/bin in the shell PATH so any sub-processes can find node/npm
+        $nodeBinDir = dirname($nodeBinary ?: '/usr/bin/node');
+        $browsershot->setIncludePath('$PATH:/usr/local/bin:/opt/homebrew/bin:' . $nodeBinDir);
+
+        // Sandbox-safe Chrome args
+        $browsershot->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox']);
+
+        return $browsershot;
+    }
+
     public function dashboard(Request $request)
     {
         $teacher = Auth::guard('teacher')->user();
@@ -314,12 +406,20 @@ class TeacherController extends Controller
             $validated['souvenir_image'] = $imagePath;
         }
         
-        // Calculate n_value based on package_number and previous lessons
+        // Get current active round for this student (exclude pending round 0)
+        $currentRound = Course::where('student_id', $student->id)
+            ->where('teacher_id', $teacher->id)
+            ->where('round', '>', 0)
+            ->max('round') ?? 1;
+        
+        // Calculate n_value based on package_number and previous lessons IN THE CURRENT ROUND
         // Exclude unapproved absences (name = "0") and lessons beyond limit that haven't been paid (name = "0.0")
         $previousLessons = Course::where('student_id', $student->id)
                                ->where('teacher_id', $teacher->id)
+                               ->where('round', $currentRound) // Only look at current round
                                ->where('name', '!=', '0') // Exclude unapproved absences
                                ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
+                               ->where('admin_status', '!=', 'pending') // Exclude pending courses
                                ->orderBy('n_value', 'desc')
                                ->first();
         
@@ -343,11 +443,6 @@ class TeacherController extends Controller
             
             // Calculate income based on teacher's hourly rate
             $income = $currentDuration * $teacher->hourly_rate;
-            
-            // Get current round for this student
-            $currentRound = Course::where('student_id', $student->id)
-                ->where('teacher_id', $teacher->id)
-                ->max('round') ?? 1;
             
             $validated['teacher_id'] = $teacher->id;
             $validated['student_name'] = $validated['student_name'] ?? $student->name;
@@ -376,11 +471,6 @@ class TeacherController extends Controller
                 
                 $pendingHours = floor($hoursPending);
                 $pendingMinutes = round(($hoursPending - $pendingHours) * 60);
-                
-                // Get current round for this student
-                $currentRound = Course::where('student_id', $student->id)
-                    ->where('teacher_id', $teacher->id)
-                    ->max('round') ?? 1;
                 
                 // First course: completes the package
                 $nValueComplete = $previousNValue + $hoursToComplete;
@@ -412,6 +502,30 @@ class TeacherController extends Controller
                 $pendingCourseData['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
                 $pendingCourseData['round'] = 0; // Will be set to new round when package is activated
                 
+                // Determine course name based on payment status
+                $paymentStatus = $student->paymentStatus;
+                if ($paymentStatus && ($paymentStatus->name === 'PAYÉ' || $paymentStatus->name === 'Active')) {
+                    // Package is paid - assign next course number
+                    $lastLesson = Course::where('student_id', $student->id)
+                        ->where('teacher_id', $teacher->id)
+                        ->where('name', '!=', '0')
+                        ->where('name', '!=', '0.0')
+                        ->where('admin_status', '!=', 'pending') // Exclude pending courses
+                        ->orderBy('course_date', 'desc')
+                        ->orderBy('class_time', 'desc')
+                        ->first();
+                    
+                    if ($lastLesson && is_numeric($lastLesson->name)) {
+                        $lessonNumber = (float)$lastLesson->name + 1;
+                    } else {
+                        $lessonNumber = 1;
+                    }
+                    $pendingCourseData['name'] = (string)$lessonNumber;
+                } else {
+                    // Package is not paid - use "0"
+                    $pendingCourseData['name'] = '0';
+                }
+                
                 Course::create($pendingCourseData);
                 
                 // Set payment status to "EN ATTENTE DE PAYEMENT"
@@ -432,6 +546,30 @@ class TeacherController extends Controller
                 $validated['admin_status'] = 'pending';
                 $validated['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
                 $validated['round'] = 0; // Will be set to new round when package is activated
+                
+                // Determine course name based on payment status
+                $paymentStatus = $student->paymentStatus;
+                if ($paymentStatus && ($paymentStatus->name === 'PAYÉ' || $paymentStatus->name === 'Active')) {
+                    // Package is paid - assign next course number
+                    $lastLesson = Course::where('student_id', $student->id)
+                        ->where('teacher_id', $teacher->id)
+                        ->where('name', '!=', '0')
+                        ->where('name', '!=', '0.0')
+                        ->where('admin_status', '!=', 'pending') // Exclude pending courses
+                        ->orderBy('course_date', 'desc')
+                        ->orderBy('class_time', 'desc')
+                        ->first();
+                    
+                    if ($lastLesson && is_numeric($lastLesson->name)) {
+                        $lessonNumber = (float)$lastLesson->name + 1;
+                    } else {
+                        $lessonNumber = 1;
+                    }
+                    $validated['name'] = (string)$lessonNumber;
+                } else {
+                    // Package is not paid - use "0"
+                    $validated['name'] = '0';
+                }
                 
                 $course = Course::create($validated);
                 
@@ -489,6 +627,7 @@ class TeacherController extends Controller
                 $validated['total_hours'] = $currentDuration;
                 $validated['income'] = $income;
                 $validated['admin_status'] = 'approved';
+                $validated['round'] = $currentRound;
                 
                 $course = Course::create($validated);
             }
@@ -522,21 +661,12 @@ class TeacherController extends Controller
             ]);
         }
         
-        // Generate and download report if course was created with Present status
-        if (isset($course) && $course->status === 'Present') {
-            // Generate WhatsApp report in background (doesn't block the response)
+        // Generate and send report via WhatsApp for any created course
+        if (isset($course)) {
             $this->generateAndSendReport($course);
             
-            // Store course ID in session for automatic download
-            session(['download_report_id' => $course->id]);
-            
             return redirect()->route('teacher.courses')
-                            ->with('success', 'Course created successfully! Report is being downloaded...');
-        }
-        
-        if (isset($course)) {
-            return redirect()->route('teacher.dashboard')
-                            ->with('success', 'Course created successfully!');
+                            ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
         }
         
         // This should not be reached, but just in case
@@ -625,20 +755,11 @@ class TeacherController extends Controller
         // Recalculate all n_values for this student to ensure consistency
         $this->recalculateNValues($student->id, $teacher->id);
         
-        // Generate and download report if course status is Present
-        if ($course->status === 'Present') {
-            // Generate WhatsApp report in background
-            $this->generateAndSendReport($course);
-            
-            // Store course ID in session for automatic download
-            session(['download_report_id' => $course->id]);
-            
-            return redirect()->route('teacher.courses')
-                            ->with('success', 'Course updated successfully! Report is being downloaded...');
-        }
+        // Generate and send report via WhatsApp for any status
+        $this->generateAndSendReport($course);
         
-        return redirect()->route('teacher.dashboard')
-                        ->with('success', 'Course updated successfully!');
+        return redirect()->route('teacher.courses')
+                        ->with('success', 'Course updated successfully! Report image has been sent to student\'s WhatsApp.');
     }
 
     public function destroyCourse(Course $course)
@@ -736,50 +857,17 @@ class TeacherController extends Controller
         $course->load(['student.subject', 'evaluation', 'teacher']);
         
         try {
-            // Get Node.js binary path
-            $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
-                ?: env('LARAVEL_PDF_NODE_BINARY');
-            
-            // Try to find Node.js in common locations if not set
-            if (!$nodeBinary || !file_exists($nodeBinary)) {
-                $possiblePaths = [
-                    getenv('HOME') . '/nodejs/bin/node',
-                    '/opt/homebrew/bin/node',
-                    '/usr/local/bin/node',
-                    '/usr/bin/node',
-                ];
-                
-                foreach ($possiblePaths as $path) {
-                    if (file_exists($path) && is_executable($path)) {
-                        $nodeBinary = $path;
-                        break;
-                    }
-                }
-            }
-            
             // Load HTML content with course data
             $html = view('teacher.courses.report-pdf', ['course' => $course])->render();
             
-            // Use Browsershot to generate screenshot/image directly from HTML
-            $browsershot = Browsershot::html($html);
-            
-            // Set Node.js binary if found
-            if ($nodeBinary && file_exists($nodeBinary)) {
-                $browsershot->setNodeBinary($nodeBinary);
-            }
-            
-            // Set Chrome executable path if configured
-            $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
-            if ($chromePath && file_exists($chromePath)) {
-                $browsershot->setChromePath($chromePath);
-            }
+            // Use Browsershot with centralized configuration
+            $browsershot = $this->configureBrowsershot(Browsershot::html($html));
             
             // Generate high-quality image (A4 size at 150dpi = 1240x1754)
             $imageContent = $browsershot->windowSize(1240, 1754)
                 ->waitUntilNetworkIdle()
                 ->delay(1000)
                 ->dismissDialogs()
-                ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
                 ->setOption('captureBeyondViewport', true)
                 ->screenshot();
             
@@ -840,56 +928,19 @@ class TeacherController extends Controller
             
             // Generate image directly using Browsershot (real browser rendering - perfect CSS support)
             try {
-                // Get Node.js binary path from config or .env
-                $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
-                    ?: env('LARAVEL_PDF_NODE_BINARY');
-                
-                // Try to find Node.js in common locations if not set
-                if (!$nodeBinary || !file_exists($nodeBinary)) {
-                    $possiblePaths = [
-                        getenv('HOME') . '/nodejs/bin/node',
-                        '/opt/homebrew/bin/node',
-                        '/usr/local/bin/node',
-                        '/usr/bin/node',
-                    ];
-                    
-                    foreach ($possiblePaths as $path) {
-                        if (file_exists($path) && is_executable($path)) {
-                            $nodeBinary = $path;
-                            break;
-                        }
-                    }
-                }
-                
                 // Load HTML content
                 $html = view('teacher.courses.report-pdf', ['course' => $course])->render();
                 
-                // Use Browsershot to generate screenshot/image directly from HTML
-                // This uses a real browser engine (Chrome), so all CSS and images render perfectly
-                $browsershot = Browsershot::html($html);
+                // Use Browsershot with centralized configuration
+                $browsershot = $this->configureBrowsershot(Browsershot::html($html));
                 
-                // Set Node.js binary if found
-                if ($nodeBinary && file_exists($nodeBinary)) {
-                    $browsershot->setNodeBinary($nodeBinary);
-                }
-                
-                // Set Chrome executable path if configured
-                $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
-                if ($chromePath && file_exists($chromePath)) {
-                    $browsershot->setChromePath($chromePath);
-                }
-                
-                // Configure for high-quality image (A4 size at 150dpi = 1240x1754)
-                // Use windowSize for full page capture
-                // screenshot() returns binary PNG image data directly
-                // Using report_background.jpg as background - wait for images to load
-                $imageContent = $browsershot->windowSize(1240, 1754) // A4 at 150dpi
+                // Generate high-quality image (A4 at 150dpi = 1240x1754)
+                $imageContent = $browsershot->windowSize(1240, 1754)
                     ->waitUntilNetworkIdle()
-                    ->delay(1000) // Longer delay to ensure base64 images are fully loaded
+                    ->delay(1000)
                     ->dismissDialogs()
-                    ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-                    ->setOption('captureBeyondViewport', true) // Capture beyond viewport
-                    ->screenshot(); // Generate PNG image directly - returns binary data
+                    ->setOption('captureBeyondViewport', true)
+                    ->screenshot();
                 
                 if (empty($imageContent)) {
                     throw new \Exception('Image generation failed - empty content');
@@ -1115,56 +1166,19 @@ class TeacherController extends Controller
         $mockCourse->setRelation('evaluation', $mockEvaluation);
         
         try {
-            // Get Node.js binary path
-            $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
-                ?: env('LARAVEL_PDF_NODE_BINARY');
-            
-            // Try to find Node.js in common locations if not set
-            if (!$nodeBinary || !file_exists($nodeBinary)) {
-                $possiblePaths = [
-                    getenv('HOME') . '/nodejs/bin/node',
-                    '/opt/homebrew/bin/node',
-                    '/usr/local/bin/node',
-                    '/usr/bin/node',
-                ];
-                
-                foreach ($possiblePaths as $path) {
-                    if (file_exists($path) && is_executable($path)) {
-                        $nodeBinary = $path;
-                        break;
-                    }
-                }
-            }
-            
             // Load HTML content
             $html = view('teacher.courses.report-pdf', ['course' => $mockCourse])->render();
             
-            // Use Browsershot to generate screenshot/image directly from HTML
-            // This uses a real browser engine (Chrome), so all CSS and images render perfectly
-            $browsershot = Browsershot::html($html);
+            // Use Browsershot with centralized configuration
+            $browsershot = $this->configureBrowsershot(Browsershot::html($html));
             
-            // Set Node.js binary if found
-            if ($nodeBinary && file_exists($nodeBinary)) {
-                $browsershot->setNodeBinary($nodeBinary);
-            }
-            
-            // Set Chrome executable path if configured
-            $chromePath = config('laravel-pdf.browsershot.chrome_path') ?: env('LARAVEL_PDF_CHROME_PATH');
-            if ($chromePath && file_exists($chromePath)) {
-                $browsershot->setChromePath($chromePath);
-            }
-            
-                // Configure for high-quality image (A4 size at 150dpi = 1240x1754)
-                // Use windowSize for full page capture
-                // screenshot() returns binary PNG image data directly
-                // Using report_background.jpg as background - wait for images to load
-                $imageContent = $browsershot->windowSize(1240, 1754) // A4 at 150dpi
-                    ->waitUntilNetworkIdle()
-                    ->delay(1000) // Longer delay to ensure base64 images are fully loaded
-                    ->dismissDialogs()
-                    ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-                    ->setOption('captureBeyondViewport', true) // Capture beyond viewport
-                    ->screenshot(); // Generate PNG image directly - returns binary data
+            // Generate high-quality image (A4 at 150dpi = 1240x1754)
+            $imageContent = $browsershot->windowSize(1240, 1754)
+                ->waitUntilNetworkIdle()
+                ->delay(1000)
+                ->dismissDialogs()
+                ->setOption('captureBeyondViewport', true)
+                ->screenshot();
             
             if (empty($imageContent)) {
                 return response('Image generation failed - empty content', 500);
@@ -1215,45 +1229,18 @@ class TeacherController extends Controller
         $mockCourse->setRelation('evaluation', $mockEvaluation);
         
         try {
-            // Get Node.js binary path
-            $nodeBinary = config('laravel-pdf.browsershot.node_binary') 
-                ?: env('LARAVEL_PDF_NODE_BINARY');
-            
-            // Try to find Node.js in common locations if not set
-            if (!$nodeBinary || !file_exists($nodeBinary)) {
-                $possiblePaths = [
-                    getenv('HOME') . '/nodejs/bin/node',
-                    '/opt/homebrew/bin/node',
-                    '/usr/local/bin/node',
-                    '/usr/bin/node',
-                ];
-                
-                foreach ($possiblePaths as $path) {
-                    if (file_exists($path) && is_executable($path)) {
-                        $nodeBinary = $path;
-                        break;
-                    }
-                }
-            }
-            
             // Load HTML content
             $html = view('teacher.courses.report-pdf', ['course' => $mockCourse])->render();
             
-            // Use Browsershot to generate PDF directly from HTML
-            $browsershot = Browsershot::html($html);
-            
-            // Set Node.js binary if found
-            if ($nodeBinary && file_exists($nodeBinary)) {
-                $browsershot->setNodeBinary($nodeBinary);
-            }
+            // Use Browsershot with centralized configuration
+            $browsershot = $this->configureBrowsershot(Browsershot::html($html));
             
             // Generate PDF with high quality
             $pdfContent = $browsershot->format('A4')
                 ->margins(0, 0, 0, 0)
                 ->waitUntilNetworkIdle()
                 ->dismissDialogs()
-                ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-                ->pdf(); // Generate PDF directly - returns binary data
+                ->pdf();
             
             if (empty($pdfContent)) {
                 return response('PDF content is empty', 500);

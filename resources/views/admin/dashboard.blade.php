@@ -284,15 +284,6 @@
                                        title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    @if($course->status === 'Present')
-                                    <a href="{{ route('admin.courses.report-image', $course) }}" 
-                                       style="padding: 8px; color: #059669; text-decoration: none; border-radius: 4px;"
-                                       onmouseover="this.style.background='#d1fae5'" 
-                                       onmouseout="this.style.background='transparent'"
-                                       title="Download Report">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                    @endif
                                     <form method="POST" action="{{ route('admin.courses.destroy', $course) }}" style="display: inline;" 
                                           onsubmit="return confirm('{{ __('admin.delete_course_confirm') }}')">
                                         @csrf
@@ -448,21 +439,5 @@
             }
         });
         
-        // Auto-download report after course creation/update
-        @if(session('download_report_id'))
-            (function() {
-                var courseId = {{ session('download_report_id') }};
-                // Create hidden iframe to trigger download
-                var iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = '{{ url("/admin/courses") }}/' + courseId + '/report-image';
-                document.body.appendChild(iframe);
-                
-                // Remove iframe after download starts
-                setTimeout(function() {
-                    document.body.removeChild(iframe);
-                }, 5000);
-            })();
-        @endif
     </script>
 @endsection

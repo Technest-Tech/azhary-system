@@ -23,6 +23,7 @@ class Student extends Authenticatable
         'teacher_id',
         'teacher_rate',
         'subject_id',
+        'color',
     ];
 
     protected $hidden = [

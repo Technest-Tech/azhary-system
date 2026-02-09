@@ -229,17 +229,46 @@
 
             <!-- Action Buttons -->
             <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <button type="submit" name="save_only" value="1" 
-                        style="padding: 14px 28px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-save"></i>
-                    {{ __('teacher.save') }}
+                <button type="submit" name="save_only" value="1" id="saveBtn"
+                        style="padding: 14px 28px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+                    <i class="fas fa-save" id="saveIcon"></i>
+                    <span id="saveText">{{ __('teacher.save') }}</span>
                 </button>
-                <button type="submit" name="generate_report" value="1" 
-                        style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                    <i class="fas fa-file-alt"></i>
-                    {{ __('teacher.save') }}
+                <button type="submit" name="generate_report" value="1" id="submitBtn"
+                        style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                    <i class="fas fa-file-alt" id="submitIcon"></i>
+                    <span id="submitText">{{ __('teacher.save') }}</span>
                 </button>
             </div>
         </form>
     </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 20px; padding: 48px 56px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.4s ease;">
+            <div style="margin-bottom: 24px;">
+                <div class="loading-spinner" style="width: 56px; height: 56px; border: 4px solid #e5e7eb; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
+            </div>
+            <h3 style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">{{ __('teacher.create_course') }}...</h3>
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">Generating report and sending to WhatsApp.<br>Please wait, this may take a few seconds.</p>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            var btns = document.querySelectorAll('button[type="submit"]');
+            var overlay = document.getElementById('loadingOverlay');
+            btns.forEach(function(btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'not-allowed';
+            });
+            overlay.style.display = 'flex';
+        });
+    </script>
 @endsection

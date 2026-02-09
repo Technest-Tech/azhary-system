@@ -322,11 +322,6 @@
                                             <a href="{{ route('teacher.courses.edit', $course) }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border: 1px solid #fde68a; border-radius: 8px; text-decoration: none; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'" title="Edit">
                                                 <i class="fas fa-edit" style="font-size: 14px;"></i>
                                             </a>
-                                            @if($course->status === 'Present')
-                                            <a href="{{ route('teacher.courses.report-image', $course) }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #059669; border: 1px solid #a7f3d0; border-radius: 8px; text-decoration: none; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'" title="Download Report">
-                                                <i class="fas fa-download" style="font-size: 14px;"></i>
-                                            </a>
-                                            @endif
                                             <form method="POST" action="{{ route('teacher.courses.destroy', $course) }}" style="display: inline;" onsubmit="return confirm('{{ __('teacher.delete_confirm') }}')">
                                                 @csrf
                                                 @method('DELETE')
@@ -485,21 +480,5 @@
             }
         });
         
-        // Auto-download report after course creation
-        @if(session('download_report_id'))
-            (function() {
-                var courseId = {{ session('download_report_id') }};
-                // Create hidden iframe to trigger download
-                var iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = '{{ url("/teacher/courses") }}/' + courseId + '/report-image';
-                document.body.appendChild(iframe);
-                
-                // Remove iframe after download starts
-                setTimeout(function() {
-                    document.body.removeChild(iframe);
-                }, 5000);
-            })();
-        @endif
     </script>
 @endsection

@@ -220,11 +220,40 @@
             <i class="fas fa-times"></i>
             {{ __('teacher.cancel') }}
         </button>
-        <button type="submit" name="save_only" value="1" 
-                style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-            <i class="fas fa-save"></i>
-            {{ __('teacher.save_course') }}
+        <button type="submit" name="save_only" value="1" id="modalSubmitBtn"
+                style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+            <i class="fas fa-save" id="modalSubmitIcon"></i>
+            <span id="modalSubmitText">{{ __('teacher.save_course') }}</span>
         </button>
     </div>
 </form>
 
+<!-- Loading Overlay for Modal -->
+<div id="modalLoadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 20px; padding: 48px 56px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: modalSlideUp 0.4s ease;">
+        <div style="margin-bottom: 24px;">
+            <div style="width: 56px; height: 56px; border: 4px solid #e5e7eb; border-top: 4px solid #10b981; border-radius: 50%; animation: modalSpin 0.8s linear infinite; margin: 0 auto;"></div>
+        </div>
+        <h3 style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">{{ __('teacher.create_course') }}...</h3>
+        <p style="color: #6b7280; font-size: 14px; margin: 0;">Generating report and sending to WhatsApp.<br>Please wait, this may take a few seconds.</p>
+    </div>
+</div>
+
+<style>
+    @keyframes modalSpin { to { transform: rotate(360deg); } }
+    @keyframes modalSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script>
+    document.getElementById('addLessonForm').addEventListener('submit', function(e) {
+        var btn = document.getElementById('modalSubmitBtn');
+        var overlay = document.getElementById('modalLoadingOverlay');
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'not-allowed';
+        document.getElementById('modalSubmitIcon').className = '';
+        document.getElementById('modalSubmitIcon').style.cssText = 'width:16px;height:16px;border:3px solid rgba(255,255,255,0.3);border-top:3px solid white;border-radius:50%;animation:modalSpin 0.8s linear infinite;';
+        document.getElementById('modalSubmitText').textContent = 'Processing...';
+        overlay.style.display = 'flex';
+    });
+</script>

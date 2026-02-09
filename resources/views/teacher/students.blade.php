@@ -28,7 +28,11 @@
                      onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.1)'" 
                      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
                     <!-- Circular Graphic with Mosque/Crescent -->
-                    <div style="width: 100%; height: 180px; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                    @php
+                        $studentColor = $student->color ?? '#14b8a6';
+                        $darkerColor = \App\Services\StudentColorService::getDarkerShade($studentColor);
+                    @endphp
+                    <div style="width: 100%; height: 180px; background: linear-gradient(135deg, {{ $studentColor }} 0%, {{ $darkerColor }} 100%); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                         <!-- Birds (small white circles) -->
                         <div style="position: absolute; top: 20px; left: 30px; width: 8px; height: 8px; background: white; border-radius: 50%; opacity: 0.8;"></div>
                         <div style="position: absolute; top: 15px; right: 40px; width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.8;"></div>

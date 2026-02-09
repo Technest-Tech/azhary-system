@@ -14,6 +14,7 @@ use App\Models\WaitingList;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\StudentColorService;
 
 class AdminController extends Controller
 {
@@ -216,6 +217,11 @@ class AdminController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
 
+        // Assign unique color if teacher is assigned
+        if (!empty($validated['teacher_id'])) {
+            $validated['color'] = StudentColorService::generateUniqueColorForTeacher($validated['teacher_id']);
+        }
+
         Student::create($validated);
 
         return redirect()->route('admin.students')->with('success', 'Student created successfully!');
@@ -251,6 +257,21 @@ class AdminController extends Controller
                 'password' => 'string|min:8',
             ]);
             $validated['password'] = Hash::make($request->password);
+        }
+
+        // Handle color assignment when teacher changes
+        $oldTeacherId = $student->teacher_id;
+        $newTeacherId = $validated['teacher_id'] ?? null;
+
+        // If teacher is being assigned or changed, assign/update color
+        if ($newTeacherId) {
+            // If student has no color, or teacher changed, assign new unique color
+            if (!$student->color || $oldTeacherId != $newTeacherId) {
+                $validated['color'] = StudentColorService::generateUniqueColorForTeacher($newTeacherId);
+            }
+        } else {
+            // If teacher is removed, clear color
+            $validated['color'] = null;
         }
 
         $student->update($validated);
@@ -640,12 +661,20 @@ class AdminController extends Controller
             $validated['souvenir_image'] = $imagePath;
         }
         
-        // Calculate n_value based on package_number and previous lessons
+        // Get current active round for this student (exclude pending round 0)
+        $currentRound = Course::where('student_id', $student->id)
+            ->where('teacher_id', $teacher->id)
+            ->where('round', '>', 0)
+            ->max('round') ?? 1;
+        
+        // Calculate n_value based on package_number and previous lessons IN THE CURRENT ROUND
         // Exclude unapproved absences (name = "0") and lessons beyond limit that haven't been paid (name = "0.0")
         $previousLessons = Course::where('student_id', $student->id)
                                ->where('teacher_id', $teacher->id)
+                               ->where('round', $currentRound) // Only look at current round
                                ->where('name', '!=', '0') // Exclude unapproved absences
                                ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
+                               ->where('admin_status', '!=', 'pending') // Exclude pending courses
                                ->orderBy('n_value', 'desc')
                                ->first();
         
@@ -670,11 +699,6 @@ class AdminController extends Controller
             $validated['name'] = '0';
             $nValue = $previousNValue; // Don't increment n_value for absences until approved
             
-            // Get current round for this student
-            $currentRound = Course::where('student_id', $student->id)
-                ->where('teacher_id', $teacher->id)
-                ->max('round') ?? 1;
-            
             $validated['student_name'] = $validated['student_name'] ?? $student->name;
             $validated['n_value'] = $nValue;
             $validated['total_hours'] = $currentDuration;
@@ -683,18 +707,12 @@ class AdminController extends Controller
             
             $course = Course::create($validated);
             
-            // Generate and download report if course status is Present
-            if ($course->status === 'Present') {
-                // Use TeacherController's method to generate and send report
-                $teacherController = new \App\Http\Controllers\TeacherController();
-                $teacherController->generateAndSendReport($course);
-                
-                // Store course ID in session for automatic download
-                session(['download_report_id' => $course->id]);
-                
-                return redirect()->route('admin.dashboard')
-                                ->with('success', 'Course created successfully! Report is being downloaded...');
-            }
+            // Generate and send report via WhatsApp for any status
+            $teacherController = new \App\Http\Controllers\TeacherController();
+            $teacherController->generateAndSendReport($course);
+            
+            return redirect()->route('admin.dashboard')
+                            ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
         } else {
             // Check if lesson exceeds package limit
             $remainingInPackage = $student->package_number - $previousNValue;
@@ -711,11 +729,6 @@ class AdminController extends Controller
                 
                 $pendingHours = floor($hoursPending);
                 $pendingMinutes = round(($hoursPending - $pendingHours) * 60);
-                
-                // Get current round for this student
-                $currentRound = Course::where('student_id', $student->id)
-                    ->where('teacher_id', $teacher->id)
-                    ->max('round') ?? 1;
                 
                 // First course: completes the package
                 $nValueComplete = $previousNValue + $hoursToComplete;
@@ -745,6 +758,30 @@ class AdminController extends Controller
                 $pendingCourseData['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
                 $pendingCourseData['round'] = 0; // Will be set to new round when package is activated
                 
+                // Determine course name based on payment status
+                $paymentStatus = $student->paymentStatus;
+                if ($paymentStatus && ($paymentStatus->name === 'PAYÉ' || $paymentStatus->name === 'Active')) {
+                    // Package is paid - assign next course number
+                    $lastLesson = Course::where('student_id', $student->id)
+                        ->where('teacher_id', $teacher->id)
+                        ->where('name', '!=', '0')
+                        ->where('name', '!=', '0.0')
+                        ->where('admin_status', '!=', 'pending') // Exclude pending courses
+                        ->orderBy('course_date', 'desc')
+                        ->orderBy('class_time', 'desc')
+                        ->first();
+                    
+                    if ($lastLesson && is_numeric($lastLesson->name)) {
+                        $lessonNumber = (float)$lastLesson->name + 1;
+                    } else {
+                        $lessonNumber = 1;
+                    }
+                    $pendingCourseData['name'] = (string)$lessonNumber;
+                } else {
+                    // Package is not paid - use "0"
+                    $pendingCourseData['name'] = '0';
+                }
+                
                 Course::create($pendingCourseData);
                 
                 // Set payment status to "EN ATTENTE DE PAYEMENT"
@@ -764,6 +801,30 @@ class AdminController extends Controller
                 $validated['admin_status'] = 'pending';
                 $validated['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
                 $validated['round'] = 0; // Will be set to new round when package is activated
+                
+                // Determine course name based on payment status
+                $paymentStatus = $student->paymentStatus;
+                if ($paymentStatus && ($paymentStatus->name === 'PAYÉ' || $paymentStatus->name === 'Active')) {
+                    // Package is paid - assign next course number
+                    $lastLesson = Course::where('student_id', $student->id)
+                        ->where('teacher_id', $teacher->id)
+                        ->where('name', '!=', '0')
+                        ->where('name', '!=', '0.0')
+                        ->where('admin_status', '!=', 'pending') // Exclude pending courses
+                        ->orderBy('course_date', 'desc')
+                        ->orderBy('class_time', 'desc')
+                        ->first();
+                    
+                    if ($lastLesson && is_numeric($lastLesson->name)) {
+                        $lessonNumber = (float)$lastLesson->name + 1;
+                    } else {
+                        $lessonNumber = 1;
+                    }
+                    $validated['name'] = (string)$lessonNumber;
+                } else {
+                    // Package is not paid - use "0"
+                    $validated['name'] = '0';
+                }
                 
                 Course::create($validated);
                 
@@ -813,11 +874,6 @@ class AdminController extends Controller
                 // Normal lesson - calculate n_value and create course
                 $nValue = $previousNValue + $currentDuration;
                 
-                // Get current round for this student
-                $currentRound = Course::where('student_id', $student->id)
-                    ->where('teacher_id', $teacher->id)
-                    ->max('round') ?? 1;
-                
                 $validated['student_name'] = $validated['student_name'] ?? $student->name;
                 $validated['n_value'] = $nValue;
                 $validated['total_hours'] = $currentDuration;
@@ -827,18 +883,12 @@ class AdminController extends Controller
                 
                 $course = Course::create($validated);
                 
-                // Generate and download report if course status is Present
-                if ($course->status === 'Present') {
-                    // Use TeacherController's method to generate and send report
-                    $teacherController = new \App\Http\Controllers\TeacherController();
-                    $teacherController->generateAndSendReport($course);
-                    
-                    // Store course ID in session for automatic download
-                    session(['download_report_id' => $course->id]);
-                    
-                    return redirect()->route('admin.dashboard')
-                                    ->with('success', 'Course created successfully! Report is being downloaded...');
-                }
+                // Generate and send report via WhatsApp for any status
+                $teacherController = new \App\Http\Controllers\TeacherController();
+                $teacherController->generateAndSendReport($course);
+                
+                return redirect()->route('admin.dashboard')
+                                ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
             }
         }
         
@@ -912,21 +962,12 @@ class AdminController extends Controller
         
         $course->update($validated);
         
-        // Generate and download report if course status is Present
-        if ($course->status === 'Present') {
-            // Use TeacherController's method to generate and send report
-            $teacherController = new \App\Http\Controllers\TeacherController();
-            $teacherController->generateAndSendReport($course);
-            
-            // Store course ID in session for automatic download
-            session(['download_report_id' => $course->id]);
-            
-                return redirect()->route('admin.dashboard')
-                            ->with('success', 'Course updated successfully! Report is being downloaded...');
-        }
+        // Generate and send report via WhatsApp for any status
+        $teacherController = new \App\Http\Controllers\TeacherController();
+        $teacherController->generateAndSendReport($course);
         
         return redirect()->route('admin.dashboard')
-                        ->with('success', 'Course updated successfully!');
+                        ->with('success', 'Course updated successfully! Report image has been sent to student\'s WhatsApp.');
     }
 
     public function destroyCourse(Course $course)
