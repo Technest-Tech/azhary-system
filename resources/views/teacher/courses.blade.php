@@ -211,13 +211,19 @@
                                     <td style="padding: 20px 16px; font-weight: 700; color: #1e293b; font-size: 16px; white-space: nowrap;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
-                                                {{ number_format($course->n_value, 1) }}
+                                                {{ number_format($course->n_value, 2) }}
                                             </div>
                                         </div>
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                             <span style="font-weight: 600; color: #3b82f6; font-size: 14px;">R{{ $course->round ?? 1 }}</span>
+                                            @php
+                                                $paymentBadge = $course->getPaymentStatusBadge();
+                                            @endphp
+                                            <span style="display: inline-block; padding: 4px 10px; background: {{ $paymentBadge['bg_color'] }}; color: {{ $paymentBadge['text_color'] }}; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">
+                                                {{ $paymentBadge['label'] }}
+                                            </span>
                                             <button onclick="showRoundsModal({{ $course->student_id }})" 
                                                     style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;"
                                                     title="View all rounds">
@@ -447,7 +453,7 @@
                                     <td style="padding: 8px; font-size: 12px;">
                                         <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: ${course.status === 'Present' ? '#6ee7b7' : course.status === 'Absent' ? '#fca5a5' : '#fcd34d'}; color: ${course.status === 'Present' ? '#065f46' : course.status === 'Absent' ? '#991b1b' : '#92400e'};">${course.status}</span>
                                     </td>
-                                    <td style="padding: 8px; font-size: 12px; color: #1e293b; font-weight: 600;">${parseFloat(course.n_value).toFixed(1)}</td>
+                                    <td style="padding: 8px; font-size: 12px; color: #1e293b; font-weight: 600;">${parseFloat(course.n_value).toFixed(2)}</td>
                                 </tr>
                             `;
                         });

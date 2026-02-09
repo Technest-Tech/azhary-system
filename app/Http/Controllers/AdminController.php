@@ -35,38 +35,8 @@ class AdminController extends Controller
         $teachers = Teacher::all();
         $students = Student::all();
         
-        // Query courses with filters - only show courses from current round and pending courses for each student
-        $query = Course::with(['student', 'teacher', 'evaluation']);
-        
-        // Filter by current round for each student + pending courses
-        // Get max round per student (excluding round 0 which is for pending)
-        $maxRounds = Course::where('round', '>', 0)
-            ->select('student_id', DB::raw('MAX(round) as max_round'))
-            ->groupBy('student_id')
-            ->get()
-            ->mapWithKeys(function($item) {
-                return [$item->student_id => $item->max_round];
-            });
-        
-        // Build where clause for current round courses and pending courses
-        // This ensures we only show courses from the highest round for each student
-        $query->where(function($q) use ($maxRounds) {
-            // If we have students with rounds, include their current round courses
-            if ($maxRounds->isNotEmpty()) {
-                foreach ($maxRounds as $studentId => $maxRound) {
-                    $q->orWhere(function($subQ) use ($studentId, $maxRound) {
-                        $subQ->where('student_id', $studentId)
-                             ->where('round', $maxRound);
-                    });
-                }
-            }
-            // Always include pending courses (round = 0 or admin_status = 'pending')
-            // These are courses waiting for package activation
-            $q->orWhere(function($subQ) {
-                $subQ->where('round', 0)
-                     ->orWhere('admin_status', 'pending');
-            });
-        });
+        // Query courses with filters - show ALL courses from all rounds
+        $query = Course::with(['student', 'teacher', 'evaluation', 'student.paymentStatus']);
         
         // Filter by teacher_id
         if ($request->filled('teacher_id')) {
@@ -954,9 +924,14 @@ class AdminController extends Controller
             $course->duration_hours != $validated['duration_hours'] || 
             $course->duration_minutes != $validated['duration_minutes']) {
             
+            $courseRound = $course->round;
             $previousLessons = Course::where('student_id', $student->id)
                                    ->where('teacher_id', $teacher->id)
+                                   ->where('round', $courseRound)
                                    ->where('id', '!=', $course->id)
+                                   ->where('name', '!=', '0')
+                                   ->where('name', '!=', '0.0')
+                                   ->where('admin_status', '!=', 'pending')
                                    ->orderBy('n_value', 'desc')
                                    ->first();
             
@@ -974,6 +949,9 @@ class AdminController extends Controller
         
         $course->update($validated);
         
+        // Recalculate all n_values for this student in the same round to ensure consistency
+        $this->recalculateNValues($student->id, $teacher->id);
+        
         // Generate and send report via WhatsApp for any status
         $teacherController = new \App\Http\Controllers\TeacherController();
         $teacherController->generateAndSendReport($course);
@@ -984,7 +962,13 @@ class AdminController extends Controller
 
     public function destroyCourse(Course $course)
     {
+        $studentId = $course->student_id;
+        $teacherId = $course->teacher_id;
         $course->delete();
+        
+        // Recalculate all n_values for this student to ensure consistency
+        $this->recalculateNValues($studentId, $teacherId);
+        
         return redirect()->route('admin.dashboard')
                         ->with('success', 'Course deleted successfully!');
     }
@@ -1035,12 +1019,16 @@ class AdminController extends Controller
         }
 
         $student = $notification->student;
+        $courseRound = $course->round;
         
-        // Find the last lesson before this one (excluding unapproved absences with name "0")
+        // Find the last lesson before this one IN THE SAME ROUND (excluding unapproved absences with name "0")
         $previousLessons = Course::where('student_id', $student->id)
                                ->where('teacher_id', $course->teacher_id)
+                               ->where('round', $courseRound)
                                ->where('id', '!=', $course->id)
                                ->where('name', '!=', '0') // Exclude unapproved absences
+                               ->where('name', '!=', '0.0')
+                               ->where('admin_status', '!=', 'pending')
                                ->orderBy('n_value', 'desc')
                                ->first();
 
@@ -1048,12 +1036,14 @@ class AdminController extends Controller
         $currentDuration = $course->total_hours;
         $nValue = $previousNValue + $currentDuration;
 
-        // Get the last lesson number to determine the next number
+        // Get the last lesson number IN THE SAME ROUND to determine the next number
         $lastLesson = Course::where('student_id', $student->id)
                           ->where('teacher_id', $course->teacher_id)
+                          ->where('round', $courseRound)
                           ->where('id', '!=', $course->id)
                           ->where('name', '!=', '0')
                           ->where('name', '!=', '0.0')
+                          ->where('admin_status', '!=', 'pending')
                           ->orderBy('course_date', 'desc')
                           ->orderBy('class_time', 'desc')
                           ->first();
@@ -1071,6 +1061,9 @@ class AdminController extends Controller
         $course->n_value = $nValue;
         $course->admin_status = 'approved';
         $course->save();
+        
+        // Recalculate all n_values for this student to ensure consistency
+        $this->recalculateNValues($student->id, $course->teacher_id);
 
         // Mark notification as approved
         $notification->is_approved = true;
@@ -1316,6 +1309,52 @@ class AdminController extends Controller
             'coursesByDay',
             'financialStats'
         ));
+    }
+
+    /**
+     * Recalculate n_values for all courses of a specific student
+     * This method ensures the cumulative calculation is correct PER ROUND
+     */
+    public function recalculateNValues($studentId, $teacherId)
+    {
+        // Get all courses for this student and teacher, ordered by round, date, time
+        $courses = Course::where('student_id', $studentId)
+                        ->where('teacher_id', $teacherId)
+                        ->orderBy('round', 'asc')
+                        ->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
+                        ->orderBy('created_at', 'asc')
+                        ->get();
+        
+        // Group courses by round and recalculate per round
+        $coursesByRound = $courses->groupBy('round');
+        
+        foreach ($coursesByRound as $round => $roundCourses) {
+            if ($round == 0) {
+                // Round 0 = pending overflow courses, keep n_value as 0
+                foreach ($roundCourses as $course) {
+                    if ($course->n_value != 0) {
+                        $course->update(['n_value' => 0]);
+                    }
+                }
+                continue;
+            }
+            
+            $cumulativeValue = 0;
+            
+            foreach ($roundCourses as $course) {
+                $duration = $course->duration_hours + ($course->duration_minutes / 60.0);
+                
+                if ($course->admin_status === 'pending' || $course->admin_status === 'rejected') {
+                    // Unapproved/rejected absences: keep n_value at current cumulative (don't add duration)
+                    $course->update(['n_value' => $cumulativeValue]);
+                } else {
+                    // Normal/approved courses: add duration to cumulative
+                    $cumulativeValue += $duration;
+                    $course->update(['n_value' => $cumulativeValue]);
+                }
+            }
+        }
     }
 
     /**

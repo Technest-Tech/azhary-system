@@ -190,41 +190,9 @@ class TeacherController extends Controller
             ];
         }
         
-        // Course listing with filters and search - only show courses from current round and pending courses for each student
+        // Course listing with filters and search - show ALL courses from all rounds
         $query = Course::where('teacher_id', $teacher->id)
-                      ->with(['student', 'evaluation']);
-        
-        // Filter by current round for each student + pending courses
-        // Get max round per student for this teacher (excluding round 0 which is for pending)
-        $maxRounds = Course::where('teacher_id', $teacher->id)
-            ->where('round', '>', 0)
-            ->select('student_id', DB::raw('MAX(round) as max_round'))
-            ->groupBy('student_id')
-            ->pluck('max_round', 'student_id');
-        
-        // Build where clause for current round courses and pending courses
-        // This ensures we only show courses from the highest round for each student
-        $query->where(function($q) use ($maxRounds, $teacher) {
-            // If we have students with rounds, include their current round courses
-            if ($maxRounds->isNotEmpty()) {
-                foreach ($maxRounds as $studentId => $maxRound) {
-                    $q->orWhere(function($subQ) use ($studentId, $maxRound, $teacher) {
-                        $subQ->where('student_id', $studentId)
-                             ->where('round', $maxRound)
-                             ->where('teacher_id', $teacher->id);
-                    });
-                }
-            }
-            // Always include pending courses (round = 0 or admin_status = 'pending') for this teacher
-            // These are courses waiting for package activation
-            $q->orWhere(function($subQ) use ($teacher) {
-                $subQ->where('teacher_id', $teacher->id)
-                     ->where(function($pendingQ) {
-                         $pendingQ->where('round', 0)
-                                  ->orWhere('admin_status', 'pending');
-                     });
-            });
-        });
+                      ->with(['student', 'evaluation', 'student.paymentStatus']);
         
         // Search functionality
         if ($request->filled('search')) {
@@ -296,39 +264,7 @@ class TeacherController extends Controller
         $teacher = Auth::guard('teacher')->user();
         
         $query = Course::where('teacher_id', $teacher->id)
-                      ->with(['student', 'evaluation']);
-        
-        // Filter by current round for each student + pending courses
-        // Get max round per student for this teacher (excluding round 0 which is for pending)
-        $maxRounds = Course::where('teacher_id', $teacher->id)
-            ->where('round', '>', 0)
-            ->select('student_id', DB::raw('MAX(round) as max_round'))
-            ->groupBy('student_id')
-            ->pluck('max_round', 'student_id');
-        
-        // Build where clause for current round courses and pending courses
-        // This ensures we only show courses from the highest round for each student
-        $query->where(function($q) use ($maxRounds, $teacher) {
-            // If we have students with rounds, include their current round courses
-            if ($maxRounds->isNotEmpty()) {
-                foreach ($maxRounds as $studentId => $maxRound) {
-                    $q->orWhere(function($subQ) use ($studentId, $maxRound, $teacher) {
-                        $subQ->where('student_id', $studentId)
-                             ->where('round', $maxRound)
-                             ->where('teacher_id', $teacher->id);
-                    });
-                }
-            }
-            // Always include pending courses (round = 0 or admin_status = 'pending') for this teacher
-            // These are courses waiting for package activation
-            $q->orWhere(function($subQ) use ($teacher) {
-                $subQ->where('teacher_id', $teacher->id)
-                     ->where(function($pendingQ) {
-                         $pendingQ->where('round', 0)
-                                  ->orWhere('admin_status', 'pending');
-                     });
-            });
-        });
+                      ->with(['student', 'evaluation', 'student.paymentStatus']);
         
         // Apply filters
         if ($request->filled('student_id')) {
@@ -745,10 +681,15 @@ class TeacherController extends Controller
         // Get student info
         $student = Student::findOrFail($validated['student_id']);
         
-        // Calculate n_value based on package_number and previous lessons (excluding current course)
+        // Calculate n_value based on package_number and previous lessons IN THE SAME ROUND (excluding current course)
+        $courseRound = $course->round;
         $previousLessons = Course::where('student_id', $student->id)
                                ->where('teacher_id', $teacher->id)
+                               ->where('round', $courseRound)
                                ->where('id', '!=', $course->id) // Exclude current course
+                               ->where('name', '!=', '0')
+                               ->where('name', '!=', '0.0')
+                               ->where('admin_status', '!=', 'pending')
                                ->orderBy('n_value', 'desc')
                                ->first();
         
@@ -797,24 +738,47 @@ class TeacherController extends Controller
 
     /**
      * Recalculate n_values for all courses of a specific student
-     * This method ensures the cumulative calculation is correct
+     * This method ensures the cumulative calculation is correct PER ROUND
      */
     public function recalculateNValues($studentId, $teacherId)
     {
-        // Get all courses for this student and teacher, ordered by creation date
+        // Get all courses for this student and teacher, ordered by round, date, time
         $courses = Course::where('student_id', $studentId)
                         ->where('teacher_id', $teacherId)
+                        ->orderBy('round', 'asc')
+                        ->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
                         ->orderBy('created_at', 'asc')
                         ->get();
         
-        $cumulativeValue = 0;
+        // Group courses by round and recalculate per round
+        $coursesByRound = $courses->groupBy('round');
         
-        foreach ($courses as $course) {
-            $duration = $course->duration_hours + ($course->duration_minutes / 60.0);
-            $cumulativeValue += $duration;
+        foreach ($coursesByRound as $round => $roundCourses) {
+            if ($round == 0) {
+                // Round 0 = pending overflow courses, keep n_value as 0
+                foreach ($roundCourses as $course) {
+                    if ($course->n_value != 0) {
+                        $course->update(['n_value' => 0]);
+                    }
+                }
+                continue;
+            }
             
-            // Update the n_value
-            $course->update(['n_value' => $cumulativeValue]);
+            $cumulativeValue = 0;
+            
+            foreach ($roundCourses as $course) {
+                $duration = $course->duration_hours + ($course->duration_minutes / 60.0);
+                
+                if ($course->admin_status === 'pending' || $course->admin_status === 'rejected') {
+                    // Unapproved/rejected absences: keep n_value at current cumulative (don't add duration)
+                    $course->update(['n_value' => $cumulativeValue]);
+                } else {
+                    // Normal/approved courses: add duration to cumulative
+                    $cumulativeValue += $duration;
+                    $course->update(['n_value' => $cumulativeValue]);
+                }
+            }
         }
     }
 

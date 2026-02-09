@@ -63,4 +63,74 @@ class Course extends Model
     {
         return $this->belongsTo(RecurringCourse::class, 'recurring_course_id');
     }
+
+    /**
+     * Get payment status badge information for this course's round
+     * Returns array with 'label' and 'color' for display
+     */
+    public function getPaymentStatusBadge()
+    {
+        // Round 0 = pending courses, always "Not Paid"
+        if ($this->round == 0) {
+            return [
+                'label' => 'Not Paid',
+                'color' => '#ef4444', // red
+                'bg_color' => '#fee2e2',
+                'text_color' => '#991b1b'
+            ];
+        }
+
+        // Get the current active round for this student (max round > 0)
+        $currentActiveRound = Course::where('student_id', $this->student_id)
+            ->where('round', '>', 0)
+            ->max('round') ?? 1;
+
+        // If this is the current active round, use student's current payment status
+        if ($this->round == $currentActiveRound) {
+            $paymentStatus = $this->student->paymentStatus;
+            
+            if (!$paymentStatus) {
+                return [
+                    'label' => 'Not Paid',
+                    'color' => '#ef4444',
+                    'bg_color' => '#fee2e2',
+                    'text_color' => '#991b1b'
+                ];
+            }
+
+            $statusName = $paymentStatus->name;
+            
+            if ($statusName === 'PAYÉ' || $statusName === 'Active') {
+                return [
+                    'label' => 'Paid',
+                    'color' => '#10b981', // green
+                    'bg_color' => '#d1fae5',
+                    'text_color' => '#065f46'
+                ];
+            } elseif ($statusName === 'EN ATTENTE DE PAYEMENT') {
+                return [
+                    'label' => 'Not Paid',
+                    'color' => '#ef4444',
+                    'bg_color' => '#fee2e2',
+                    'text_color' => '#991b1b'
+                ];
+            } else {
+                // For other statuses like ARRÊTÉ, show as "Active" or "Not Paid" based on context
+                return [
+                    'label' => $statusName === 'ARRÊTÉ' ? 'Stopped' : 'Active',
+                    'color' => '#f59e0b', // amber
+                    'bg_color' => '#fef3c7',
+                    'text_color' => '#92400e'
+                ];
+            }
+        } else {
+            // Previous completed round - it was paid (otherwise it wouldn't have been completed)
+            return [
+                'label' => 'Paid',
+                'color' => '#10b981',
+                'bg_color' => '#d1fae5',
+                'text_color' => '#065f46'
+            ];
+        }
+    }
 }
