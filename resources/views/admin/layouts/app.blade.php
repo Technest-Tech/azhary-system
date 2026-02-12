@@ -15,8 +15,8 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #2d3748;
+            background: #e2e8f0;
+            color: #0f172a;
         }
 
         .layout-wrapper {
@@ -27,12 +27,12 @@
         /* Sidebar Styles */
         .sidebar {
             width: 260px;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            color: #e2e8f0;
+            background: linear-gradient(180deg, #1e3a5f 0%, #0c1929 100%);
+            color: #f1f5f9;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.25);
             z-index: 1000;
             transition: all 0.3s ease;
         }
@@ -91,17 +91,17 @@
         }
 
         .sidebar::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: #0c1929;
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: #475569;
+            background: #3b82f6;
             border-radius: 3px;
         }
 
         .sidebar-header {
             padding: 24px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid rgba(59, 130, 246, 0.35);
             position: relative;
             transition: padding 0.3s ease;
         }
@@ -114,9 +114,9 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #e2e8f0;
+            background: rgba(59, 130, 246, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.6);
+            color: #93c5fd;
             width: 32px;
             height: 32px;
             border-radius: 6px;
@@ -129,8 +129,9 @@
         }
 
         .sidebar-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #3b82f6;
             color: #fff;
+            border-color: #2563eb;
         }
 
         .sidebar.collapsed .sidebar-toggle {
@@ -156,7 +157,7 @@
 
         .sidebar-logo i {
             font-size: 32px;
-            color: #60a5fa;
+            color: #38bdf8;
         }
 
         .sidebar-logo-text {
@@ -167,7 +168,7 @@
         .sidebar-logo-text h2 {
             font-size: 20px;
             font-weight: 700;
-            color: #fff;
+            color: #ffffff;
             margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
@@ -176,8 +177,8 @@
 
         .sidebar-logo-text p {
             font-size: 12px;
-            color: #94a3b8;
-            font-weight: 500;
+            color: #93c5fd;
+            font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -197,14 +198,14 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #64748b;
+            color: #93c5fd;
         }
 
         .menu-item {
             display: flex;
             align-items: center;
             padding: 12px 20px;
-            color: #cbd5e1;
+            color: #e2e8f0;
             text-decoration: none;
             transition: all 0.2s;
             position: relative;
@@ -222,18 +223,18 @@
         }
 
         .menu-item:hover {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
+            background: rgba(59, 130, 246, 0.2);
+            color: #ffffff;
         }
 
         .menu-item.active {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-            border-left: 3px solid #60a5fa;
+            background: rgba(59, 130, 246, 0.35);
+            color: #38bdf8;
+            border-left: 4px solid #3b82f6;
         }
 
         .menu-item.active i {
-            color: #60a5fa;
+            color: #38bdf8;
         }
 
         .sidebar-footer {
@@ -241,8 +242,8 @@
             bottom: 0;
             width: 100%;
             padding: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            background: #0f172a;
+            border-top: 2px solid rgba(59, 130, 246, 0.35);
+            background: #0c1929;
         }
 
         .user-profile {
@@ -256,12 +257,13 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 16px;
+            color: #fff;
         }
 
         .user-info h4 {
@@ -272,14 +274,14 @@
 
         .user-info p {
             font-size: 12px;
-            color: #64748b;
+            color: #93c5fd;
         }
 
         .logout-btn {
             width: 100%;
             padding: 10px;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.25);
+            border: 2px solid #ef4444;
             color: #fca5a5;
             border-radius: 6px;
             cursor: pointer;
@@ -293,7 +295,7 @@
         }
 
         .logout-btn:hover {
-            background: rgba(239, 68, 68, 0.2);
+            background: #ef4444;
             color: #fff;
         }
 
@@ -313,9 +315,9 @@
         }
 
         .top-navbar {
-            background: #fff;
+            background: #ffffff;
             padding: 16px 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -327,7 +329,7 @@
         .page-title {
             font-size: 24px;
             font-weight: 700;
-            color: #1e293b;
+            color: #0f172a;
         }
 
         .top-navbar-right {
@@ -341,7 +343,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #f1f5f9;
+            background: #dbeafe;
+            color: #1d4ed8;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -350,16 +353,17 @@
         }
 
         .notification-icon:hover {
-            background: #e2e8f0;
+            background: #3b82f6;
+            color: #fff;
         }
 
         .notification-badge {
             position: absolute;
             top: 6px;
             right: 6px;
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
+            width: 10px;
+            height: 10px;
+            background: #dc2626;
             border-radius: 50%;
             border: 2px solid #fff;
         }
@@ -388,11 +392,12 @@
 
         /* Additional Utility Styles */
         .card {
-            background: #fff;
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
             padding: 24px;
             margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
         }
 
         .card-header {
@@ -402,7 +407,7 @@
         .card-title {
             font-size: 18px;
             font-weight: 700;
-            color: #1e293b;
+            color: #0f172a;
         }
 
         .btn {
@@ -419,13 +424,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             color: #fff;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
         }
 
         .badge {
@@ -438,16 +443,16 @@
 
         .badge-success {
             background: #dcfce7;
-            color: #166534;
+            color: #15803d;
         }
 
         .badge-warning {
-            background: #fef3c7;
-            color: #92400e;
+            background: #fef08a;
+            color: #a16207;
         }
 
         .badge-info {
-            background: #dbeafe;
+            background: #bfdbfe;
             color: #1e40af;
         }
     </style>

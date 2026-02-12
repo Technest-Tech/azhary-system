@@ -15,8 +15,8 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #2d3748;
+            background: #e2e8f0;
+            color: #0f172a;
         }
 
         .layout-wrapper {
@@ -27,12 +27,12 @@
         /* Sidebar Styles */
         .sidebar {
             width: 260px;
-            background: linear-gradient(180deg, #0f766e 0%, #064e3b 100%);
-            color: #e2e8f0;
+            background: linear-gradient(180deg, #0d9488 0%, #064e3b 100%);
+            color: #f0fdfa;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.25);
             z-index: 1000;
             transition: all 0.3s ease;
         }
@@ -91,17 +91,17 @@
         }
 
         .sidebar::-webkit-scrollbar-track {
-            background: #0f766e;
+            background: #064e3b;
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: #14b8a6;
+            background: #2dd4bf;
             border-radius: 3px;
         }
 
         .sidebar-header {
             padding: 24px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid rgba(45, 212, 191, 0.4);
             position: relative;
             transition: padding 0.3s ease;
         }
@@ -114,9 +114,9 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #e2e8f0;
+            background: rgba(45, 212, 191, 0.35);
+            border: 1px solid rgba(45, 212, 191, 0.6);
+            color: #99f6e4;
             width: 32px;
             height: 32px;
             border-radius: 6px;
@@ -129,8 +129,9 @@
         }
 
         .sidebar-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #14b8a6;
             color: #fff;
+            border-color: #0d9488;
         }
 
         .sidebar.collapsed .sidebar-toggle {
@@ -156,7 +157,7 @@
 
         .sidebar-logo i {
             font-size: 32px;
-            color: #5eead4;
+            color: #2dd4bf;
         }
 
         .sidebar-logo-text {
@@ -167,7 +168,7 @@
         .sidebar-logo-text h2 {
             font-size: 20px;
             font-weight: 700;
-            color: #fff;
+            color: #ffffff;
             margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
@@ -177,7 +178,7 @@
         .sidebar-logo-text p {
             font-size: 12px;
             color: #99f6e4;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -197,7 +198,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #5eead4;
+            color: #99f6e4;
         }
 
         .menu-item {
@@ -222,18 +223,18 @@
         }
 
         .menu-item:hover {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
+            background: rgba(45, 212, 191, 0.25);
+            color: #ffffff;
         }
 
         .menu-item.active {
-            background: rgba(20, 184, 166, 0.2);
-            color: #5eead4;
-            border-left: 3px solid #5eead4;
+            background: rgba(45, 212, 191, 0.35);
+            color: #2dd4bf;
+            border-left: 4px solid #14b8a6;
         }
 
         .menu-item.active i {
-            color: #5eead4;
+            color: #2dd4bf;
         }
 
         .sidebar-footer {
@@ -241,7 +242,7 @@
             bottom: 0;
             width: 100%;
             padding: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 2px solid rgba(45, 212, 191, 0.4);
             background: #064e3b;
         }
 
@@ -256,12 +257,13 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 16px;
+            color: #fff;
         }
 
         .user-info h4 {
@@ -278,8 +280,8 @@
         .logout-btn {
             width: 100%;
             padding: 10px;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.25);
+            border: 2px solid #ef4444;
             color: #fca5a5;
             border-radius: 6px;
             cursor: pointer;
@@ -293,7 +295,7 @@
         }
 
         .logout-btn:hover {
-            background: rgba(239, 68, 68, 0.2);
+            background: #ef4444;
             color: #fff;
         }
 
@@ -312,9 +314,9 @@
         }
 
         .top-navbar {
-            background: #fff;
+            background: #ffffff;
             padding: 16px 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -326,7 +328,7 @@
         .page-title {
             font-size: 24px;
             font-weight: 700;
-            color: #1e293b;
+            color: #0f172a;
         }
 
         .top-navbar-right {
@@ -340,7 +342,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #f1f5f9;
+            background: #ccfbf1;
+            color: #0d9488;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -349,16 +352,17 @@
         }
 
         .notification-icon:hover {
-            background: #e2e8f0;
+            background: #14b8a6;
+            color: #fff;
         }
 
         .notification-badge {
             position: absolute;
             top: 6px;
             right: 6px;
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
+            width: 10px;
+            height: 10px;
+            background: #dc2626;
             border-radius: 50%;
             border: 2px solid #fff;
         }
@@ -385,11 +389,12 @@
 
         /* Additional Utility Styles */
         .card {
-            background: #fff;
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
             padding: 24px;
             margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
         }
 
         .card-header {
@@ -399,7 +404,7 @@
         .card-title {
             font-size: 18px;
             font-weight: 700;
-            color: #1e293b;
+            color: #0f172a;
         }
 
         .btn {
@@ -416,13 +421,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
             color: #fff;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.5);
         }
 
         .badge {
@@ -434,18 +439,18 @@
         }
 
         .badge-success {
-            background: #dcfce7;
-            color: #166534;
+            background: #a7f3d0;
+            color: #15803d;
         }
 
         .badge-warning {
-            background: #fef3c7;
-            color: #92400e;
+            background: #fef08a;
+            color: #a16207;
         }
 
         .badge-info {
-            background: #dbeafe;
-            color: #1e40af;
+            background: #a5f3fc;
+            color: #0e7490;
         }
         
         .language-switcher {
@@ -453,15 +458,15 @@
             align-items: center;
             gap: 8px;
             padding: 8px 12px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(45, 212, 191, 0.2);
+            border: 1px solid rgba(45, 212, 191, 0.5);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
         }
         
         .language-switcher:hover {
-            background: rgba(255,255,255,0.15);
+            background: rgba(45, 212, 191, 0.35);
         }
         
         .language-switcher select {
@@ -542,7 +547,7 @@
                 <form method="POST" action="{{ route('teacher.language.switch') }}" style="margin-bottom: 12px;">
                     @csrf
                     <div class="language-switcher">
-                        <i class="fas fa-globe" style="color: #5eead4;"></i>
+                        <i class="fas fa-globe" style="color: #2dd4bf;"></i>
                         <select name="locale" onchange="this.form.submit()" style="width: 100%;">
                             <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>🇬🇧 EN</option>
                             <option value="fr" {{ app()->getLocale() == 'fr' ? 'selected' : '' }}>🇫🇷 FR</option>
@@ -567,9 +572,9 @@
                     <!-- Language Switcher in Top Navbar -->
                     <form method="POST" action="{{ route('teacher.language.switch') }}" style="margin-right: 16px;">
                         @csrf
-                        <div class="language-switcher" style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px;">
-                            <i class="fas fa-globe" style="color: #64748b;"></i>
-                            <select name="locale" onchange="this.form.submit()" style="background: transparent; border: none; color: #1e293b; font-size: 14px; font-weight: 600; cursor: pointer; outline: none;">
+                        <div class="language-switcher" style="background: #ccfbf1; border: 2px solid #99f6e4; padding: 8px 12px; border-radius: 8px;">
+                            <i class="fas fa-globe" style="color: #0d9488;"></i>
+                            <select name="locale" onchange="this.form.submit()" style="background: transparent; border: none; color: #0f172a; font-size: 14px; font-weight: 600; cursor: pointer; outline: none;">
                                 <option value="en" {{ app()->getLocale() == 'en' ? 'selected' : '' }}>🇬🇧 EN</option>
                                 <option value="fr" {{ app()->getLocale() == 'fr' ? 'selected' : '' }}>🇫🇷 FR</option>
                             </select>

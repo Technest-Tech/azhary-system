@@ -210,16 +210,16 @@
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
                                         @php
-                                            $studentColor = $course->student->display_color ?? '#64748b';
+                                            $studentColor = $course->student->display_color ?? '#1565c0';
                                             $darkerColor = \App\Services\StudentColorService::getDarkerShade($studentColor);
                                         @endphp
                                         <div style="display: flex; align-items: center; gap: 12px;">
-                                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, {{ $studentColor }} 0%, {{ $darkerColor }} 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, {{ $studentColor }} 0%, {{ $darkerColor }} 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px;">
                                                 {{ substr($course->student->name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <div style="font-weight: 600; color: {{ $studentColor }}; font-size: 14px;">{{ $course->student->name }}</div>
-                                                <div style="font-size: 12px; color: #64748b;">Package: {{ $course->student->package_number }} lessons</div>
+                                                <span style="display: inline-block; padding: 6px 12px; background: {{ $studentColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name }}</span>
+                                                <div style="font-size: 12px; color: #334155; font-weight: 600; margin-top: 4px;">Package: {{ $course->student->package_number }} lessons</div>
                                             </div>
                                         </div>
                                     </td>

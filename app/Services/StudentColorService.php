@@ -8,39 +8,39 @@ use Illuminate\Support\Facades\DB;
 class StudentColorService
 {
     /**
-     * Predefined color palette - vibrant, distinct colors
+     * Predefined color palette - maximally distinct colors (no similar hues)
      */
     private static $colorPalette = [
-        '#14b8a6', // Teal
-        '#0d9488', // Dark Teal
-        '#3b82f6', // Blue
-        '#2563eb', // Dark Blue
-        '#8b5cf6', // Purple
-        '#7c3aed', // Dark Purple
-        '#ec4899', // Pink
-        '#db2777', // Dark Pink
-        '#f59e0b', // Amber
-        '#d97706', // Dark Amber
-        '#10b981', // Green
-        '#059669', // Dark Green
-        '#ef4444', // Red
-        '#dc2626', // Dark Red
-        '#06b6d4', // Cyan
-        '#0891b2', // Dark Cyan
-        '#a855f7', // Violet
-        '#9333ea', // Dark Violet
-        '#f97316', // Orange
-        '#ea580c', // Dark Orange
-        '#84cc16', // Lime
-        '#65a30d', // Dark Lime
-        '#6366f1', // Indigo
-        '#4f46e5', // Dark Indigo
-        '#22c55e', // Emerald
-        '#16a34a', // Dark Emerald
-        '#eab308', // Yellow
-        '#ca8a04', // Dark Yellow
-        '#06b6d4', // Sky
-        '#0284c7', // Dark Sky
+        '#e53935', // Red
+        '#ff6d00', // Orange
+        '#f9a825', // Amber / Yellow
+        '#7cb342', // Lime green
+        '#00897b', // Teal
+        '#00acc1', // Cyan
+        '#1e88e5', // Blue
+        '#5e35b1', // Deep purple / Indigo
+        '#8e24aa', // Violet
+        '#d81b60', // Magenta / Pink
+        '#c62828', // Dark red
+        '#ef6c00', // Deep orange
+        '#fbc02d', // Gold
+        '#43a047', // Green
+        '#00695c', // Dark teal
+        '#0097a7', // Dark cyan
+        '#1565c0', // Navy blue
+        '#4527a0', // Purple
+        '#6a1b9a', // Deep violet
+        '#ad1457', // Rose
+        '#b71c1c', // Crimson
+        '#e65100', // Burnt orange
+        '#f57f17', // Dark amber
+        '#2e7d32', // Forest green
+        '#004d40', // Dark green
+        '#006064', // Dark cyan-green
+        '#0d47a1', // Royal blue
+        '#311b92', // Indigo
+        '#4a148c', // Deep purple
+        '#880e4f', // Dark pink
     ];
 
     /**
@@ -186,6 +186,15 @@ class StudentColorService
         }
 
         return $results;
+    }
+
+    /**
+     * Force refresh colors for all students (clear and reassign from palette)
+     */
+    public static function refreshAllStudentsColors(): array
+    {
+        Student::whereNotNull('teacher_id')->update(['color' => null]);
+        return self::assignColorsToAllStudents();
     }
 
     /**

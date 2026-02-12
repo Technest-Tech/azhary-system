@@ -192,10 +192,10 @@
                                 $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
                             }
                             
-                            // Use student's fixed color
+                            // Use student's fixed color (sharp, visible palette)
                             $nameColor = $course->student && $course->student->teacher_id 
-                                ? ($course->student->display_color ?? '#64748b') 
-                                : '#64748b';
+                                ? ($course->student->display_color ?? '#1565c0') 
+                                : '#1565c0';
                         @endphp
                         <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" 
                             onmouseover="this.style.background='#f8fafc'" 
@@ -223,7 +223,7 @@
                                 </div>
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
-                                <span style="color: {{ $nameColor }}; font-weight: 600;">{{ $course->student->name ?? $course->student_name ?? 'N/A' }}</span>
+                                <span style="display: inline-block; padding: 6px 12px; background: {{ $nameColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name ?? $course->student_name ?? 'N/A' }}</span>
                             </td>
                             <td style="padding: 16px; white-space: nowrap; color: #64748b;">
                                 {{ $course->course_type ?? '-' }}

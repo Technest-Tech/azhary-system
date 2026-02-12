@@ -126,8 +126,8 @@ class Student extends Authenticatable
             }
         }
         
-        // Return color or default gray if no teacher
-        return $this->color ?? '#64748b';
+        // Return color or default visible blue if no teacher
+        return $this->color ?? '#1565c0';
     }
 
     /**
@@ -155,7 +155,7 @@ class Student extends Authenticatable
                 $this->save();
             }
         }
-        return $this->color ?? '#64748b';
+        return $this->color ?? '#1565c0';
     }
 
     /**
