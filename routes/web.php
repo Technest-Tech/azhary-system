@@ -96,6 +96,9 @@ Route::prefix('admin')->group(function () {
         Route::delete('/courses/{course}', [AdminController::class, 'destroyCourse'])->name('admin.courses.destroy');
         Route::get('/courses/{course}/report-image', [TeacherController::class, 'downloadReportImage'])->name('admin.courses.report-image');
         
+        // AJAX: Get students by teacher
+        Route::get('/teachers/{teacher}/students', [AdminController::class, 'getTeacherStudents'])->name('admin.teachers.students');
+        
         // Notifications Management
         Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications');
         Route::post('/notifications/{notification}/approve', [AdminController::class, 'approveAbsence'])->name('admin.notifications.approve');

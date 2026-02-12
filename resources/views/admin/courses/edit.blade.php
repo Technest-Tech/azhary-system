@@ -149,9 +149,8 @@
                         <select name="status" id="status" 
                                 style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
                             <option value="Present" {{ old('status', $course->status) == 'Present' ? 'selected' : '' }}>Present</option>
-                            <option value="Pending" {{ old('status', $course->status) == 'Pending' ? 'selected' : '' }}>Pending</option>
                             <option value="Absent" {{ old('status', $course->status) == 'Absent' ? 'selected' : '' }}>Absent</option>
-                            <option value="Late" {{ old('status', $course->status) == 'Late' ? 'selected' : '' }}>Late</option>
+                            <option value="Free" {{ old('status', $course->status) == 'Free' ? 'selected' : '' }}>Free</option>
                         </select>
                         @error('status')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
@@ -261,7 +260,7 @@
                     <i class="fas fa-times"></i>
                     Cancel
                 </a>
-                <button type="submit" id="submitBtn"
+                <button type="submit" id="submitBtn" onclick="showLoadingOverlay()"
                         style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
                     <i class="fas fa-save" id="submitIcon"></i>
                     <span id="submitText">Update Course</span>
@@ -271,7 +270,7 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center;">
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; visibility: hidden; opacity: 0; transition: opacity 0.3s ease;">
         <div style="background: white; border-radius: 20px; padding: 48px 56px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.4s ease;">
             <div style="margin-bottom: 24px;">
                 <div class="loading-spinner" style="width: 56px; height: 56px; border: 4px solid #e5e7eb; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
@@ -287,16 +286,51 @@
     </style>
 
     <script>
-        document.querySelector('form').addEventListener('submit', function(e) {
-            var btn = document.getElementById('submitBtn');
+        // Function to show loading overlay
+        function showLoadingOverlay() {
             var overlay = document.getElementById('loadingOverlay');
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
-            btn.style.cursor = 'not-allowed';
-            document.getElementById('submitIcon').className = '';
-            document.getElementById('submitIcon').style.cssText = 'width:16px;height:16px;border:3px solid rgba(255,255,255,0.3);border-top:3px solid white;border-radius:50%;animation:spin 0.8s linear infinite;';
-            document.getElementById('submitText').textContent = 'Processing...';
-            overlay.style.display = 'flex';
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.style.visibility = 'visible';
+                overlay.style.opacity = '1';
+                
+                // Disable all form inputs
+                var form = document.querySelector('form[method="POST"]');
+                if (form) {
+                    var inputs = form.querySelectorAll('input, select, textarea, button');
+                    inputs.forEach(function(input) {
+                        if (input.type !== 'hidden' && input.type !== 'submit') {
+                            input.disabled = true;
+                            input.style.pointerEvents = 'none';
+                            input.style.opacity = '0.6';
+                            input.style.cursor = 'not-allowed';
+                        }
+                    });
+                }
+                
+                // Prevent any interaction with the overlay
+                overlay.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                };
+                
+                overlay.onmousedown = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                };
+            }
+        }
+        
+        // Form submit handler
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.querySelector('form[method="POST"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    showLoadingOverlay();
+                });
+            }
         });
     </script>
 @endsection

@@ -229,12 +229,19 @@ class TeacherController extends Controller
         }
         
         $perPage = $request->get('per_page', 10);
-        $courses = $query->orderBy('course_date', 'asc')
+        $courses = $query->orderBy('n_value', 'desc')
+                        ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate($perPage);
         
         // Get students and subjects for filters
         $students = Student::where('teacher_id', $teacher->id)->get();
+        
+        // Ensure all students have colors assigned
+        foreach ($students as $student) {
+            $student->ensureColor();
+        }
+        
         $subjects = Subject::all();
         $evaluations = Evaluation::active()->ordered()->get();
         
@@ -287,13 +294,18 @@ class TeacherController extends Controller
             $query->whereDate('course_date', '<=', $request->date_to);
         }
         
-        $courses = $query->orderBy('created_at', 'asc')
+        $courses = $query->orderBy('n_value', 'desc')
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate(20);
         
         // Get students for filter dropdown
         $students = Student::where('teacher_id', $teacher->id)->get();
+        
+        // Ensure all students have colors assigned
+        foreach ($students as $student) {
+            $student->ensureColor();
+        }
         
         // Get subjects for course type filter
         $subjects = Subject::all();
@@ -324,7 +336,8 @@ class TeacherController extends Controller
             'duration_hours' => 'required|integer|min:0',
             'duration_minutes' => 'required|integer|min:0|max:59',
             'course_type' => 'required|string|max:255',
-            'status' => 'required|in:Present,Absent,Late,Pending',
+            // Only allow Present, Absent, or Free from the UI
+            'status' => 'required|in:Present,Absent,Free',
             'homework' => 'nullable|string',
             'evaluation_id' => 'nullable|exists:evaluations,id',
             'content' => 'nullable|string',
@@ -371,7 +384,7 @@ class TeacherController extends Controller
             ->where('is_read', false)
             ->exists();
         
-        // Set admin_status: pending for absences, approved for others
+        // Set admin_status: pending for absences, special handling for Free lessons
         if ($validated['status'] === 'Absent') {
             $validated['admin_status'] = 'pending';
             $validated['name'] = '0';
@@ -387,6 +400,20 @@ class TeacherController extends Controller
             $validated['income'] = $income;
             $validated['round'] = $currentRound;
             
+            $course = Course::create($validated);
+        } elseif ($validated['status'] === 'Free') {
+            // Free lesson: no billing, no impact on n_value / package
+            $nValue = $previousNValue;
+            $income = 0;
+
+            $validated['teacher_id'] = $teacher->id;
+            $validated['student_name'] = $validated['student_name'] ?? $student->name;
+            $validated['n_value'] = $nValue; // keep cumulative hours unchanged
+            $validated['total_hours'] = $currentDuration; // still store duration for info
+            $validated['income'] = $income; // no salary for free lessons
+            $validated['admin_status'] = 'approved';
+            $validated['round'] = $currentRound;
+
             $course = Course::create($validated);
         } else {
             // Calculate income based on teacher's hourly rate
@@ -658,7 +685,8 @@ class TeacherController extends Controller
             'duration_hours' => 'required|integer|min:0',
             'duration_minutes' => 'required|integer|min:0|max:59',
             'course_type' => 'required|string|max:255',
-            'status' => 'required|in:Present,Absent,Late,Pending',
+            // Only allow Present, Absent, or Free from the UI
+            'status' => 'required|in:Present,Absent,Free',
             'homework' => 'nullable|string',
             'evaluation_id' => 'nullable|exists:evaluations,id',
             'content' => 'nullable|string',
@@ -772,6 +800,9 @@ class TeacherController extends Controller
                 
                 if ($course->admin_status === 'pending' || $course->admin_status === 'rejected') {
                     // Unapproved/rejected absences: keep n_value at current cumulative (don't add duration)
+                    $course->update(['n_value' => $cumulativeValue]);
+                } elseif ($course->status === 'Free') {
+                    // Free lessons never consume package hours
                     $course->update(['n_value' => $cumulativeValue]);
                 } else {
                     // Normal/approved courses: add duration to cumulative

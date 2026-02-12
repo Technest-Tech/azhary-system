@@ -126,12 +126,11 @@
                             <i class="fas fa-user-check" style="color: #3b82f6;"></i>
                             {{ __('teacher.status') }}
                         </label>
-                        <select name="status" id="status" 
+                    <select name="status" id="status" 
                                 style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
                             <option value="Present" {{ old('status', $course->status) == 'Present' ? 'selected' : '' }}>{{ __('teacher.present') }}</option>
-                            <option value="Pending" {{ old('status', $course->status) == 'Pending' ? 'selected' : '' }}>{{ __('teacher.pending') }}</option>
                             <option value="Absent" {{ old('status', $course->status) == 'Absent' ? 'selected' : '' }}>{{ __('teacher.absent') }}</option>
-                            <option value="Late" {{ old('status', $course->status) == 'Late' ? 'selected' : '' }}>{{ __('teacher.late') }}</option>
+                            <option value="Free" {{ old('status', $course->status) == 'Free' ? 'selected' : '' }}>{{ __('teacher.free') }}</option>
                         </select>
                         @error('status')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>

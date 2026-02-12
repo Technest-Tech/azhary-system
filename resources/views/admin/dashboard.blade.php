@@ -90,9 +90,8 @@
                     <select name="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>{{ __('admin.all_statuses') }}</option>
                         <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>{{ __('admin.present') }}</option>
-                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>{{ __('admin.pending') }}</option>
                         <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>{{ __('admin.absent') }}</option>
-                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>{{ __('admin.late') }}</option>
+                        <option value="Free" {{ request('status') == 'Free' ? 'selected' : '' }}>{{ __('admin.free') }}</option>
                     </select>
                 </div>
                 
@@ -193,8 +192,10 @@
                                 $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
                             }
                             
-                            // Color coding for student names
-                            $nameColor = '#60a5fa';
+                            // Use student's fixed color
+                            $nameColor = $course->student && $course->student->teacher_id 
+                                ? ($course->student->display_color ?? '#64748b') 
+                                : '#64748b';
                         @endphp
                         <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" 
                             onmouseover="this.style.background='#f8fafc'" 
@@ -240,12 +241,10 @@
                             <td style="padding: 16px; white-space: nowrap;">
                                 @if($course->status === 'Present')
                                     <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.present') }}</span>
-                                @elseif($course->status === 'Pending')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.pending') }}</span>
                                 @elseif($course->status === 'Absent')
                                     <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.absent') }}</span>
-                                @elseif($course->status === 'Late')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.late') }}</span>
+                                @elseif($course->status === 'Free')
+                                    <span style="display: inline-block; padding: 6px 12px; background: #e5e7eb; color: #374151; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('admin.free') }}</span>
                                 @else
                                     <span style="display: inline-block; padding: 6px 12px; background: #cbd5e1; color: #475569; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ $course->status ?? '-' }}</span>
                                 @endif
@@ -317,8 +316,8 @@
             </table>
         </div>
 
-        <!-- Pagination and Add Button -->
-        <div style="padding: 20px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Pagination -->
+        <div style="padding: 20px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-start; align-items: center;">
             <div style="display: flex; gap: 12px;">
                 @if($courses->previousPageUrl())
                     <a href="{{ $courses->previousPageUrl() }}&{{ http_build_query(request()->except('page')) }}" 
@@ -333,12 +332,16 @@
                     </a>
                 @endif
             </div>
-            <a href="{{ route('admin.courses.create') }}" 
-               style="padding: 12px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-plus"></i> {{ __('admin.add_course') }}
-            </a>
         </div>
     </div>
+
+    <!-- Fixed Add Course Button -->
+    <a href="{{ route('admin.courses.create') }}" 
+       style="position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); z-index: 1000; transition: all 0.3s;"
+       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.5)'"
+       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'">
+        <i class="fas fa-plus"></i> {{ __('admin.add_course') }}
+    </a>
 
     <!-- Rounds Modal -->
     <div id="roundsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
@@ -410,7 +413,7 @@
                                     <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.course_type || '-'}</td>
                                     <td style="padding: 8px; font-size: 12px; color: #64748b;">${course.duration_hours}h ${course.duration_minutes}m</td>
                                     <td style="padding: 8px; font-size: 12px;">
-                                        <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: ${course.status === 'Present' ? '#6ee7b7' : course.status === 'Absent' ? '#fca5a5' : '#fcd34d'}; color: ${course.status === 'Present' ? '#065f46' : course.status === 'Absent' ? '#991b1b' : '#92400e'};">${course.status}</span>
+                                        <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: ${course.status === 'Present' ? '#6ee7b7' : course.status === 'Absent' ? '#fca5a5' : course.status === 'Free' ? '#e5e7eb' : '#cbd5e1'}; color: ${course.status === 'Present' ? '#065f46' : course.status === 'Absent' ? '#991b1b' : course.status === 'Free' ? '#374151' : '#475569'};">${course.status}</span>
                                     </td>
                                     <td style="padding: 8px; font-size: 12px; color: #1e293b; font-weight: 600;">${parseFloat(course.n_value).toFixed(2)}</td>
                                 </tr>

@@ -42,7 +42,7 @@
                         <option value="">{{ __('teacher.all_status') }}</option>
                         <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>✅ {{ __('teacher.present') }}</option>
                         <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>❌ {{ __('teacher.absent') }}</option>
-                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>⏰ {{ __('teacher.late') }}</option>
+                        <option value="Free" {{ request('status') == 'Free' ? 'selected' : '' }}>🎁 {{ __('teacher.free') }}</option>
                     </select>
                 </div>
                 
@@ -148,9 +148,6 @@
                     </h3>
                     <p style="color: #64748b; margin: 8px 0 0 0; font-size: 14px;">{{ __('teacher.manage_teaching_courses') }}</p>
                 </div>
-                <a href="{{ route('teacher.courses.create') }}" style="padding: 12px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); text-decoration: none;">
-                    <i class="fas fa-plus"></i> {{ __('teacher.add_course') }}
-                </a>
             </div>
         </div>
         <div class="card-body" style="padding: 0;">
@@ -162,10 +159,6 @@
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-hashtag" style="color: #3b82f6; margin-right: 6px;"></i>
                                     {{ __('teacher.no') }}
-                                </th>
-                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
-                                    <i class="fas fa-sync-alt" style="color: #8b5cf6; margin-right: 6px;"></i>
-                                    Round
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-user-graduate" style="color: #34d399; margin-right: 6px;"></i>
@@ -216,28 +209,16 @@
                                         </div>
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
-                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                            <span style="font-weight: 600; color: #3b82f6; font-size: 14px;">R{{ $course->round ?? 1 }}</span>
-                                            @php
-                                                $paymentBadge = $course->getPaymentStatusBadge();
-                                            @endphp
-                                            <span style="display: inline-block; padding: 4px 10px; background: {{ $paymentBadge['bg_color'] }}; color: {{ $paymentBadge['text_color'] }}; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">
-                                                {{ $paymentBadge['label'] }}
-                                            </span>
-                                            <button onclick="showRoundsModal({{ $course->student_id }})" 
-                                                    style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;"
-                                                    title="View all rounds">
-                                                <i class="fas fa-history"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        @php
+                                            $studentColor = $course->student->display_color ?? '#64748b';
+                                            $darkerColor = \App\Services\StudentColorService::getDarkerShade($studentColor);
+                                        @endphp
                                         <div style="display: flex; align-items: center; gap: 12px;">
-                                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0369a1; font-weight: 700; font-size: 16px;">
+                                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, {{ $studentColor }} 0%, {{ $darkerColor }} 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                 {{ substr($course->student->name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->student->name }}</div>
+                                                <div style="font-weight: 600; color: {{ $studentColor }}; font-size: 14px;">{{ $course->student->name }}</div>
                                                 <div style="font-size: 12px; color: #64748b;">Package: {{ $course->student->package_number }} lessons</div>
                                             </div>
                                         </div>
@@ -276,18 +257,22 @@
                                         </div>
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
-                                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: {{ $course->status === 'Present' ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' : ($course->status === 'Absent' ? 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)') }}; color: {{ $course->status === 'Present' ? '#166534' : ($course->status === 'Absent' ? '#dc2626' : '#d97706') }}; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid {{ $course->status === 'Present' ? '#bbf7d0' : ($course->status === 'Absent' ? '#fecaca' : '#fde68a') }}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                            <i class="fas {{ $course->status === 'Present' ? 'fa-check-circle' : ($course->status === 'Absent' ? 'fa-times-circle' : 'fa-clock') }}"></i>
-                                            @if($course->status === 'Present')
+                                        @if($course->status === 'Present')
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-check-circle"></i>
                                                 {{ __('teacher.present') }}
-                                            @elseif($course->status === 'Pending')
-                                                {{ __('teacher.pending') }}
-                                            @elseif($course->status === 'Absent')
+                                            </span>
+                                        @elseif($course->status === 'Absent')
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #fecaca; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-times-circle"></i>
                                                 {{ __('teacher.absent') }}
-                                            @else
-                                                {{ __('teacher.late') }}
-                                            @endif
-                                        </span>
+                                            </span>
+                                        @elseif($course->status === 'Free')
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #374151; border-radius: 25px; font-size: 12px; font-weight: 700; border: 1px solid #d1d5db; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <i class="fas fa-gift"></i>
+                                                {{ __('teacher.free') }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td style="padding: 20px 16px; white-space: nowrap;">
                                         @if($course->admin_status === 'approved')
@@ -380,6 +365,14 @@
             @endif
         </div>
     </div>
+
+    <!-- Fixed Add Course Button -->
+    <a href="{{ route('teacher.courses.create') }}" 
+       style="position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); z-index: 1000; transition: all 0.3s;"
+       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.5)'"
+       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'">
+        <i class="fas fa-plus"></i> {{ __('teacher.add_course') }}
+    </a>
 
     <!-- Rounds Modal -->
     <div id="roundsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">

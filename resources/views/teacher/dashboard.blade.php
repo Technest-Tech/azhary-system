@@ -84,9 +84,8 @@
                     <select name="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="all">{{ __('teacher.all_statuses') }}</option>
                         <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>{{ __('teacher.present') }}</option>
-                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>{{ __('teacher.pending') }}</option>
                         <option value="Absent" {{ request('status') == 'Absent' ? 'selected' : '' }}>{{ __('teacher.absent') }}</option>
-                        <option value="Late" {{ request('status') == 'Late' ? 'selected' : '' }}>{{ __('teacher.late') }}</option>
+                        <option value="Free" {{ request('status') == 'Free' ? 'selected' : '' }}>{{ __('teacher.free') }}</option>
                     </select>
                 </div>
                 
@@ -147,7 +146,6 @@
                             <input type="checkbox" style="cursor: pointer;">
                         </th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.no') }}</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">Round</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.name') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.course') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.date') }}</th>
@@ -173,19 +171,8 @@
                                 $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
                             }
                             
-                            // Color coding for student names
-                            $nameColor = '#64748b';
-                            if ($course->status === 'Pending') {
-                                $nameColor = '#fbbf24';
-                            } elseif ($course->student->package_number > 0) {
-                                if ($completionPercentage >= 80) {
-                                    $nameColor = '#f9a8d4'; // Soft Pink
-                                } elseif ($completionPercentage >= 50) {
-                                    $nameColor = '#fde047'; // Soft Yellow
-                                } else {
-                                    $nameColor = '#c084fc'; // Soft Purple
-                                }
-                            }
+                            // Use student's fixed color
+                            $nameColor = $course->student->display_color ?? '#64748b';
                         @endphp
                         <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" 
                             onmouseover="this.style.background='#f8fafc'" 
@@ -195,22 +182,6 @@
                             </td>
                             <td style="padding: 16px; font-weight: 600; color: #1e293b;">
                                 {{ number_format($course->n_value, 2) }}
-                            </td>
-                            <td style="padding: 16px; white-space: nowrap;">
-                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                    <span style="font-weight: 600; color: #3b82f6;">R{{ $course->round ?? 1 }}</span>
-                                    @php
-                                        $paymentBadge = $course->getPaymentStatusBadge();
-                                    @endphp
-                                    <span style="display: inline-block; padding: 4px 10px; background: {{ $paymentBadge['bg_color'] }}; color: {{ $paymentBadge['text_color'] }}; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">
-                                        {{ $paymentBadge['label'] }}
-                                    </span>
-                                    <button onclick="showRoundsModal({{ $course->student_id }})" 
-                                            style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;"
-                                            title="View all rounds">
-                                        <i class="fas fa-history"></i>
-                                    </button>
-                                </div>
                             </td>
                             <td style="padding: 16px;">
                                 <span style="color: {{ $nameColor }}; font-weight: 600;">{{ $course->student->name }}</span>
@@ -224,12 +195,10 @@
                             <td style="padding: 16px;">
                                 @if($course->status === 'Present')
                                     <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.present') }}</span>
-                                @elseif($course->status === 'Pending')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.pending') }}</span>
                                 @elseif($course->status === 'Absent')
                                     <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.absent') }}</span>
-                                @else
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fcd34d; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.late') }}</span>
+                                @elseif($course->status === 'Free')
+                                    <span style="display: inline-block; padding: 6px 12px; background: #e5e7eb; color: #374151; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.free') }}</span>
                                 @endif
                             </td>
                             <td style="padding: 16px;">
@@ -294,7 +263,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" style="padding: 40px; text-align: center; color: #64748b;">
+                            <td colspan="11" style="padding: 40px; text-align: center; color: #64748b;">
                                 <i class="fas fa-book-open" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
                                 <p>{{ __('teacher.no_courses_found') }}</p>
                             </td>
@@ -304,8 +273,8 @@
             </table>
         </div>
 
-        <!-- Pagination and Add Button -->
-        <div style="padding: 20px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Pagination -->
+        <div style="padding: 20px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-start; align-items: center;">
             <div style="display: flex; gap: 12px;">
                 @if($courses->previousPageUrl())
                     <a href="{{ $courses->previousPageUrl() }}&{{ http_build_query(request()->except('page')) }}" 
@@ -320,12 +289,16 @@
                     </a>
                 @endif
             </div>
-            <a href="{{ route('teacher.courses.create') }}" 
-               style="padding: 12px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-plus"></i> {{ __('teacher.add_a_course') }}
-            </a>
         </div>
     </div>
+
+    <!-- Fixed Add Course Button -->
+    <a href="{{ route('teacher.courses.create') }}" 
+       style="position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); z-index: 1000; transition: all 0.3s;"
+       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.5)'"
+       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'">
+        <i class="fas fa-plus"></i> {{ __('teacher.add_a_course') }}
+    </a>
 @endsection
 
 @section('scripts')

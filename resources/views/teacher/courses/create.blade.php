@@ -127,10 +127,9 @@
                         </label>
                         <select name="status" id="status" 
                                 style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                    <option value="Present" {{ old('status', 'Present') == 'Present' ? 'selected' : '' }}>{{ __('teacher.present') }}</option>
-                            <option value="Pending" {{ old('status') == 'Pending' ? 'selected' : '' }}>{{ __('teacher.pending') }}</option>
+                            <option value="Present" {{ old('status', 'Present') == 'Present' ? 'selected' : '' }}>{{ __('teacher.present') }}</option>
                             <option value="Absent" {{ old('status') == 'Absent' ? 'selected' : '' }}>{{ __('teacher.absent') }}</option>
-                            <option value="Late" {{ old('status') == 'Late' ? 'selected' : '' }}>{{ __('teacher.late') }}</option>
+                            <option value="Free" {{ old('status') == 'Free' ? 'selected' : '' }}>{{ __('teacher.free') }}</option>
                         </select>
                         @error('status')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
@@ -229,12 +228,12 @@
 
             <!-- Action Buttons -->
             <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                <button type="submit" name="save_only" value="1" id="saveBtn"
+                <button type="submit" name="save_only" value="1" id="saveBtn" onclick="showLoadingOverlay()"
                         style="padding: 14px 28px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
                     <i class="fas fa-save" id="saveIcon"></i>
                     <span id="saveText">{{ __('teacher.save') }}</span>
                 </button>
-                <button type="submit" name="generate_report" value="1" id="submitBtn"
+                <button type="submit" name="generate_report" value="1" id="submitBtn" onclick="showLoadingOverlay()"
                         style="padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
                     <i class="fas fa-file-alt" id="submitIcon"></i>
                     <span id="submitText">{{ __('teacher.save') }}</span>
@@ -244,31 +243,76 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center;">
-        <div style="background: white; border-radius: 20px; padding: 48px 56px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.4s ease;">
-            <div style="margin-bottom: 24px;">
-                <div class="loading-spinner" style="width: 56px; height: 56px; border: 4px solid #e5e7eb; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(3px); z-index: 99999; justify-content: center; align-items: center; pointer-events: all; cursor: not-allowed;">
+        <div style="background: white; border-radius: 16px; padding: 40px 48px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; pointer-events: none;">
+            <div style="margin-bottom: 20px;">
+                <div class="loading-spinner" style="width: 48px; height: 48px; border: 4px solid #e5e7eb; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
             </div>
-            <h3 style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">{{ __('teacher.create_course') }}...</h3>
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">Generating report and sending to WhatsApp.<br>Please wait, this may take a few seconds.</p>
+            <h3 style="color: #1f2937; font-size: 18px; font-weight: 700; margin: 0 0 8px 0;">Saving...</h3>
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">Please wait, this may take a few seconds.</p>
         </div>
     </div>
 
     <style>
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        #loadingOverlay {
+            cursor: not-allowed;
+        }
     </style>
+@endsection
 
+@section('scripts')
     <script>
-        document.querySelector('form').addEventListener('submit', function(e) {
-            var btns = document.querySelectorAll('button[type="submit"]');
+        function showLoadingOverlay() {
             var overlay = document.getElementById('loadingOverlay');
-            btns.forEach(function(btn) {
-                btn.disabled = true;
-                btn.style.opacity = '0.7';
-                btn.style.cursor = 'not-allowed';
-            });
-            overlay.style.display = 'flex';
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.style.visibility = 'visible';
+                overlay.style.opacity = '1';
+                
+                // Disable all form inputs and buttons
+                var form = document.querySelector('form[method="POST"]');
+                if (form) {
+                    var inputs = form.querySelectorAll('input, select, textarea, button');
+                    inputs.forEach(function(input) {
+                        if (input.type !== 'hidden' && input.type !== 'submit') {
+                            input.disabled = true;
+                            input.style.pointerEvents = 'none';
+                            input.style.opacity = '0.6';
+                            input.style.cursor = 'not-allowed';
+                        }
+                    });
+                }
+                
+                // Prevent any interaction with the overlay
+                overlay.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                };
+                
+                overlay.onmousedown = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                };
+            }
+        }
+        
+        // Also attach to form submit as backup
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.querySelector('form[method="POST"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    showLoadingOverlay();
+                });
+            }
         });
     </script>
 @endsection

@@ -248,12 +248,12 @@
                     <span class="status-badge status-{{ strtolower($course->status) }}">
                         @if($course->status === 'Present')
                             Present
-                        @elseif($course->status === 'Pending')
-                            Pending
                         @elseif($course->status === 'Absent')
                             Absent
+                        @elseif($course->status === 'Free')
+                            Free
                         @else
-                            Late
+                            {{ $course->status }}
                         @endif
                     </span>
                 </div>

@@ -46,8 +46,11 @@ class StudentColorService
     /**
      * Generate a unique color for a student based on their teacher
      * Ensures no two students of the same teacher have the same color
+     * 
+     * @param int $teacherId The teacher ID
+     * @param int|null $excludeStudentId Optional student ID to exclude from duplicate check
      */
-    public static function generateUniqueColorForTeacher($teacherId): string
+    public static function generateUniqueColorForTeacher($teacherId, $excludeStudentId = null): string
     {
         if (!$teacherId) {
             // If no teacher, return a default color
@@ -55,9 +58,15 @@ class StudentColorService
         }
 
         // Get all colors already assigned to students of this teacher
-        $usedColors = Student::where('teacher_id', $teacherId)
-            ->whereNotNull('color')
-            ->pluck('color')
+        $query = Student::where('teacher_id', $teacherId)
+            ->whereNotNull('color');
+        
+        // Exclude current student if provided
+        if ($excludeStudentId) {
+            $query->where('id', '!=', $excludeStudentId);
+        }
+        
+        $usedColors = $query->pluck('color')
             ->toArray();
 
         // Find the first available color from the palette

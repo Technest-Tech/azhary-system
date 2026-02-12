@@ -29,6 +29,7 @@ return [
     'pending' => 'Pending',
     'absent' => 'Absent',
     'late' => 'Late',
+    'free' => 'Free',
     'all_months' => 'All Months',
     'filter' => 'Filter',
     'number_of_courses' => 'Number of courses: :count',

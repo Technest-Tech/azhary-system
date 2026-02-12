@@ -37,6 +37,55 @@
             transition: all 0.3s ease;
         }
 
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar.collapsed .sidebar-logo-text,
+        .sidebar.collapsed .menu-item span,
+        .sidebar.collapsed .menu-section-title,
+        .sidebar.collapsed .user-info,
+        .sidebar.collapsed .logout-btn span,
+        .sidebar.collapsed .language-switcher {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .sidebar.collapsed .menu-item i {
+            margin-right: 0;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 24px 12px;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .user-profile {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .sidebar-footer {
+            padding: 20px 12px;
+        }
+
+        .sidebar.collapsed .logout-btn {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .logout-btn i {
+            margin-right: 0;
+        }
+
         .sidebar::-webkit-scrollbar {
             width: 6px;
         }
@@ -53,12 +102,56 @@
         .sidebar-header {
             padding: 24px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            transition: padding 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 12px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #e2e8f0;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .sidebar.collapsed .sidebar-toggle {
+            right: 50%;
+            transform: translateX(50%);
+            top: 24px;
         }
 
         .sidebar-logo {
             display: flex;
             align-items: center;
             gap: 12px;
+            padding-right: 40px;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            padding-right: 0;
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
         }
 
         .sidebar-logo i {
@@ -66,17 +159,28 @@
             color: #60a5fa;
         }
 
+        .sidebar-logo-text {
+            flex: 1;
+            min-width: 0;
+        }
+
         .sidebar-logo-text h2 {
             font-size: 20px;
             font-weight: 700;
             color: #fff;
             margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .sidebar-logo-text p {
             font-size: 12px;
             color: #94a3b8;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .sidebar-menu {
@@ -201,6 +305,11 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 80px;
         }
 
         .top-navbar {
@@ -349,6 +458,9 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+                    <i class="fas fa-bars" id="sidebarToggleIcon"></i>
+                </button>
                 <div class="sidebar-logo">
                     <i class="fas fa-graduation-cap"></i>
                     <div class="sidebar-logo-text">
@@ -424,7 +536,7 @@
                     @csrf
                     <button type="submit" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
-                        {{ __('admin.logout') }}
+                        <span>{{ __('admin.logout') }}</span>
                     </button>
                 </form>
             </div>
@@ -467,6 +579,39 @@
         </main>
     </div>
 
+    <script>
+        // Sidebar Toggle Functionality
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            // Update icon
+            if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.classList.remove('fa-bars');
+                toggleIcon.classList.add('fa-chevron-right');
+                localStorage.setItem('adminSidebarCollapsed', 'true');
+            } else {
+                toggleIcon.classList.remove('fa-chevron-right');
+                toggleIcon.classList.add('fa-bars');
+                localStorage.setItem('adminSidebarCollapsed', 'false');
+            }
+        }
+
+        // Restore sidebar state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const isCollapsed = localStorage.getItem('adminSidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
+            
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                toggleIcon.classList.remove('fa-bars');
+                toggleIcon.classList.add('fa-chevron-right');
+            }
+        });
+    </script>
     @yield('scripts')
 </body>
 </html>

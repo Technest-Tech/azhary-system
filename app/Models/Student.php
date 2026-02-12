@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\StudentColorService;
 
 class Student extends Authenticatable
 {
@@ -66,6 +68,94 @@ class Student extends Authenticatable
     public function waitingList()
     {
         return $this->hasMany(WaitingList::class);
+    }
+
+    /**
+     * Boot method to auto-assign colors when student is created or teacher is assigned
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($student) {
+            // Auto-assign color if teacher is assigned and color is missing
+            if ($student->teacher_id && !$student->color) {
+                $student->color = StudentColorService::generateUniqueColorForTeacher($student->teacher_id, $student->id);
+            }
+        });
+
+        static::updating(function ($student) {
+            // If teacher is being assigned or changed, and color is missing or teacher changed
+            if ($student->teacher_id) {
+                $originalTeacherId = $student->getOriginal('teacher_id');
+                
+                // If teacher changed or color is missing, assign new unique color
+                if (!$student->color || $originalTeacherId != $student->teacher_id) {
+                    $student->color = StudentColorService::generateUniqueColorForTeacher($student->teacher_id, $student->id);
+                }
+            } elseif (!$student->teacher_id) {
+                // If teacher is removed, clear color
+                $student->color = null;
+            }
+        });
+    }
+
+    /**
+     * Get the student's color, auto-assigning if missing
+     */
+    public function getDisplayColorAttribute()
+    {
+        // If student has a teacher but no color, assign one
+        if ($this->teacher_id && !$this->color) {
+            $this->color = StudentColorService::generateUniqueColorForTeacher($this->teacher_id, $this->id);
+            // Use direct DB update to avoid triggering events and infinite loops
+            DB::table('students')->where('id', $this->id)->update(['color' => $this->color]);
+        }
+        
+        // Check if this color is duplicate for this teacher and fix it
+        if ($this->teacher_id && $this->color) {
+            $duplicateCount = Student::where('teacher_id', $this->teacher_id)
+                ->where('color', $this->color)
+                ->where('id', '!=', $this->id)
+                ->count();
+            
+            if ($duplicateCount > 0) {
+                // This color is already used by another student of the same teacher, get a new one
+                $this->color = StudentColorService::generateUniqueColorForTeacher($this->teacher_id, $this->id);
+                DB::table('students')->where('id', $this->id)->update(['color' => $this->color]);
+            }
+        }
+        
+        // Return color or default gray if no teacher
+        return $this->color ?? '#64748b';
+    }
+
+    /**
+     * Ensure this student has a unique color assigned
+     * Call this method to ensure color is set without accessing the accessor
+     */
+    public function ensureColor()
+    {
+        if ($this->teacher_id) {
+            // Check if color is missing or duplicate
+            $needsNewColor = !$this->color;
+            
+            if ($this->color) {
+                // Check for duplicates
+                $duplicateCount = Student::where('teacher_id', $this->teacher_id)
+                    ->where('color', $this->color)
+                    ->where('id', '!=', $this->id)
+                    ->count();
+                
+                $needsNewColor = $duplicateCount > 0;
+            }
+            
+            if ($needsNewColor) {
+                $this->color = StudentColorService::generateUniqueColorForTeacher($this->teacher_id, $this->id);
+                $this->save();
+            }
+        }
+        return $this->color ?? '#64748b';
     }
 
     /**

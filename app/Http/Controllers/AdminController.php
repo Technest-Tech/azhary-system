@@ -35,6 +35,9 @@ class AdminController extends Controller
         $teachers = Teacher::all();
         $students = Student::all();
         
+        // Fix any duplicate colors and ensure all students have colors
+        StudentColorService::assignColorsToAllStudents();
+        
         // Query courses with filters - show ALL courses from all rounds
         $query = Course::with(['student', 'teacher', 'evaluation', 'student.paymentStatus']);
         
@@ -73,7 +76,8 @@ class AdminController extends Controller
         
         // Pagination
         $perPage = $request->get('per_page', 20);
-        $courses = $query->orderBy('course_date', 'asc')
+        $courses = $query->orderBy('n_value', 'desc')
+                        ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate($perPage);
         
@@ -237,7 +241,7 @@ class AdminController extends Controller
         if ($newTeacherId) {
             // If student has no color, or teacher changed, assign new unique color
             if (!$student->color || $oldTeacherId != $newTeacherId) {
-                $validated['color'] = StudentColorService::generateUniqueColorForTeacher($newTeacherId);
+                $validated['color'] = StudentColorService::generateUniqueColorForTeacher($newTeacherId, $student->id);
             }
         } else {
             // If teacher is removed, clear color
@@ -600,6 +604,21 @@ class AdminController extends Controller
         return view('admin.courses.create', compact('teachers', 'students', 'subjects', 'evaluations'));
     }
 
+    /**
+     * Get students by teacher ID (AJAX endpoint)
+     */
+    public function getTeacherStudents(Teacher $teacher)
+    {
+        $students = Student::where('teacher_id', $teacher->id)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+        
+        return response()->json([
+            'success' => true,
+            'students' => $students
+        ]);
+    }
+
     public function storeCourse(Request $request)
     {
         $validated = $request->validate([
@@ -612,7 +631,8 @@ class AdminController extends Controller
             'duration_hours' => 'required|integer|min:0',
             'duration_minutes' => 'required|integer|min:0|max:59',
             'course_type' => 'required|string|max:255',
-            'status' => 'required|in:Present,Absent,Late,Pending',
+            // Only allow Present, Absent, or Free from the UI
+            'status' => 'required|in:Present,Absent,Free',
             'homework' => 'nullable|string',
             'evaluation_id' => 'nullable|exists:evaluations,id',
             'content' => 'nullable|string',
@@ -663,7 +683,7 @@ class AdminController extends Controller
         // Calculate income based on teacher's hourly rate
         $income = $currentDuration * $teacher->hourly_rate;
         
-        // Set admin_status: pending for absences, approved for others
+        // Set admin_status: pending for absences, special handling for Free lessons
         if ($validated['status'] === 'Absent') {
             $validated['admin_status'] = 'pending';
             $validated['name'] = '0';
@@ -683,6 +703,20 @@ class AdminController extends Controller
             
             return redirect()->route('admin.dashboard')
                             ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
+        } elseif ($validated['status'] === 'Free') {
+            // Free lesson: no billing, no impact on n_value / package
+            $nValue = $previousNValue;
+            $income = 0;
+
+            $validated['teacher_id'] = $teacher->id;
+            $validated['student_name'] = $validated['student_name'] ?? $student->name;
+            $validated['n_value'] = $nValue; // keep cumulative hours unchanged
+            $validated['total_hours'] = $currentDuration; // still store duration for info
+            $validated['income'] = $income; // no salary for free lessons
+            $validated['admin_status'] = 'approved';
+            $validated['round'] = $currentRound;
+
+            $course = Course::create($validated);
         } else {
             // Check if lesson exceeds package limit
             $remainingInPackage = $student->package_number - $previousNValue;
@@ -900,7 +934,8 @@ class AdminController extends Controller
             'duration_hours' => 'required|integer|min:0',
             'duration_minutes' => 'required|integer|min:0|max:59',
             'course_type' => 'required|string|max:255',
-            'status' => 'required|in:Present,Absent,Late,Pending',
+            // Only allow Present, Absent, or Free from the UI
+            'status' => 'required|in:Present,Absent,Free',
             'homework' => 'nullable|string',
             'evaluation_id' => 'nullable|exists:evaluations,id',
             'content' => 'nullable|string',
@@ -1347,6 +1382,9 @@ class AdminController extends Controller
                 
                 if ($course->admin_status === 'pending' || $course->admin_status === 'rejected') {
                     // Unapproved/rejected absences: keep n_value at current cumulative (don't add duration)
+                    $course->update(['n_value' => $cumulativeValue]);
+                } elseif ($course->status === 'Free') {
+                    // Free lessons never consume package hours
                     $course->update(['n_value' => $cumulativeValue]);
                 } else {
                     // Normal/approved courses: add duration to cumulative

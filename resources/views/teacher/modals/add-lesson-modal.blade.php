@@ -116,9 +116,8 @@
                 <select name="status" id="modal_status" 
                         style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
                     <option value="Present" selected>{{ __('teacher.present') }}</option>
-                    <option value="Pending">{{ __('teacher.pending') }}</option>
                     <option value="Absent">{{ __('teacher.absent') }}</option>
-                    <option value="Late">{{ __('teacher.late') }}</option>
+                    <option value="Free">{{ __('teacher.free') }}</option>
                 </select>
                 @error('status')
                     <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
