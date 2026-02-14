@@ -204,12 +204,7 @@
                                 <input type="checkbox" style="cursor: pointer;">
                             </td>
                             <td style="padding: 16px; white-space: nowrap; font-weight: 600; color: #1e293b;">
-                                @if($course->name === '0' || $course->name === '0.0')
-                                    <span style="color: #94a3b8; font-style: italic;">—</span>
-                                @else
-                                    <span style="color: #3b82f6;">{{ $course->name }}</span>
-                                @endif
-                                <span style="color: #94a3b8; font-size: 11px; margin-left: 4px;">({{ number_format($course->n_value, 2) }}h)</span>
+                                {{ number_format($course->n_value, 2) }}
                             </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
