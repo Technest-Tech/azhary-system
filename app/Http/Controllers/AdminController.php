@@ -81,13 +81,19 @@ class AdminController extends Controller
                         ->orderBy('class_time', 'asc')
                         ->paginate($perPage);
         
+        // Get subjects and evaluations for course modal
+        $subjects = Subject::all();
+        $evaluations = Evaluation::active()->ordered()->get();
+        
         return view('admin.dashboard', compact(
             'totalStudents',
             'totalHours',
             'monthlyRevenue',
             'teachers',
             'students',
-            'courses'
+            'courses',
+            'subjects',
+            'evaluations'
         ));
     }
 
@@ -698,12 +704,20 @@ class AdminController extends Controller
             
             $course = Course::create($validated);
             
-            // Generate and send report via WhatsApp for any status
-            $teacherController = new \App\Http\Controllers\TeacherController();
-            $teacherController->generateAndSendReport($course);
+            // Generate and send report via WhatsApp only if requested
+            if ($request->input('send_whatsapp')) {
+                $teacherController = new \App\Http\Controllers\TeacherController();
+                $teacherController->generateAndSendReport($course);
+            }
             
-            return redirect()->route('admin.dashboard')
-                            ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
+            $successMsg = $request->input('send_whatsapp') 
+                ? 'Course created successfully! Report image has been sent to student\'s WhatsApp.'
+                : 'Course created successfully!';
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
+            }
+            return redirect()->route('admin.dashboard')->with('success', $successMsg);
         } elseif ($validated['status'] === 'Free') {
             // Free lesson: no billing, no impact on n_value / package
             $nValue = $previousNValue;
@@ -885,6 +899,9 @@ class AdminController extends Controller
                     $student->save();
                 }
                 
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => 'Lesson added to waiting list. Package limit reached.']);
+                }
                 return redirect()->route('admin.dashboard')
                                 ->with('success', 'Lesson added to waiting list. Package limit reached.');
             } else {
@@ -900,17 +917,28 @@ class AdminController extends Controller
                 
                 $course = Course::create($validated);
                 
-                // Generate and send report via WhatsApp for any status
-                $teacherController = new \App\Http\Controllers\TeacherController();
-                $teacherController->generateAndSendReport($course);
+                // Generate and send report via WhatsApp only if requested
+                if ($request->input('send_whatsapp')) {
+                    $teacherController = new \App\Http\Controllers\TeacherController();
+                    $teacherController->generateAndSendReport($course);
+                }
                 
-                return redirect()->route('admin.dashboard')
-                                ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
+                $successMsg = $request->input('send_whatsapp') 
+                    ? 'Course created successfully! Report image has been sent to student\'s WhatsApp.'
+                    : 'Course created successfully!';
+                
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
+                }
+                return redirect()->route('admin.dashboard')->with('success', $successMsg);
             }
         }
         
-        return redirect()->route('admin.dashboard')
-                        ->with('success', 'Course created successfully!');
+        $msg = 'Course created successfully!';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+        return redirect()->route('admin.dashboard')->with('success', $msg);
     }
 
     public function editCourse(Course $course)
@@ -921,6 +949,35 @@ class AdminController extends Controller
         $subjects = Subject::all();
         
         return view('admin.courses.edit', compact('course', 'teachers', 'students', 'evaluations', 'subjects'));
+    }
+
+    /**
+     * Get course data as JSON for the edit modal (AJAX endpoint)
+     */
+    public function getCourseData(Course $course)
+    {
+        $course->load(['student', 'teacher', 'evaluation']);
+        return response()->json([
+            'success' => true,
+            'course' => [
+                'id' => $course->id,
+                'teacher_id' => $course->teacher_id,
+                'student_id' => $course->student_id,
+                'student_name' => $course->student->name ?? $course->student_name,
+                'name' => $course->name,
+                'course_date' => $course->course_date->format('Y-m-d'),
+                'class_time' => \Carbon\Carbon::parse($course->class_time)->format('H:i'),
+                'duration_hours' => $course->duration_hours,
+                'duration_minutes' => $course->duration_minutes,
+                'course_type' => $course->course_type,
+                'status' => $course->status,
+                'homework' => $course->homework,
+                'evaluation_id' => $course->evaluation_id,
+                'content' => $course->content,
+                'notes' => $course->notes,
+                'souvenir_image' => $course->souvenir_image,
+            ],
+        ]);
     }
 
     public function updateCourse(Request $request, Course $course)
@@ -988,12 +1045,20 @@ class AdminController extends Controller
         // Recalculate all n_values for this student in the same round to ensure consistency
         $this->recalculateNValues($student->id, $teacher->id);
         
-        // Generate and send report via WhatsApp for any status
-        $teacherController = new \App\Http\Controllers\TeacherController();
-        $teacherController->generateAndSendReport($course);
+        // Generate and send report via WhatsApp only if requested
+        if ($request->input('send_whatsapp')) {
+            $teacherController = new \App\Http\Controllers\TeacherController();
+            $teacherController->generateAndSendReport($course);
+        }
         
-        return redirect()->route('admin.dashboard')
-                        ->with('success', 'Course updated successfully! Report image has been sent to student\'s WhatsApp.');
+        $successMsg = $request->input('send_whatsapp') 
+            ? 'Course updated successfully! Report image has been sent to student\'s WhatsApp.'
+            : 'Course updated successfully!';
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
+        }
+        return redirect()->route('admin.dashboard')->with('success', $successMsg);
     }
 
     public function destroyCourse(Course $course)
@@ -1386,6 +1451,10 @@ class AdminController extends Controller
                     $course->update(['n_value' => $cumulativeValue]);
                 } elseif ($course->status === 'Free') {
                     // Free lessons never consume package hours
+                    $course->update(['n_value' => $cumulativeValue]);
+                } elseif ($course->name === '0' || $course->name === '0.0') {
+                    // Unapproved absences (name="0") and unpaid beyond-limit lessons (name="0.0")
+                    // should NOT contribute to cumulative n_value, matching storeCourse exclusion logic
                     $course->update(['n_value' => $cumulativeValue]);
                 } else {
                     // Normal/approved courses: add duration to cumulative
