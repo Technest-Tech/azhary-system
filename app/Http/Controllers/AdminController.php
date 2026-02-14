@@ -254,7 +254,22 @@ class AdminController extends Controller
             $validated['color'] = null;
         }
 
+        // Detect if package_number changed
+        $oldPackageNumber = $student->package_number;
+        
         $student->update($validated);
+
+        // If package_number changed, recalculate all n_values for this student
+        if ($oldPackageNumber != $validated['package_number']) {
+            // Recalculate for all teachers this student has courses with
+            $teacherIds = Course::where('student_id', $student->id)
+                ->distinct()
+                ->pluck('teacher_id');
+            
+            foreach ($teacherIds as $teacherId) {
+                $this->recalculateNValues($student->id, $teacherId);
+            }
+        }
 
         // Redirect back to management if coming from there, otherwise to students list
         if (request()->has('from_management') || str_contains(request()->header('referer', ''), '/management')) {
@@ -908,6 +923,24 @@ class AdminController extends Controller
                 // Normal lesson - calculate n_value and create course
                 $nValue = $previousNValue + $currentDuration;
                 
+                // Auto-calculate lesson number (count of valid named courses in this round + 1)
+                $lastLessonInRound = Course::where('student_id', $student->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->where('round', $currentRound)
+                    ->where('name', '!=', '0')
+                    ->where('name', '!=', '0.0')
+                    ->where('admin_status', '!=', 'pending')
+                    ->where('status', '!=', 'Free')
+                    ->orderByRaw('CAST(name AS DECIMAL) DESC')
+                    ->first();
+                
+                if ($lastLessonInRound && is_numeric($lastLessonInRound->name)) {
+                    $autoLessonNumber = (int)$lastLessonInRound->name + 1;
+                } else {
+                    $autoLessonNumber = 1;
+                }
+                $validated['name'] = (string)$autoLessonNumber;
+                
                 $validated['student_name'] = $validated['student_name'] ?? $student->name;
                 $validated['n_value'] = $nValue;
                 $validated['total_hours'] = $currentDuration;
@@ -1418,6 +1451,10 @@ class AdminController extends Controller
      */
     public function recalculateNValues($studentId, $teacherId)
     {
+        // Get the student's package limit
+        $student = Student::find($studentId);
+        $packageLimit = $student ? $student->package_number : 0;
+        
         // Get all courses for this student and teacher, ordered by round, date, time
         $courses = Course::where('student_id', $studentId)
                         ->where('teacher_id', $teacherId)
@@ -1442,6 +1479,7 @@ class AdminController extends Controller
             }
             
             $cumulativeValue = 0;
+            $lessonNumber = 0; // Auto-number valid lessons
             
             foreach ($roundCourses as $course) {
                 $duration = $course->duration_hours + ($course->duration_minutes / 60.0);
@@ -1454,12 +1492,21 @@ class AdminController extends Controller
                     $course->update(['n_value' => $cumulativeValue]);
                 } elseif ($course->name === '0' || $course->name === '0.0') {
                     // Unapproved absences (name="0") and unpaid beyond-limit lessons (name="0.0")
-                    // should NOT contribute to cumulative n_value, matching storeCourse exclusion logic
+                    // should NOT contribute to cumulative n_value
                     $course->update(['n_value' => $cumulativeValue]);
                 } else {
                     // Normal/approved courses: add duration to cumulative
                     $cumulativeValue += $duration;
-                    $course->update(['n_value' => $cumulativeValue]);
+                    $lessonNumber++;
+                    
+                    $updateData = ['n_value' => $cumulativeValue];
+                    
+                    // Auto-assign sequential lesson name if it's not already correct
+                    if ($course->name !== (string)$lessonNumber) {
+                        $updateData['name'] = (string)$lessonNumber;
+                    }
+                    
+                    $course->update($updateData);
                 }
             }
         }
