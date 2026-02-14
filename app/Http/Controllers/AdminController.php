@@ -76,7 +76,7 @@ class AdminController extends Controller
         
         // Pagination
         $perPage = $request->get('per_page', 20);
-        $courses = $query->orderBy('n_value', 'asc')
+        $courses = $query->orderBy('round', 'asc')
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate($perPage);

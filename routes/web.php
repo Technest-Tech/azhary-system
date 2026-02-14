@@ -94,6 +94,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/courses/{course}/edit', [AdminController::class, 'editCourse'])->name('admin.courses.edit');
         Route::put('/courses/{course}', [AdminController::class, 'updateCourse'])->name('admin.courses.update');
         Route::delete('/courses/{course}', [AdminController::class, 'destroyCourse'])->name('admin.courses.destroy');
+        Route::get('/courses/{course}/data', [AdminController::class, 'getCourseData'])->name('admin.courses.data');
         Route::get('/courses/{course}/report-image', [TeacherController::class, 'downloadReportImage'])->name('admin.courses.report-image');
         
         // AJAX: Get students by teacher
