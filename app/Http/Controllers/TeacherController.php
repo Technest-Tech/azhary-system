@@ -944,6 +944,7 @@ class TeacherController extends Controller
             }
             
             $cumulativeValue = 0;
+            $lessonNumber = 0;
             
             foreach ($roundCourses as $course) {
                 $duration = $course->duration_hours + ($course->duration_minutes / 60.0);
@@ -954,10 +955,23 @@ class TeacherController extends Controller
                 } elseif ($course->status === 'Free') {
                     // Free lessons never consume package hours
                     $course->update(['n_value' => $cumulativeValue]);
-                } else {
-                    // Normal/approved courses: add duration to cumulative
-                    $cumulativeValue += $duration;
+                } elseif ($course->name === '0.0') {
+                    // Unpaid beyond-limit lessons: don't contribute to cumulative n_value
                     $course->update(['n_value' => $cumulativeValue]);
+                } else {
+                    // Normal/approved courses (including split courses with name='0' or 'Course'):
+                    // add duration to cumulative and assign proper sequential lesson name
+                    $cumulativeValue += $duration;
+                    $lessonNumber++;
+                    
+                    $updateData = ['n_value' => $cumulativeValue];
+                    
+                    // Always assign the correct sequential lesson name
+                    if ($course->name !== (string)$lessonNumber) {
+                        $updateData['name'] = (string)$lessonNumber;
+                    }
+                    
+                    $course->update($updateData);
                 }
             }
         }

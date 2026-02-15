@@ -1607,18 +1607,18 @@ class AdminController extends Controller
                 } elseif ($course->status === 'Free') {
                     // Free lessons never consume package hours
                     $course->update(['n_value' => $cumulativeValue]);
-                } elseif ($course->name === '0' || $course->name === '0.0') {
-                    // Unapproved absences (name="0") and unpaid beyond-limit lessons (name="0.0")
-                    // should NOT contribute to cumulative n_value
+                } elseif ($course->name === '0.0') {
+                    // Unpaid beyond-limit lessons: don't contribute to cumulative n_value
                     $course->update(['n_value' => $cumulativeValue]);
                 } else {
-                    // Normal/approved courses: add duration to cumulative
+                    // Normal/approved courses (including split courses with name='0' or 'Course'):
+                    // add duration to cumulative and assign proper sequential lesson name
                     $cumulativeValue += $duration;
                     $lessonNumber++;
                     
                     $updateData = ['n_value' => $cumulativeValue];
                     
-                    // Auto-assign sequential lesson name if it's not already correct
+                    // Always assign the correct sequential lesson name
                     if ($course->name !== (string)$lessonNumber) {
                         $updateData['name'] = (string)$lessonNumber;
                     }
