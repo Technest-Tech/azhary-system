@@ -642,13 +642,26 @@ class TeacherController extends Controller
         
         // Generate and send report via WhatsApp for any created course
         if (isset($course)) {
-            $this->generateAndSendReport($course);
+            if ($request->input('send_whatsapp')) {
+                $this->generateAndSendReport($course);
+            }
+            
+            $successMsg = $request->input('send_whatsapp') 
+                ? 'Course created successfully! Report image has been sent to student\'s WhatsApp.'
+                : 'Course created successfully!';
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $successMsg]);
+            }
             
             return redirect()->route('teacher.courses')
-                            ->with('success', 'Course created successfully! Report image has been sent to student\'s WhatsApp.');
+                            ->with('success', $successMsg);
         }
         
         // This should not be reached, but just in case
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Operation completed successfully!']);
+        }
         return redirect()->route('teacher.dashboard')
                         ->with('success', 'Operation completed successfully!');
     }
@@ -667,6 +680,37 @@ class TeacherController extends Controller
         $subjects = Subject::all();
         
         return view('teacher.courses.edit', compact('course', 'students', 'evaluations', 'subjects'));
+    }
+
+    public function getCourseData(Course $course)
+    {
+        $teacher = Auth::guard('teacher')->user();
+        
+        if ($course->teacher_id !== $teacher->id) {
+            abort(403, 'Unauthorized access to course.');
+        }
+        
+        $course->load(['student', 'evaluation']);
+        return response()->json([
+            'success' => true,
+            'course' => [
+                'id' => $course->id,
+                'student_id' => $course->student_id,
+                'student_name' => $course->student->name ?? $course->student_name,
+                'name' => $course->name,
+                'course_date' => $course->course_date->format('Y-m-d'),
+                'class_time' => \Carbon\Carbon::parse($course->class_time)->format('H:i'),
+                'duration_hours' => $course->duration_hours,
+                'duration_minutes' => $course->duration_minutes,
+                'course_type' => $course->course_type,
+                'status' => $course->status,
+                'homework' => $course->homework,
+                'evaluation_id' => $course->evaluation_id,
+                'content' => $course->content,
+                'notes' => $course->notes,
+                'souvenir_image' => $course->souvenir_image,
+            ],
+        ]);
     }
 
     public function updateCourse(Request $request, Course $course)
@@ -740,11 +784,21 @@ class TeacherController extends Controller
         // Recalculate all n_values for this student to ensure consistency
         $this->recalculateNValues($student->id, $teacher->id);
         
-        // Generate and send report via WhatsApp for any status
-        $this->generateAndSendReport($course);
+        // Conditionally generate and send report via WhatsApp
+        if ($request->input('send_whatsapp')) {
+            $this->generateAndSendReport($course);
+        }
+        
+        $successMsg = $request->input('send_whatsapp') 
+            ? 'Course updated successfully! Report image has been sent to student\'s WhatsApp.'
+            : 'Course updated successfully!';
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $successMsg]);
+        }
         
         return redirect()->route('teacher.courses')
-                        ->with('success', 'Course updated successfully! Report image has been sent to student\'s WhatsApp.');
+                        ->with('success', $successMsg);
     }
 
     public function destroyCourse(Course $course)

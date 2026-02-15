@@ -147,6 +147,7 @@ Route::prefix('teacher')->group(function () {
         Route::get('/courses/create', [TeacherController::class, 'createCourse'])->name('teacher.courses.create');
         Route::post('/courses', [TeacherController::class, 'storeCourse'])->name('teacher.courses.store');
         Route::get('/courses/{course}/edit', [TeacherController::class, 'editCourse'])->name('teacher.courses.edit');
+        Route::get('/courses/{course}/data', [TeacherController::class, 'getCourseData'])->name('teacher.courses.data');
         Route::put('/courses/{course}', [TeacherController::class, 'updateCourse'])->name('teacher.courses.update');
         Route::delete('/courses/{course}', [TeacherController::class, 'destroyCourse'])->name('teacher.courses.destroy');
         Route::get('/courses/{course}/report', [TeacherController::class, 'generateReport'])->name('teacher.courses.report');
