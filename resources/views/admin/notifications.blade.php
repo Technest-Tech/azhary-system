@@ -14,6 +14,7 @@
                 <select name="type" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                     <option value="all" {{ request('type') == 'all' || !request('type') ? 'selected' : '' }}>{{ __('admin.all_types') }}</option>
                     <option value="absence_approval" {{ request('type') == 'absence_approval' ? 'selected' : '' }}>{{ __('admin.absence_approval') }}</option>
+                    <option value="auto_approval" {{ request('type') == 'auto_approval' ? 'selected' : '' }}>Auto Approved</option>
                     <option value="progress_update" {{ request('type') == 'progress_update' ? 'selected' : '' }}>{{ __('admin.progress_update') }}</option>
                     <option value="birthday" {{ request('type') == 'birthday' ? 'selected' : '' }}>{{ __('admin.birthday') }}</option>
                 </select>
@@ -84,6 +85,10 @@
                             <span style="display: inline-block; padding: 6px 12px; background: #fee2e2; color: #dc2626; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 {{ __('admin.absence_approval_badge') }}
                             </span>
+                        @elseif($notification->type === 'auto_approval')
+                            <span style="display: inline-block; padding: 6px 12px; background: #d1fae5; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                ⚡ Auto Approved
+                            </span>
                         @elseif($notification->type === 'progress_update')
                             <span style="display: inline-block; padding: 6px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 {{ __('admin.progress_update_badge') }}
@@ -143,6 +148,10 @@
                                     </button>
                                 </form>
                             @endif
+                        @elseif($notification->type === 'auto_approval')
+                            <button type="button" disabled style="padding: 8px 16px; background: #059669; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: not-allowed; opacity: 0.8;">
+                                ⚡ Auto Approved by System
+                            </button>
                         @else
                             <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $notification->student->phone) }}" 
                                target="_blank"

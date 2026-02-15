@@ -1154,27 +1154,52 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Course not found');
         }
 
-        $student = $notification->student;
+        // Use the shared package-aware approval logic
+        self::processAbsenceApproval($course);
+
+        // Mark notification as approved
+        $notification->is_approved = true;
+        $notification->is_read = true;
+        $notification->save();
+
+        return redirect()->back()->with('success', 'Absence approved and lesson calculated');
+    }
+
+    /**
+     * Package-aware absence approval logic.
+     * Handles: normal approval, package completion detection, course splitting when
+     * absence duration exceeds remaining package hours, and overflow to round 0.
+     * 
+     * Called from:
+     * - AdminController::approveAbsence() (admin manual approval)
+     * - TeacherController::storeCourse() (auto-approval when Present course is added)
+     *
+     * @param Course $course The pending absent course to approve
+     * @return array ['packageCompleted' => bool, 'newRound' => int|null]
+     */
+    public static function processAbsenceApproval(Course $course)
+    {
+        $student = $course->student;
+        $teacher = $course->teacher;
         $courseRound = $course->round;
+        $currentDuration = (float)$course->total_hours;
         
-        // Find the last lesson before this one IN THE SAME ROUND (excluding unapproved absences with name "0")
+        // Find the last approved lesson IN THE SAME ROUND
         $previousLessons = Course::where('student_id', $student->id)
-                               ->where('teacher_id', $course->teacher_id)
+                               ->where('teacher_id', $teacher->id)
                                ->where('round', $courseRound)
                                ->where('id', '!=', $course->id)
-                               ->where('name', '!=', '0') // Exclude unapproved absences
+                               ->where('name', '!=', '0')
                                ->where('name', '!=', '0.0')
                                ->where('admin_status', '!=', 'pending')
                                ->orderBy('n_value', 'desc')
                                ->first();
 
-        $previousNValue = $previousLessons ? $previousLessons->n_value : 0;
-        $currentDuration = $course->total_hours;
-        $nValue = $previousNValue + $currentDuration;
-
-        // Get the last lesson number IN THE SAME ROUND to determine the next number
+        $previousNValue = $previousLessons ? (float)$previousLessons->n_value : 0;
+        
+        // Get the last lesson number IN THE SAME ROUND
         $lastLesson = Course::where('student_id', $student->id)
-                          ->where('teacher_id', $course->teacher_id)
+                          ->where('teacher_id', $teacher->id)
                           ->where('round', $courseRound)
                           ->where('id', '!=', $course->id)
                           ->where('name', '!=', '0')
@@ -1184,29 +1209,113 @@ class AdminController extends Controller
                           ->orderBy('class_time', 'desc')
                           ->first();
 
-        // Determine the lesson number
-        if ($lastLesson && is_numeric($lastLesson->name)) {
-            $lessonNumber = (float)$lastLesson->name + 1;
+        $lessonNumber = ($lastLesson && is_numeric($lastLesson->name)) 
+            ? (float)$lastLesson->name + 1 
+            : 1;
+
+        // Calculate remaining hours in this package
+        $remainingInPackage = $student->package_number - $previousNValue;
+        $packageCompleted = false;
+
+        if ($remainingInPackage <= 0) {
+            // Package already full — place course in round 0 as pending overflow
+            $course->name = '0';
+            $course->n_value = 0;
+            $course->admin_status = 'approved';
+            $course->round = 0;
+            $course->save();
+            
+            return ['packageCompleted' => false, 'newRound' => null];
+        } elseif ($currentDuration > $remainingInPackage) {
+            // Duration exceeds remaining — SPLIT the course
+            $hoursToComplete = $remainingInPackage;
+            $hoursOverflow = $currentDuration - $remainingInPackage;
+            
+            // Convert to hours and minutes
+            $completeHours = floor($hoursToComplete);
+            $completeMinutes = round(($hoursToComplete - $completeHours) * 60);
+            $overflowHours = floor($hoursOverflow);
+            $overflowMinutes = round(($hoursOverflow - $overflowHours) * 60);
+            
+            $nValueComplete = $previousNValue + $hoursToComplete;
+            $incomeComplete = $hoursToComplete * $teacher->hourly_rate;
+            
+            // Update current course to complete the package
+            $course->name = (string)$lessonNumber;
+            $course->n_value = $nValueComplete;
+            $course->admin_status = 'approved';
+            $course->duration_hours = $completeHours;
+            $course->duration_minutes = $completeMinutes;
+            $course->total_hours = $hoursToComplete;
+            $course->income = $incomeComplete;
+            $course->save();
+            
+            // Create overflow course in round 0 (pending until payment activation)
+            $overflowCourse = Course::create([
+                'teacher_id' => $teacher->id,
+                'student_id' => $student->id,
+                'student_name' => $course->student_name,
+                'round' => 0,
+                'name' => '0',
+                'n_value' => 0,
+                'class_time' => $course->class_time,
+                'course_type' => $course->course_type,
+                'course_date' => $course->course_date,
+                'duration_hours' => $overflowHours,
+                'duration_minutes' => $overflowMinutes,
+                'total_hours' => $hoursOverflow,
+                'status' => 'Absent',
+                'admin_status' => 'approved',
+                'homework' => $course->homework,
+                'evaluation_id' => $course->evaluation_id,
+                'content' => $course->content,
+                'notes' => $course->notes,
+                'souvenir_image' => $course->souvenir_image,
+                'income' => $hoursOverflow * $teacher->hourly_rate,
+            ]);
+            
+            $packageCompleted = true;
         } else {
-            // If no previous lesson, start from 1
-            $lessonNumber = 1;
+            // Normal case — fits within the package
+            $nValue = $previousNValue + $currentDuration;
+            
+            $course->name = (string)$lessonNumber;
+            $course->n_value = $nValue;
+            $course->admin_status = 'approved';
+            $course->save();
+            
+            // Check if package is now complete
+            if ($nValue >= $student->package_number) {
+                $packageCompleted = true;
+            }
         }
-
-        // Update the course
-        $course->name = (string)$lessonNumber;
-        $course->n_value = $nValue;
-        $course->admin_status = 'approved';
-        $course->save();
         
-        // Recalculate all n_values for this student to ensure consistency
-        $this->recalculateNValues($student->id, $course->teacher_id);
-
-        // Mark notification as approved
-        $notification->is_approved = true;
-        $notification->is_read = true;
-        $notification->save();
-
-        return redirect()->back()->with('success', 'Absence approved and lesson calculated');
+        // Recalculate n_values for consistency
+        (new self)->recalculateNValues($student->id, $teacher->id);
+        
+        // If package is completed, create notification and set payment status
+        if ($packageCompleted) {
+            // Set payment status to "EN ATTENTE DE PAYEMENT"
+            $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+            if ($waitingPaymentStatus) {
+                $student->payment_status_id = $waitingPaymentStatus->id;
+                $student->save();
+            }
+            
+            // Create progress_update notification for package completion
+            $message = $student->name . ' has completed the course !!';
+            Notification::create([
+                'type' => 'progress_update',
+                'course_id' => $course->id,
+                'student_id' => $student->id,
+                'teacher_id' => $teacher->id,
+                'message' => $message,
+                'is_read' => false,
+                'is_approved' => null,
+            ]);
+        }
+        
+        return ['packageCompleted' => $packageCompleted, 'newRound' => null];
     }
 
     public function rejectAbsence(Notification $notification)

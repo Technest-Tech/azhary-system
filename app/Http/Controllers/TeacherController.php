@@ -420,6 +420,76 @@ class TeacherController extends Controller
 
             $course = Course::create($validated);
         } else {
+            // === AUTO-APPROVE pending Absent courses for this student ===
+            $pendingAbsents = Course::where('student_id', $student->id)
+                ->where('teacher_id', $teacher->id)
+                ->where('admin_status', 'pending')
+                ->where('status', 'Absent')
+                ->orderBy('course_date', 'asc')
+                ->orderBy('class_time', 'asc')
+                ->get();
+            
+            if ($pendingAbsents->isNotEmpty()) {
+                foreach ($pendingAbsents as $pendingAbsent) {
+                    // Auto-approve using the shared package-aware logic
+                    AdminController::processAbsenceApproval($pendingAbsent);
+                    
+                    // Mark the absence notification as auto-approved
+                    $absenceNotification = Notification::where('course_id', $pendingAbsent->id)
+                        ->where('type', 'absence_approval')
+                        ->where('is_read', false)
+                        ->first();
+                    
+                    if ($absenceNotification) {
+                        $absenceNotification->is_approved = true;
+                        $absenceNotification->is_read = true;
+                        $absenceNotification->save();
+                    }
+                    
+                    // Create auto-approval notification for admin
+                    $autoApproveDate = $pendingAbsent->course_date ? $pendingAbsent->course_date->format('Y-m-d') : 'N/A';
+                    $autoApproveTime = $pendingAbsent->class_time ? \Carbon\Carbon::parse($pendingAbsent->class_time)->format('H:i') : 'N/A';
+                    $autoMessage = 'System auto-approved absent class on ' . $autoApproveDate 
+                        . ' at ' . $autoApproveTime 
+                        . ' for ' . $student->name 
+                        . ' (Teacher: ' . $teacher->name . ')'
+                        . ' because a new Present course was added.';
+                    
+                    Notification::create([
+                        'type' => 'auto_approval',
+                        'course_id' => $pendingAbsent->id,
+                        'student_id' => $student->id,
+                        'teacher_id' => $teacher->id,
+                        'message' => $autoMessage,
+                        'is_read' => false,
+                        'is_approved' => true,
+                    ]);
+                }
+                
+                // Recalculate currentRound and previousNValue after auto-approvals
+                $currentRound = Course::where('student_id', $student->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->where('round', '>', 0)
+                    ->max('round') ?? 1;
+                
+                $previousLessons = Course::where('student_id', $student->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->where('round', $currentRound)
+                    ->where('name', '!=', '0')
+                    ->where('name', '!=', '0.0')
+                    ->where('admin_status', '!=', 'pending')
+                    ->orderBy('n_value', 'desc')
+                    ->first();
+                
+                $previousNValue = $previousLessons ? $previousLessons->n_value : 0;
+                $packageLimitReached = $previousNValue >= $student->package_number;
+                
+                $hasPackageNotification = Notification::where('student_id', $student->id)
+                    ->where('type', 'progress_update')
+                    ->where('is_read', false)
+                    ->exists();
+            }
+            
             // Calculate income based on teacher's hourly rate
             $income = $currentDuration * $teacher->hourly_rate;
             
