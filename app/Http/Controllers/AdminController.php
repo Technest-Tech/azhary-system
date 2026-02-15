@@ -1363,14 +1363,21 @@ class AdminController extends Controller
         // These are students who need payment activation - either have courses with name "0.0" 
         // or have pending courses (admin_status='pending') from the new package
         $query = Student::with(['teacher', 'paymentStatus', 'courses' => function($q) {
-            $q->orderBy('course_date', 'desc')->orderBy('class_time', 'desc');
-        }])
-        ->whereHas('courses', function($q) {
+        $q->orderBy('course_date', 'desc')->orderBy('class_time', 'desc');
+    }])
+    ->where(function($mainQ) {
+        // Students with courses that have name "0.0" or admin_status='pending'
+        $mainQ->whereHas('courses', function($q) {
             $q->where(function($subQ) {
                 $subQ->where('name', '0.0')
                      ->orWhere('admin_status', 'pending');
             });
+        })
+        // OR students whose payment status is "EN ATTENTE DE PAYEMENT"
+        ->orWhereHas('paymentStatus', function($q) {
+            $q->where('name', 'EN ATTENTE DE PAYEMENT');
         });
+    });
 
         // Filter by student search
         if ($request->filled('student_search')) {
@@ -1566,12 +1573,11 @@ class AdminController extends Controller
         $student = Student::find($studentId);
         $packageLimit = $student ? $student->package_number : 0;
         
-        // Get all courses for this student and teacher, ordered by round, date, time
+        // Get all courses for this student and teacher, ordered by round, date, created_at
         $courses = Course::where('student_id', $studentId)
                         ->where('teacher_id', $teacherId)
                         ->orderBy('round', 'asc')
                         ->orderBy('course_date', 'asc')
-                        ->orderBy('class_time', 'asc')
                         ->orderBy('created_at', 'asc')
                         ->get();
         

@@ -921,12 +921,11 @@ class TeacherController extends Controller
      */
     public function recalculateNValues($studentId, $teacherId)
     {
-        // Get all courses for this student and teacher, ordered by round, date, time
+        // Get all courses for this student and teacher, ordered by round, date, created_at
         $courses = Course::where('student_id', $studentId)
                         ->where('teacher_id', $teacherId)
                         ->orderBy('round', 'asc')
                         ->orderBy('course_date', 'asc')
-                        ->orderBy('class_time', 'asc')
                         ->orderBy('created_at', 'asc')
                         ->get();
         
