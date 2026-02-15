@@ -311,8 +311,9 @@ class TeacherController extends Controller
         
         // Get subjects for course type filter
         $subjects = Subject::all();
+        $evaluations = Evaluation::active()->ordered()->get();
         
-        return view('teacher.courses', compact('courses', 'students', 'subjects'));
+        return view('teacher.courses', compact('courses', 'students', 'subjects', 'evaluations'));
     }
 
     public function createCourse()
@@ -327,6 +328,7 @@ class TeacherController extends Controller
 
     public function storeCourse(Request $request)
     {
+      try {
         $teacher = Auth::guard('teacher')->user();
         
         $validated = $request->validate([
@@ -664,6 +666,17 @@ class TeacherController extends Controller
         }
         return redirect()->route('teacher.dashboard')
                         ->with('success', 'Operation completed successfully!');
+      } catch (\Illuminate\Validation\ValidationException $e) {
+          if ($request->ajax() || $request->wantsJson() || $request->has('send_whatsapp')) {
+              return response()->json(['errors' => $e->errors()], 422);
+          }
+          throw $e;
+      } catch (\Exception $e) {
+          if ($request->ajax() || $request->wantsJson() || $request->has('send_whatsapp')) {
+              return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+          }
+          throw $e;
+      }
     }
 
     public function editCourse(Course $course)
@@ -715,6 +728,7 @@ class TeacherController extends Controller
 
     public function updateCourse(Request $request, Course $course)
     {
+      try {
         $teacher = Auth::guard('teacher')->user();
         
         // Ensure the course belongs to this teacher
@@ -799,6 +813,17 @@ class TeacherController extends Controller
         
         return redirect()->route('teacher.courses')
                         ->with('success', $successMsg);
+      } catch (\Illuminate\Validation\ValidationException $e) {
+          if ($request->ajax() || $request->wantsJson() || $request->has('send_whatsapp')) {
+              return response()->json(['errors' => $e->errors()], 422);
+          }
+          throw $e;
+      } catch (\Exception $e) {
+          if ($request->ajax() || $request->wantsJson() || $request->has('send_whatsapp')) {
+              return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+          }
+          throw $e;
+      }
     }
 
     public function destroyCourse(Course $course)
