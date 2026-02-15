@@ -20,29 +20,24 @@ class AdminAuthController extends Controller
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'user_type' => 'required|in:admin,teacher',
         ]);
 
         // Try admin authentication first
-        if ($credentials['user_type'] === 'admin') {
-            if (Auth::guard('admin')->attempt([
-                'email' => $credentials['email'],
-                'password' => $credentials['password']
-            ], $request->boolean('remember'))) {
-                $request->session()->regenerate();
-                return redirect()->intended('/admin/dashboard');
-            }
+        if (Auth::guard('admin')->attempt([
+            'email' => $credentials['email'],
+            'password' => $credentials['password']
+        ], $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended('/admin/dashboard');
         }
         
         // Try teacher authentication
-        if ($credentials['user_type'] === 'teacher') {
-            if (Auth::guard('teacher')->attempt([
-                'email' => $credentials['email'],
-                'password' => $credentials['password']
-            ], $request->boolean('remember'))) {
-                $request->session()->regenerate();
-                return redirect()->intended('/teacher/dashboard');
-            }
+        if (Auth::guard('teacher')->attempt([
+            'email' => $credentials['email'],
+            'password' => $credentials['password']
+        ], $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended('/teacher/dashboard');
         }
 
         return back()->withErrors([

@@ -157,17 +157,8 @@
         <form method="POST" action="{{ url('/admin/login') }}">
             @csrf
 
-            <div class="form-group @error('user_type') error @enderror">
-                <label for="user_type">{{ __('admin.account_type') }}</label>
-                <select name="user_type" id="user_type" required>
-                    <option value="">{{ __('admin.select_account_type') }}</option>
-                    <option value="admin" {{ old('user_type') == 'admin' ? 'selected' : '' }}>{{ __('admin.administrator') }}</option>
-                    <option value="teacher" {{ old('user_type') == 'teacher' ? 'selected' : '' }}>{{ __('admin.teacher') }}</option>
-                </select>
-                @error('user_type')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+
+
 
             <div class="form-group @error('email') error @enderror">
                 <label for="email">{{ __('admin.email_address') }}</label>

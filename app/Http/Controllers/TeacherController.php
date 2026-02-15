@@ -229,7 +229,8 @@ class TeacherController extends Controller
         }
         
         $perPage = $request->get('per_page', 10);
-        $courses = $query->orderBy('n_value', 'asc')
+        $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
+                        ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate($perPage);
@@ -294,7 +295,8 @@ class TeacherController extends Controller
             $query->whereDate('course_date', '<=', $request->date_to);
         }
         
-        $courses = $query->orderBy('n_value', 'asc')
+        $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
+                        ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate(20);
