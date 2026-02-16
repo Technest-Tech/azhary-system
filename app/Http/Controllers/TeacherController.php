@@ -228,7 +228,7 @@ class TeacherController extends Controller
             $query->where('course_type', $request->course_type);
         }
         
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 50);
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
                         ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')

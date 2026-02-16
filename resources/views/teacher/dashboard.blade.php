@@ -108,9 +108,9 @@
                 <!-- Items per page -->
                 <div>
                     <select name="per_page" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                         <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50</option>
                     </select>
                 </div>
                 
