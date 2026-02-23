@@ -183,8 +183,7 @@ class AdminController extends Controller
     {
         $teachers = Teacher::all();
         $subjects = Subject::where('is_active', true)->get();
-        $paymentStatuses = PaymentStatus::where('is_active', true)->orderBy('sort_order')->get();
-        return view('admin.students-create', compact('teachers', 'subjects', 'paymentStatuses'));
+        return view('admin.students-create', compact('teachers', 'subjects'));
     }
 
     public function storeStudent(Request $request)
@@ -194,18 +193,21 @@ class AdminController extends Controller
             'email' => 'required|email|unique:students,email',
             'phone' => 'required|string|max:20',
             'date_of_birth' => 'required|date',
-            'password' => 'required|string|min:8',
+            'password' => 'nullable|string|min:8',
             'section' => 'required|string|max:10',
             'package_number' => 'required|integer|min:1',
             'hour_rate' => 'required|numeric|min:0',
             'package_rate' => 'required|numeric|min:0',
-            'payment_status_id' => 'required|exists:payment_statuses,id',
-            'teacher_id' => 'nullable|exists:teachers,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:teachers,id',
             'teacher_rate' => 'nullable|numeric|min:0',
-            'subject_id' => 'nullable|exists:subjects,id',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
 
         // Assign unique color if teacher is assigned
         if (!empty($validated['teacher_id'])) {
@@ -221,8 +223,7 @@ class AdminController extends Controller
     {
         $teachers = Teacher::all();
         $subjects = Subject::where('is_active', true)->get();
-        $paymentStatuses = PaymentStatus::where('is_active', true)->orderBy('sort_order')->get();
-        return view('admin.students-edit', compact('student', 'teachers', 'subjects', 'paymentStatuses'));
+        return view('admin.students-edit', compact('student', 'teachers', 'subjects'));
     }
 
     public function updateStudent(Request $request, Student $student)
@@ -236,10 +237,9 @@ class AdminController extends Controller
             'package_number' => 'required|integer|min:1',
             'hour_rate' => 'required|numeric|min:0',
             'package_rate' => 'required|numeric|min:0',
-            'payment_status_id' => 'required|exists:payment_statuses,id',
-            'teacher_id' => 'nullable|exists:teachers,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:teachers,id',
             'teacher_rate' => 'nullable|numeric|min:0',
-            'subject_id' => 'nullable|exists:subjects,id',
         ]);
 
         if ($request->filled('password')) {

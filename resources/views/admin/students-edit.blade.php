@@ -67,7 +67,7 @@
                 <!-- Date of Birth -->
                 <div>
                     <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Date of Birth <span style="color: #dc2626;">*</span>
+                        Date of Birth
                     </label>
                     <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $student->date_of_birth ? $student->date_of_birth->format('Y-m-d') : '') }}" required
                         style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
@@ -79,7 +79,7 @@
                 <!-- Section -->
                 <div>
                     <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Section <span style="color: #dc2626;">*</span>
+                        Section
                     </label>
                     <select name="section" required
                         style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
@@ -110,9 +110,9 @@
                 <!-- Course/Subject -->
                 <div>
                     <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Course/Subject
+                        Course/Subject <span style="color: #dc2626;">*</span>
                     </label>
-                    <select name="subject_id"
+                    <select name="subject_id" required
                         style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
                         <option value="">Select Course</option>
                         @foreach($subjects as $subject)
@@ -129,7 +129,7 @@
                 <!-- Hour Rate -->
                 <div>
                     <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Hour Rate (USD) <span style="color: #dc2626;">*</span>
+                        Hour Rate (USD)
                     </label>
                     <input type="number" name="hour_rate" value="{{ old('hour_rate', $student->hour_rate) }}" required min="0" step="0.01"
                         style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;"
@@ -152,33 +152,14 @@
                     @enderror
                 </div>
 
-                <!-- Payment Status -->
-                <div>
-                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Payment Status <span style="color: #dc2626;">*</span>
-                    </label>
-                    <select name="payment_status_id" required
-                        style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        <option value="">Select Payment Status</option>
-                        @foreach($paymentStatuses as $status)
-                            <option value="{{ $status->id }}" {{ old('payment_status_id', $student->payment_status_id) == $status->id ? 'selected' : '' }}>
-                                {{ $status->name }} ({{ $status->display_name }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('payment_status_id')
-                        <span style="color: #dc2626; font-size: 13px; margin-top: 4px; display: block;">{{ $message }}</span>
-                    @enderror
-                </div>
-
                 <!-- Assign Teacher -->
                 <div>
                     <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Assign Teacher
+                        Assign Teacher <span style="color: #dc2626;">*</span>
                     </label>
-                    <select name="teacher_id"
+                    <select name="teacher_id" required
                         style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        <option value="">No Teacher Assigned</option>
+                        <option value="">Select Teacher</option>
                         @foreach($teachers as $teacher)
                             <option value="{{ $teacher->id }}" {{ old('teacher_id', $student->teacher_id) == $teacher->id ? 'selected' : '' }}>
                                 {{ $teacher->name }}
