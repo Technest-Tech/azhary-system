@@ -228,7 +228,7 @@ class TeacherController extends Controller
             $query->where('course_type', $request->course_type);
         }
         
-        $perPage = $request->get('per_page', 50);
+        $perPage = $request->get('per_page', 100);
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
                         ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')
@@ -299,8 +299,8 @@ class TeacherController extends Controller
                         ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
-                        ->paginate(20);
-        
+->paginate($request->get('per_page', 100));
+
         // Get students for filter dropdown
         $students = Student::where('teacher_id', $teacher->id)->get();
         

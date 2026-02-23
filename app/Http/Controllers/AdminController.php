@@ -75,7 +75,7 @@ class AdminController extends Controller
         }
         
         // Pagination
-        $perPage = $request->get('per_page', 20);
+        $perPage = $request->get('per_page', 100);
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
                         ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')

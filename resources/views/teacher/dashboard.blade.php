@@ -108,9 +108,10 @@
                 <!-- Items per page -->
                 <div>
                     <select name="per_page" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="10" {{ request('per_page', 100) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ request('per_page', 100) == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ request('per_page', 100) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100</option>
                     </select>
                 </div>
                 
@@ -194,7 +195,7 @@
                                 $roundId = 'round-' . str_replace('-', '_', $comboKey);
                             @endphp
                             <tr class="round-header-row" data-round-id="{{ $roundId }}" style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0; cursor: pointer; font-weight: 700;" onclick="toggleRound('{{ $roundId }}')" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                                <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s;"></i></td>
+                                <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s; transform: rotate(90deg);"></i></td>
                                 <td colspan="13" style="padding: 14px 16px;"><span style="font-weight: 700; color: #1e293b;">{{ $studentName }} — {{ $roundLabel }}</span> <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span></td>
                             </tr>
                             @foreach($roundCourses as $course)
@@ -205,7 +206,7 @@
                                     }
                                     $nameColor = $course->student->display_color ?? '#1565c0';
                                 @endphp
-                                <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9; display: none;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
                                     <td style="padding: 16px;"><input type="checkbox" style="cursor: pointer;" onclick="event.stopPropagation();"></td>
                                     <td style="padding: 16px; font-weight: 600; color: #1e293b;">{{ number_format($course->n_value, 2) }}</td>
                                     <td style="padding: 16px;"><span style="display: inline-block; padding: 6px 12px; background: {{ $nameColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name }}</span></td>

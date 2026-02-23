@@ -224,7 +224,7 @@
                                     $roundId = 'round-' . str_replace('-', '_', $comboKey);
                                 @endphp
                                 <tr class="round-header-row" data-round-id="{{ $roundId }}" style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0; cursor: pointer; font-weight: 700;" onclick="toggleRound('{{ $roundId }}')" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                                    <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s;"></i></td>
+                                    <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s; transform: rotate(90deg);"></i></td>
                                     <td colspan="10" style="padding: 14px 16px;"><span style="font-weight: 700; color: #1e293b;">{{ $studentName }} — {{ $roundLabel }}</span> <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span></td>
                                 </tr>
                                 @foreach($roundCourses as $course)
@@ -232,7 +232,7 @@
                                         $studentColor = $course->student->display_color ?? '#1565c0';
                                         $darkerColor = \App\Services\StudentColorService::getDarkerShade($studentColor);
                                     @endphp
-                                    <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9; display: none;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                    <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
                                         <td style="padding: 20px 16px; font-weight: 700; color: #1e293b; font-size: 16px; white-space: nowrap;">
                                             <div style="display: flex; align-items: center; gap: 8px;"><div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">{{ number_format($course->n_value, 2) }}</div></div>
                                         </td>
