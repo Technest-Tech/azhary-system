@@ -357,7 +357,7 @@
             <div style="padding: 24px 32px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
                 <h2 id="courseModalTitle" style="margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-plus-circle" style="color: #3b82f6;"></i>
-                    <span>Create New Course</span>
+                    <span>{{ __('admin.create_new_course') }}</span>
                 </h2>
                 <button onclick="closeCourseModal()" style="background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #64748b; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">&times;</button>
             </div>
@@ -378,10 +378,10 @@
                             <!-- Teacher Selection -->
                             <div>
                                 <label for="modal_teacher_id" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-chalkboard-teacher" style="color: #3b82f6;"></i> Teacher
+                                    <i class="fas fa-chalkboard-teacher" style="color: #3b82f6;"></i> {{ __('admin.teacher') }}
                                 </label>
                                 <select name="teacher_id" id="modal_teacher_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                    <option value="">Select a teacher</option>
+                                    <option value="">{{ __('admin.select_a_teacher') }}</option>
                                     @foreach($teachers as $teacher)
                                         <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
                                     @endforeach
@@ -392,14 +392,14 @@
                             <!-- Student Selection (real-time search) -->
                             <div style="position: relative; overflow: visible;">
                                 <label for="modal_student_search" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-user" style="color: #3b82f6;"></i> Student
+                                    <i class="fas fa-user" style="color: #3b82f6;"></i> {{ __('admin.student') }}
                                 </label>
-                                <input type="text" id="modal_student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Type to search student...">
+                                <input type="text" id="modal_student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="{{ __('admin.type_to_search_student') }}">
                                 <input type="hidden" name="student_id" id="modal_student_id" required>
                                 <input type="hidden" name="student_name" id="modal_student_name" value="">
                                 <div id="modal_student_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999;"></div>
                                 <div id="modal_student_loading" style="display: none; margin-top: 8px; color: #64748b; font-size: 12px;">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading students...
+                                    <i class="fas fa-spinner fa-spin"></i> {{ __('admin.loading_students') }}
                                 </div>
                                 <div class="field-error" data-field="student_id" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
@@ -407,7 +407,7 @@
                             <!-- Class Time -->
                             <div>
                                 <label for="modal_class_time" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-clock" style="color: #3b82f6;"></i> Class Time
+                                    <i class="fas fa-clock" style="color: #3b82f6;"></i> {{ __('admin.class_time') }}
                                 </label>
                                 <input type="time" name="class_time" id="modal_class_time" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" required>
                                 <div class="field-error" data-field="class_time" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
@@ -416,10 +416,10 @@
                             <!-- Course Type -->
                             <div>
                                 <label for="modal_course_type" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-book" style="color: #3b82f6;"></i> Course
+                                    <i class="fas fa-book" style="color: #3b82f6;"></i> {{ __('admin.course') }}
                                 </label>
                                 <select name="course_type" id="modal_course_type" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                    <option value="">Select a course</option>
+                                    <option value="">{{ __('admin.select_a_course') }}</option>
                                     @foreach($subjects as $subject)
                                         <option value="{{ $subject->name }}">{{ $subject->name }}</option>
                                     @endforeach
@@ -430,7 +430,7 @@
                             <!-- Date -->
                             <div>
                                 <label for="modal_course_date" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-calendar" style="color: #3b82f6;"></i> Date
+                                    <i class="fas fa-calendar" style="color: #3b82f6;"></i> {{ __('admin.date') }}
                                 </label>
                                 <input type="date" name="course_date" id="modal_course_date" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" value="{{ date('Y-m-d') }}" required>
                                 <div class="field-error" data-field="course_date" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
@@ -439,7 +439,7 @@
                             <!-- Duration -->
                             <div>
                                 <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-stopwatch" style="color: #3b82f6;"></i> Duration
+                                    <i class="fas fa-stopwatch" style="color: #3b82f6;"></i> {{ __('admin.duration') }}
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <select name="duration_hours" id="modal_duration_hours" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
@@ -460,12 +460,12 @@
                             <!-- Status -->
                             <div>
                                 <label for="modal_status" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-user-check" style="color: #3b82f6;"></i> Status
+                                    <i class="fas fa-user-check" style="color: #3b82f6;"></i> {{ __('admin.status') }}
                                 </label>
                                 <select name="status" id="modal_status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                    <option value="Present" selected>Present</option>
-                                    <option value="Absent">Absent</option>
-                                    <option value="Free">Free</option>
+                                    <option value="Present" selected>{{ __('admin.present') }}</option>
+                                    <option value="Absent">{{ __('admin.absent') }}</option>
+                                    <option value="Free">{{ __('admin.free') }}</option>
                                 </select>
                                 <div class="field-error" data-field="status" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
@@ -476,19 +476,19 @@
                             <!-- Homework -->
                             <div>
                                 <label for="modal_homework" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i> Homework
+                                    <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i> {{ __('admin.homework') }}
                                 </label>
-                                <input type="text" name="homework" id="modal_homework" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Assigned homework">
+                                <input type="text" name="homework" id="modal_homework" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="{{ __('admin.homework_placeholder') }}">
                                 <div class="field-error" data-field="homework" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
                             <!-- Evaluation -->
                             <div>
                                 <label for="modal_evaluation_id" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-sun" style="color: #3b82f6;"></i> Evaluation
+                                    <i class="fas fa-sun" style="color: #3b82f6;"></i> {{ __('admin.evaluation') }}
                                 </label>
                                 <select name="evaluation_id" id="modal_evaluation_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;">
-                                    <option value="">Select an evaluation</option>
+                                    <option value="">{{ __('admin.select_an_evaluation') }}</option>
                                     @foreach($evaluations as $evaluation)
                                         <option value="{{ $evaluation->id }}">{{ $evaluation->name }} : {{ $evaluation->max_percentage }} %</option>
                                     @endforeach
@@ -499,31 +499,31 @@
                             <!-- Content -->
                             <div>
                                 <label for="modal_content" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-file-alt" style="color: #3b82f6;"></i> Content
+                                    <i class="fas fa-file-alt" style="color: #3b82f6;"></i> {{ __('admin.content') }}
                                 </label>
-                                <textarea name="content" id="modal_content" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="Content covered in this course"></textarea>
+                                <textarea name="content" id="modal_content" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="{{ __('admin.content_placeholder') }}"></textarea>
                                 <div class="field-error" data-field="content" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
                             <!-- Notes -->
                             <div>
                                 <label for="modal_notes" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-sticky-note" style="color: #3b82f6;"></i> Notes
+                                    <i class="fas fa-sticky-note" style="color: #3b82f6;"></i> {{ __('admin.notes') }}
                                 </label>
-                                <textarea name="notes" id="modal_notes" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="Additional notes"></textarea>
+                                <textarea name="notes" id="modal_notes" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="{{ __('admin.notes_placeholder') }}"></textarea>
                                 <div class="field-error" data-field="notes" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
                             <!-- Souvenir Image -->
                             <div>
                                 <label for="modal_souvenir_image" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-camera" style="color: #3b82f6;"></i> Souvenir
+                                    <i class="fas fa-camera" style="color: #3b82f6;"></i> {{ __('admin.souvenir') }}
                                 </label>
                                 <div id="modal_souvenir_preview" style="display: none; margin-bottom: 8px;">
-                                    <img id="modal_souvenir_img" src="" alt="Souvenir" style="max-width: 200px; max-height: 120px; border-radius: 8px; border: 2px solid #e2e8f0;">
+                                    <img id="modal_souvenir_img" src="" alt="{{ __('admin.souvenir') }}" style="max-width: 200px; max-height: 120px; border-radius: 8px; border: 2px solid #e2e8f0;">
                                 </div>
                                 <div style="position: relative;">
-                                    <input type="text" id="modal_souvenir_image_text" style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Click to upload an image" readonly>
+                                    <input type="text" id="modal_souvenir_image_text" style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="{{ __('admin.click_to_upload_image') }}" readonly>
                                     <input type="file" name="souvenir_image" id="modal_souvenir_image" accept="image/*" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; top: 0; left: 0;"
                                            onchange="document.getElementById('modal_souvenir_image_text').value = this.files[0] ? this.files[0].name : '';">
                                     <i class="fas fa-folder" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none;"></i>
@@ -538,15 +538,15 @@
             <!-- Modal Footer - Action Buttons -->
             <div style="padding: 20px 32px; border-top: 1px solid #e2e8f0; display: flex; gap: 12px; justify-content: flex-end; background: #f8fafc; border-radius: 0 0 16px 16px;">
                 <button type="button" onclick="closeCourseModal()" style="padding: 14px 24px; background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                    <i class="fas fa-times"></i> Cancel
+                    <i class="fas fa-times"></i> {{ __('admin.cancel') }}
                 </button>
                 <button type="button" id="btnSaveOnly" onclick="submitCourseForm(false)" style="padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                     <i class="fas fa-save"></i>
-                    <span>Save Only</span>
+                    <span>{{ __('admin.save_only') }}</span>
                 </button>
                 <button type="button" id="btnSaveWhatsapp" onclick="submitCourseForm(true)" style="padding: 14px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                     <i class="fab fa-whatsapp"></i>
-                    <span>Save & Send WhatsApp Report</span>
+                    <span>{{ __('admin.save_send_whatsapp') }}</span>
                 </button>
             </div>
         </div>
@@ -558,15 +558,15 @@
             <div style="margin-bottom: 24px;">
                 <div style="width: 56px; height: 56px; border: 4px solid #e5e7eb; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
             </div>
-            <h3 id="loadingTitle" style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">Saving Course...</h3>
-            <p id="loadingSubtitle" style="color: #6b7280; font-size: 14px; margin: 0;">Please wait while we process your request.</p>
+            <h3 id="loadingTitle" style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">{{ __('admin.saving_course') }}</h3>
+            <p id="loadingSubtitle" style="color: #6b7280; font-size: 14px; margin: 0;">{{ __('admin.please_wait_processing') }}</p>
         </div>
     </div>
 
     <!-- Success Toast -->
     <div id="successToast" style="display: none; position: fixed; top: 24px; right: 24px; background: #10b981; color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4); z-index: 4000; font-weight: 600; font-size: 14px; display: none; align-items: center; gap: 10px; animation: slideDown 0.3s ease;">
         <i class="fas fa-check-circle"></i>
-        <span id="successToastText">Course saved successfully!</span>
+        <span id="successToastText">{{ __('admin.course_created_success') }}</span>
     </div>
 
     <style>
@@ -576,6 +576,15 @@
     </style>
 
     <script>
+        window.adminCreateNewCourseLabel = @json(__('admin.create_new_course'));
+        window.adminEditCourseLabel = @json(__('admin.edit_course'));
+        window.adminNoMatchingStudents = @json(__('admin.no_matching_students'));
+        window.adminLoadingRounds = @json(__('admin.loading_rounds'));
+        window.adminPleaseWait = @json(__('admin.please_wait'));
+        window.adminGeneratingWhatsapp = @json(__('admin.generating_whatsapp_report'));
+        window.adminCourseSavedSuccess = @json(__('admin.course_created_success'));
+        window.adminErrorOccurred = @json(__('admin.error_occurred'));
+        window.adminUnexpectedError = @json(__('admin.unexpected_error'));
         // ===================== ROUNDS MODAL =====================
         function showRoundsModal(studentId) {
             const modal = document.getElementById('roundsModal');
@@ -583,7 +592,7 @@
             const title = document.getElementById('roundsModalTitle');
             
             modal.style.display = 'flex';
-            content.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #3b82f6;"></i><p style="margin-top: 16px; color: #64748b;">Loading rounds...</p></div>';
+            content.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #3b82f6;"></i><p style="margin-top: 16px; color: #64748b;">' + (window.adminLoadingRounds || 'Loading rounds...') + '</p></div>';
             
             fetch(`/admin/students/${studentId}/rounds`)
                 .then(response => response.json())
@@ -686,7 +695,7 @@
             document.getElementById('modal_souvenir_image_text').value = '';
             
             // Update title
-            document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #3b82f6;"></i><span>Create New Course</span>';
+            document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #3b82f6;"></i><span>' + (window.adminCreateNewCourseLabel || 'Create New Course') + '</span>';
             
             clearFormErrors();
             document.getElementById('courseModal').style.display = 'block';
@@ -696,7 +705,7 @@
         function openEditCourseModal(courseId) {
             // Show loading in modal
             openCourseModal();
-            document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-edit" style="color: #f59e0b;"></i><span>Edit Course</span>';
+            document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-edit" style="color: #f59e0b;"></i><span>' + (window.adminEditCourseLabel || 'Edit Course') + '</span>';
             document.getElementById('courseFormMethod').value = 'PUT';
             document.getElementById('courseFormCourseId').value = courseId;
             
@@ -769,7 +778,7 @@
             if (list.length === 0) {
                 dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No students found</div>';
             } else if (filtered.length === 0) {
-                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No matching students</div>';
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">' + (window.adminNoMatchingStudents || 'No matching students') + '</div>';
             } else {
                 dropdown.innerHTML = filtered.map(function(s) {
                     var name = String(s.name || '');
@@ -899,10 +908,10 @@
             
             if (sendWhatsapp) {
                 loadingTitle.textContent = method === 'PUT' ? 'Updating Course...' : 'Creating Course...';
-                loadingSubtitle.innerHTML = 'Generating report and sending to WhatsApp.<br>Please wait, this may take a few seconds.';
+                loadingSubtitle.innerHTML = (window.adminGeneratingWhatsapp || 'Generating report and sending to WhatsApp...') + '<br>' + (window.adminPleaseWait || 'Please wait...');
             } else {
                 loadingTitle.textContent = method === 'PUT' ? 'Updating Course...' : 'Saving Course...';
-                loadingSubtitle.textContent = 'Please wait...';
+                loadingSubtitle.textContent = window.adminPleaseWait || 'Please wait...';
             }
             
             overlay.style.display = 'flex';
@@ -935,7 +944,7 @@
                 if (data.success) {
                     // KEEP OVERLAY VISIBLE until reload
                     closeCourseModal(); // Close the modal form behind the overlay
-                    showSuccessToast(data.message || 'Course saved successfully!');
+                    showSuccessToast(data.message || (window.adminCourseSavedSuccess || 'Course saved successfully!'));
                     
                     // Update overlay message to success state
                     loadingTitle.textContent = 'Success!';
@@ -945,7 +954,7 @@
                 } else {
                     overlay.style.display = 'none';
                     document.getElementById('courseFormErrors').style.display = 'block';
-                    document.getElementById('courseFormErrors').textContent = data.message || 'An error occurred.';
+                    document.getElementById('courseFormErrors').textContent = data.message || (window.adminErrorOccurred || 'An error occurred.');
                     document.getElementById('btnSaveOnly').disabled = false;
                     document.getElementById('btnSaveWhatsapp').disabled = false;
                 }
@@ -959,7 +968,7 @@
                     showFormErrors(err.errors);
                 } else {
                     document.getElementById('courseFormErrors').style.display = 'block';
-                    document.getElementById('courseFormErrors').textContent = err.message || 'An unexpected error occurred. Please try again.';
+                    document.getElementById('courseFormErrors').textContent = err.message || (window.adminUnexpectedError || 'An unexpected error occurred. Please try again.');
                 }
             });
 

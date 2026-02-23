@@ -147,7 +147,7 @@
 
         <!-- Course Table -->
         <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
+            <table style="width: 100%; border-collapse: collapse; white-space: normal;">
                 <thead>
                     <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">
@@ -163,7 +163,7 @@
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.evaluation') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.content') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.notes') }}</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('teacher.completed') }}</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.completed') }}</th>
                         <th style="padding: 16px; text-align: center; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase;">{{ __('teacher.actions') }}</th>
                     </tr>
                 </thead>
@@ -221,7 +221,7 @@
                                     <td style="padding: 16px; color: #64748b;">@if($course->evaluation){{ $course->evaluation->name }} : {{ $course->evaluation->max_percentage }}% @else - @endif</td>
                                     <td style="padding: 16px; color: #64748b; max-width: 200px;">{{ Str::limit($course->content ?? '-', 30) }}</td>
                                     <td style="padding: 16px; color: #64748b; max-width: 200px;">{{ Str::limit($course->notes ?? '-', 30) }}</td>
-                                    <td style="padding: 16px; white-space: nowrap;">
+                                    <td style="padding: 16px;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <div style="width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;"><div style="width: {{ $completionPercentage }}%; height: 100%; background: #14b8a6; transition: width 0.3s;"></div></div>
                                             <span style="font-size: 12px; font-weight: 600; color: #1e293b;">{{ number_format($completionPercentage, 1) }}%</span>
@@ -274,7 +274,7 @@
             <div style="padding: 24px 32px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
                 <h2 id="courseModalTitle" style="margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-plus-circle" style="color: #3b82f6;"></i>
-                    <span>Create New Course</span>
+                    <span>{{ __('teacher.create_new_course') }}</span>
                 </h2>
                 <button onclick="closeCourseModal()" style="background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #64748b; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">&times;</button>
             </div>
@@ -295,9 +295,9 @@
                             <!-- Student Selection (real-time search) -->
                             <div style="position: relative; overflow: visible;">
                                 <label for="modal_student_search" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-user" style="color: #3b82f6;"></i> Student
+                                    <i class="fas fa-user" style="color: #3b82f6;"></i> {{ __('teacher.student') }}
                                 </label>
-                                <input type="text" id="modal_student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Type to search student...">
+                                <input type="text" id="modal_student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="{{ __('teacher.type_to_search_student') }}">
                                 <input type="hidden" name="student_id" id="modal_student_id" required>
                                 <input type="hidden" name="student_name" id="modal_student_name" value="">
                                 <div id="modal_student_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999;"></div>
@@ -307,7 +307,7 @@
                             <!-- Class Time -->
                             <div>
                                 <label for="modal_class_time" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-clock" style="color: #3b82f6;"></i> Class Time
+                                    <i class="fas fa-clock" style="color: #3b82f6;"></i> {{ __('teacher.class_time') }}
                                 </label>
                                 <input type="time" name="class_time" id="modal_class_time" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" required>
                                 <div class="field-error" data-field="class_time" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
@@ -316,10 +316,10 @@
                             <!-- Course Type -->
                             <div>
                                 <label for="modal_course_type" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-book" style="color: #3b82f6;"></i> Course
+                                    <i class="fas fa-book" style="color: #3b82f6;"></i> {{ __('teacher.course') }}
                                 </label>
                                 <select name="course_type" id="modal_course_type" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                    <option value="">Select a course</option>
+                                    <option value="">{{ __('teacher.select_a_course') }}</option>
                                     @foreach($subjects as $subject)
                                         <option value="{{ $subject->name }}">{{ $subject->name }}</option>
                                     @endforeach
@@ -330,7 +330,7 @@
                             <!-- Date -->
                             <div>
                                 <label for="modal_course_date" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-calendar" style="color: #3b82f6;"></i> Date
+                                    <i class="fas fa-calendar" style="color: #3b82f6;"></i> {{ __('teacher.date') }}
                                 </label>
                                 <input type="date" name="course_date" id="modal_course_date" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" value="{{ date('Y-m-d') }}" required>
                                 <div class="field-error" data-field="course_date" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
@@ -339,7 +339,7 @@
                             <!-- Duration -->
                             <div>
                                 <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-stopwatch" style="color: #3b82f6;"></i> Duration
+                                    <i class="fas fa-stopwatch" style="color: #3b82f6;"></i> {{ __('teacher.duration') }}
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <select name="duration_hours" id="modal_duration_hours" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
@@ -360,12 +360,12 @@
                             <!-- Status -->
                             <div>
                                 <label for="modal_status" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-user-check" style="color: #3b82f6;"></i> Status
+                                    <i class="fas fa-user-check" style="color: #3b82f6;"></i> {{ __('teacher.status') }}
                                 </label>
                                 <select name="status" id="modal_status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required>
-                                    <option value="Present" selected>Present</option>
-                                    <option value="Absent">Absent</option>
-                                    <option value="Free">Free</option>
+                                    <option value="Present" selected>{{ __('teacher.present') }}</option>
+                                    <option value="Absent">{{ __('teacher.absent') }}</option>
+                                    <option value="Free">{{ __('teacher.free') }}</option>
                                 </select>
                                 <div class="field-error" data-field="status" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
@@ -376,19 +376,19 @@
                             <!-- Homework -->
                             <div>
                                 <label for="modal_homework" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i> Homework
+                                    <i class="fas fa-clipboard-list" style="color: #3b82f6;"></i> {{ __('teacher.homework') }}
                                 </label>
-                                <input type="text" name="homework" id="modal_homework" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Assigned homework">
+                                <input type="text" name="homework" id="modal_homework" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="{{ __('teacher.homework_placeholder') }}">
                                 <div class="field-error" data-field="homework" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
                             <!-- Evaluation -->
                             <div>
                                 <label for="modal_evaluation_id" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-sun" style="color: #3b82f6;"></i> Evaluation
+                                    <i class="fas fa-sun" style="color: #3b82f6;"></i> {{ __('teacher.evaluation') }}
                                 </label>
                                 <select name="evaluation_id" id="modal_evaluation_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;">
-                                    <option value="">Select an evaluation</option>
+                                    <option value="">{{ __('teacher.select_an_evaluation') }}</option>
                                     @foreach($evaluations as $evaluation)
                                         <option value="{{ $evaluation->id }}">{{ $evaluation->name }} : {{ $evaluation->max_percentage }} %</option>
                                     @endforeach
@@ -399,31 +399,31 @@
                             <!-- Content -->
                             <div>
                                 <label for="modal_content" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-file-alt" style="color: #3b82f6;"></i> Content
+                                    <i class="fas fa-file-alt" style="color: #3b82f6;"></i> {{ __('teacher.content') }}
                                 </label>
-                                <textarea name="content" id="modal_content" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="Content covered in this course"></textarea>
+                                <textarea name="content" id="modal_content" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="{{ __('teacher.content_placeholder') }}"></textarea>
                                 <div class="field-error" data-field="content" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
                             <!-- Notes -->
                             <div>
                                 <label for="modal_notes" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-sticky-note" style="color: #3b82f6;"></i> Notes
+                                    <i class="fas fa-sticky-note" style="color: #3b82f6;"></i> {{ __('teacher.notes') }}
                                 </label>
-                                <textarea name="notes" id="modal_notes" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="Additional notes"></textarea>
+                                <textarea name="notes" id="modal_notes" rows="3" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; resize: vertical;" placeholder="{{ __('teacher.notes_placeholder') }}"></textarea>
                                 <div class="field-error" data-field="notes" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
                             <!-- Souvenir Image -->
                             <div>
                                 <label for="modal_souvenir_image" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
-                                    <i class="fas fa-camera" style="color: #3b82f6;"></i> Souvenir
+                                    <i class="fas fa-camera" style="color: #3b82f6;"></i> {{ __('teacher.souvenir') }}
                                 </label>
                                 <div id="modal_souvenir_preview" style="display: none; margin-bottom: 8px;">
-                                    <img id="modal_souvenir_img" src="" alt="Souvenir" style="max-width: 200px; max-height: 120px; border-radius: 8px; border: 2px solid #e2e8f0;">
+                                    <img id="modal_souvenir_img" src="" alt="{{ __('teacher.souvenir') }}" style="max-width: 200px; max-height: 120px; border-radius: 8px; border: 2px solid #e2e8f0;">
                                 </div>
                                 <div style="position: relative;">
-                                    <input type="text" id="modal_souvenir_image_text" style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Click to upload an image" readonly>
+                                    <input type="text" id="modal_souvenir_image_text" style="width: 100%; padding: 12px 48px 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="{{ __('teacher.click_to_upload_image') }}" readonly>
                                     <input type="file" name="souvenir_image" id="modal_souvenir_image" accept="image/*" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; top: 0; left: 0;"
                                            onchange="document.getElementById('modal_souvenir_image_text').value = this.files[0] ? this.files[0].name : '';">
                                     <i class="fas fa-folder" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none;"></i>
@@ -438,15 +438,15 @@
             <!-- Modal Footer - Action Buttons -->
             <div style="padding: 20px 32px; border-top: 1px solid #e2e8f0; display: flex; gap: 12px; justify-content: flex-end; background: #f8fafc; border-radius: 0 0 16px 16px;">
                 <button type="button" onclick="closeCourseModal()" style="padding: 14px 24px; background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                    <i class="fas fa-times"></i> Cancel
+                    <i class="fas fa-times"></i> {{ __('teacher.cancel') }}
                 </button>
                 <button type="button" id="btnSaveOnly" onclick="submitCourseForm(false)" style="padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                     <i class="fas fa-save"></i>
-                    <span>Save Only</span>
+                    <span>{{ __('teacher.save_only') }}</span>
                 </button>
                 <button type="button" id="btnSaveWhatsapp" onclick="submitCourseForm(true)" style="padding: 14px 24px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                     <i class="fab fa-whatsapp"></i>
-                    <span>Save & Send WhatsApp Report</span>
+                    <span>{{ __('teacher.save_send_whatsapp') }}</span>
                 </button>
             </div>
         </div>
@@ -458,15 +458,15 @@
             <div style="margin-bottom: 24px;">
                 <div style="width: 56px; height: 56px; border: 4px solid #e5e7eb; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
             </div>
-            <h3 id="loadingTitle" style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">Saving Course...</h3>
-            <p id="loadingSubtitle" style="color: #6b7280; font-size: 14px; margin: 0;">Please wait while we process your request.</p>
+            <h3 id="loadingTitle" style="color: #1f2937; font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">{{ __('teacher.saving_course') }}</h3>
+            <p id="loadingSubtitle" style="color: #6b7280; font-size: 14px; margin: 0;">{{ __('teacher.please_wait_processing') }}</p>
         </div>
     </div>
 
     <!-- Success Toast -->
     <div id="successToast" style="display: none; position: fixed; top: 24px; right: 24px; background: #10b981; color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4); z-index: 4000; font-weight: 600; font-size: 14px; align-items: center; gap: 10px; animation: slideDown 0.3s ease;">
         <i class="fas fa-check-circle"></i>
-        <span id="successToastText">Course saved successfully!</span>
+        <span id="successToastText">{{ __('teacher.course_created_success') }}</span>
     </div>
 
     <style>
@@ -478,6 +478,15 @@
 
 @section('scripts')
 <script>
+    window.teacherCreateNewCourseLabel = @json(__('teacher.create_new_course'));
+    window.teacherEditCourseLabel = @json(__('teacher.edit_course'));
+    window.teacherNoMatchingStudents = @json(__('teacher.no_matching_students'));
+    window.teacherLoadingRounds = @json(__('teacher.loading_rounds'));
+    window.teacherPleaseWait = @json(__('teacher.please_wait'));
+    window.teacherGeneratingWhatsapp = @json(__('teacher.generating_whatsapp_report'));
+    window.teacherCourseSavedSuccess = @json(__('teacher.course_created_success'));
+    window.teacherErrorOccurred = @json(__('teacher.error_occurred'));
+    window.teacherUnexpectedError = @json(__('teacher.unexpected_error'));
     // Initialize bar chart
     const ctx = document.getElementById('weeklyChart');
     if (ctx) {
@@ -521,7 +530,7 @@
         var list = window.modalStudentsList || [];
         var filtered = !q ? list : list.filter(function(s) { return String(s.name || '').toLowerCase().indexOf(q) !== -1; });
         if (filtered.length === 0) {
-            dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No matching students</div>';
+            dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">' + (window.teacherNoMatchingStudents || 'No matching students') + '</div>';
         } else {
             dropdown.innerHTML = filtered.map(function(s) {
                 var name = String(s.name || '');
@@ -561,7 +570,7 @@
         const title = document.getElementById('roundsModalTitle');
         
         modal.style.display = 'flex';
-        content.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #3b82f6;"></i><p style="margin-top: 16px; color: #64748b;">Loading rounds...</p></div>';
+        content.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #3b82f6;"></i><p style="margin-top: 16px; color: #64748b;">' + (window.teacherLoadingRounds || 'Loading rounds...') + '</p></div>';
         
         fetch(`/teacher/students/${studentId}/rounds`)
             .then(response => response.json())
@@ -662,7 +671,7 @@
         document.getElementById('modal_souvenir_image_text').value = '';
         
         // Update title
-        document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #3b82f6;"></i><span>Create New Course</span>';
+        document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #3b82f6;"></i><span>' + (window.teacherCreateNewCourseLabel || 'Create New Course') + '</span>';
         
         clearFormErrors();
         document.getElementById('courseModal').style.display = 'block';
@@ -671,7 +680,7 @@
 
     function openEditCourseModal(courseId) {
         openCourseModal();
-        document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-edit" style="color: #f59e0b;"></i><span>Edit Course</span>';
+        document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-edit" style="color: #f59e0b;"></i><span>' + (window.teacherEditCourseLabel || 'Edit Course') + '</span>';
         document.getElementById('courseFormMethod').value = 'PUT';
         document.getElementById('courseFormCourseId').value = courseId;
         
@@ -800,10 +809,10 @@
         
         if (sendWhatsapp) {
             loadingTitle.textContent = method === 'PUT' ? 'Updating Course...' : 'Creating Course...';
-            loadingSubtitle.innerHTML = 'Generating report and sending to WhatsApp.<br>Please wait, this may take a few seconds.';
+            loadingSubtitle.innerHTML = (window.teacherGeneratingWhatsapp || 'Generating report and sending to WhatsApp...') + '<br>' + (window.teacherPleaseWait || 'Please wait...');
         } else {
             loadingTitle.textContent = method === 'PUT' ? 'Updating Course...' : 'Saving Course...';
-            loadingSubtitle.textContent = 'Please wait...';
+            loadingSubtitle.textContent = window.teacherPleaseWait || 'Please wait...';
         }
         
         overlay.style.display = 'flex';
@@ -836,7 +845,7 @@
             if (data.success) {
                 // KEEP OVERLAY VISIBLE until reload
                 closeCourseModal();
-                showSuccessToast(data.message || 'Course saved successfully!');
+                showSuccessToast(data.message || (window.teacherCourseSavedSuccess || 'Course saved successfully!'));
                 
                 // Update overlay message to success state
                 loadingTitle.textContent = 'Success!';
@@ -846,7 +855,7 @@
             } else {
                 overlay.style.display = 'none';
                 document.getElementById('courseFormErrors').style.display = 'block';
-                document.getElementById('courseFormErrors').textContent = data.message || 'An error occurred.';
+                document.getElementById('courseFormErrors').textContent = data.message || (window.teacherErrorOccurred || 'An error occurred.');
                 document.getElementById('btnSaveOnly').disabled = false;
                 document.getElementById('btnSaveWhatsapp').disabled = false;
             }
@@ -860,7 +869,7 @@
                 showFormErrors(err.errors);
             } else {
                 document.getElementById('courseFormErrors').style.display = 'block';
-                document.getElementById('courseFormErrors').textContent = err.message || 'An unexpected error occurred. Please try again.';
+                document.getElementById('courseFormErrors').textContent = err.message || (window.teacherUnexpectedError || 'An unexpected error occurred. Please try again.');
             }
         });
     }
