@@ -161,114 +161,79 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($courses as $index => $course)
-                        @php
-                            // Calculate completion percentage based on n_value (cumulative hours) vs package hours
-                            $completionPercentage = 0;
-                            if ($course->student && $course->student->package_number > 0) {
-                                // Use n_value which represents cumulative hours up to this course
-                                // Calculate percentage: (cumulative hours / package hours) * 100
-                                $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
-                            }
-                            
-                            // Use student's fixed color (sharp, visible palette)
-                            $nameColor = $course->student->display_color ?? '#1565c0';
-                        @endphp
-                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" 
-                            onmouseover="this.style.background='#f8fafc'" 
-                            onmouseout="this.style.background='white'">
-                            <td style="padding: 16px;">
-                                <input type="checkbox" style="cursor: pointer;">
-                            </td>
-                            <td style="padding: 16px; font-weight: 600; color: #1e293b;">
-                                {{ number_format($course->n_value, 2) }}
-                            </td>
-                            <td style="padding: 16px;">
-                                <span style="display: inline-block; padding: 6px 12px; background: {{ $nameColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name }}</span>
-                            </td>
-                            <td style="padding: 16px; color: #64748b;">
-                                {{ $course->course_type }}
-                            </td>
-                            <td style="padding: 16px; color: #64748b;">
-                                {{ $course->course_date->format('d/m/Y') }} {{ \Carbon\Carbon::parse($course->class_time)->format('H:i') }}
-                            </td>
-                            <td style="padding: 16px;">
-                                @if($course->status === 'Present')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.present') }}</span>
-                                @elseif($course->status === 'Absent')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.absent') }}</span>
-                                @elseif($course->status === 'Free')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #e5e7eb; color: #374151; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.free') }}</span>
-                                @endif
-                            </td>
-                            <td style="padding: 16px;">
-                                @if($course->admin_status === 'approved')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">✔ {{ __('teacher.approved') }}</span>
-                                @elseif($course->admin_status === 'pending')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #f59e0b; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">⏳ {{ __('teacher.pending') }}</span>
-                                @elseif($course->admin_status === 'rejected')
-                                    <span style="display: inline-block; padding: 6px 12px; background: #ef4444; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">✗ {{ __('teacher.rejected') }}</span>
-                                @else
-                                    <span style="display: inline-block; padding: 6px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">✔ {{ __('teacher.approved') }}</span>
-                                @endif
-                            </td>
-                            <td style="padding: 16px; color: #64748b;">
-                                {{ $course->duration_hours }}h {{ $course->duration_minutes }}m
-                            </td>
-                            <td style="padding: 16px; color: #64748b; max-width: 200px;">
-                                {{ Str::limit($course->homework ?? '-', 30) }}
-                            </td>
-                            <td style="padding: 16px; color: #64748b;">
-                                @if($course->evaluation)
-                                    {{ $course->evaluation->name }} : {{ $course->evaluation->max_percentage }}%
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td style="padding: 16px; color: #64748b; max-width: 200px;">
-                                {{ Str::limit($course->content ?? '-', 30) }}
-                            </td>
-                            <td style="padding: 16px; color: #64748b; max-width: 200px;">
-                                {{ Str::limit($course->notes ?? '-', 30) }}
-                            </td>
-                            <td style="padding: 16px; white-space: nowrap;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-                                        <div style="width: {{ $completionPercentage }}%; height: 100%; background: #14b8a6; transition: width 0.3s;"></div>
-                                    </div>
-                                    <span style="font-size: 12px; font-weight: 600; color: #1e293b;">{{ number_format($completionPercentage, 1) }}%</span>
-                                </div>
-                            </td>
-                            <td style="padding: 16px; text-align: center;">
-                                <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <button type="button" onclick="openEditCourseModal({{ $course->id }})"
-                                       style="padding: 8px; color: #f59e0b; text-decoration: none; border-radius: 4px; background: none; border: none; cursor: pointer;"
-                                       onmouseover="this.style.background='#fef3c7'" 
-                                       onmouseout="this.style.background='transparent'">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <form method="POST" action="{{ route('teacher.courses.destroy', $course) }}" style="display: inline;" 
-                                          onsubmit="return confirm('{{ __('teacher.delete_confirm') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                                style="padding: 8px; color: #ef4444; background: none; border: none; cursor: pointer; border-radius: 4px;"
-                                                onmouseover="this.style.background='#fee2e2'" 
-                                                onmouseout="this.style.background='transparent'">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+                    @php
+                        $coursesByRound = $courses->groupBy(function ($c) { return (string)($c->round ?? 0); });
+                        $roundKeys = $coursesByRound->keys()->sort(function ($a, $b) {
+                            $an = (int)$a; $bn = (int)$b;
+                            if ($an === 0) return 1; if ($bn === 0) return -1;
+                            return $an <=> $bn;
+                        })->values();
+                    @endphp
+                    @if($courses->isEmpty())
                         <tr>
-                            <td colspan="11" style="padding: 40px; text-align: center; color: #64748b;">
+                            <td colspan="14" style="padding: 40px; text-align: center; color: #64748b;">
                                 <i class="fas fa-book-open" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
                                 <p>{{ __('teacher.no_courses_found') }}</p>
                             </td>
                         </tr>
-                    @endforelse
+                    @else
+                        @foreach($roundKeys as $roundKey)
+                            @php
+                                $roundCourses = $coursesByRound->get($roundKey);
+                                $roundNum = (int)$roundKey;
+                                $roundLabel = $roundNum === 0 ? 'Round 0' : 'Round ' . $roundNum;
+                                $roundId = 'round-' . $roundKey;
+                            @endphp
+                            <tr class="round-header-row" data-round-id="{{ $roundId }}" style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0; cursor: pointer; font-weight: 700;" onclick="toggleRound('{{ $roundId }}')" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                                <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s;"></i></td>
+                                <td colspan="13" style="padding: 14px 16px;"><span style="font-weight: 700; color: #1e293b;">{{ $roundLabel }}</span> <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span></td>
+                            </tr>
+                            @foreach($roundCourses as $course)
+                                @php
+                                    $completionPercentage = 0;
+                                    if ($course->student && $course->student->package_number > 0) {
+                                        $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
+                                    }
+                                    $nameColor = $course->student->display_color ?? '#1565c0';
+                                @endphp
+                                <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9; display: none;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                    <td style="padding: 16px;"><input type="checkbox" style="cursor: pointer;" onclick="event.stopPropagation();"></td>
+                                    <td style="padding: 16px; font-weight: 600; color: #1e293b;">{{ number_format($course->n_value, 2) }}</td>
+                                    <td style="padding: 16px;"><span style="display: inline-block; padding: 6px 12px; background: {{ $nameColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name }}</span></td>
+                                    <td style="padding: 16px; color: #64748b;">{{ $course->course_type }}</td>
+                                    <td style="padding: 16px; color: #64748b;">{{ $course->course_date->format('d/m/Y') }} {{ \Carbon\Carbon::parse($course->class_time)->format('H:i') }}</td>
+                                    <td style="padding: 16px;">
+                                        @if($course->status === 'Present')<span style="display: inline-block; padding: 6px 12px; background: #6ee7b7; color: #065f46; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.present') }}</span>
+                                        @elseif($course->status === 'Absent')<span style="display: inline-block; padding: 6px 12px; background: #fca5a5; color: #991b1b; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.absent') }}</span>
+                                        @elseif($course->status === 'Free')<span style="display: inline-block; padding: 6px 12px; background: #e5e7eb; color: #374151; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ __('teacher.free') }}</span>@endif
+                                    </td>
+                                    <td style="padding: 16px;">
+                                        @if($course->admin_status === 'approved')<span style="display: inline-block; padding: 6px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">✔ {{ __('teacher.approved') }}</span>
+                                        @elseif($course->admin_status === 'pending')<span style="display: inline-block; padding: 6px 12px; background: #f59e0b; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">⏳ {{ __('teacher.pending') }}</span>
+                                        @elseif($course->admin_status === 'rejected')<span style="display: inline-block; padding: 6px 12px; background: #ef4444; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">✗ {{ __('teacher.rejected') }}</span>
+                                        @else<span style="display: inline-block; padding: 6px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: 600;">✔ {{ __('teacher.approved') }}</span>@endif
+                                    </td>
+                                    <td style="padding: 16px; color: #64748b;">{{ $course->duration_hours }}h {{ $course->duration_minutes }}m</td>
+                                    <td style="padding: 16px; color: #64748b; max-width: 200px;">{{ Str::limit($course->homework ?? '-', 30) }}</td>
+                                    <td style="padding: 16px; color: #64748b;">@if($course->evaluation){{ $course->evaluation->name }} : {{ $course->evaluation->max_percentage }}% @else - @endif</td>
+                                    <td style="padding: 16px; color: #64748b; max-width: 200px;">{{ Str::limit($course->content ?? '-', 30) }}</td>
+                                    <td style="padding: 16px; color: #64748b; max-width: 200px;">{{ Str::limit($course->notes ?? '-', 30) }}</td>
+                                    <td style="padding: 16px; white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;"><div style="width: {{ $completionPercentage }}%; height: 100%; background: #14b8a6; transition: width 0.3s;"></div></div>
+                                            <span style="font-size: 12px; font-weight: 600; color: #1e293b;">{{ number_format($completionPercentage, 1) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 16px; text-align: center;">
+                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                            <button type="button" onclick="event.stopPropagation(); openEditCourseModal({{ $course->id }})" style="padding: 8px; color: #f59e0b; text-decoration: none; border-radius: 4px; background: none; border: none; cursor: pointer;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='transparent'"><i class="fas fa-edit"></i></button>
+                                            <form method="POST" action="{{ route('teacher.courses.destroy', $course) }}" style="display: inline;" onsubmit="return confirm('{{ __('teacher.delete_confirm') }}');" onclick="event.stopPropagation();">@csrf @method('DELETE')<button type="submit" style="padding: 8px; color: #ef4444; background: none; border: none; cursor: pointer; border-radius: 4px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'"><i class="fas fa-times"></i></button></form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -547,6 +512,16 @@
                 }
             }
         });
+    }
+
+    // ===================== ROUND TOGGLE (collapsible rounds) =====================
+    function toggleRound(roundId) {
+        var rows = document.querySelectorAll('tr.round-course-row.' + roundId);
+        var icon = document.getElementById(roundId + '-icon');
+        if (!rows.length || !icon) return;
+        var isHidden = rows[0].style.display === 'none';
+        rows.forEach(function(r) { r.style.display = isHidden ? '' : 'none'; });
+        icon.style.transform = isHidden ? 'rotate(90deg)' : '';
     }
 
     // Rounds Modal
