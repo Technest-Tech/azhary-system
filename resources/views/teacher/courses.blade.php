@@ -200,23 +200,32 @@
                         </thead>
                         <tbody>
                             @php
-                                $coursesByRound = $courses->groupBy(function ($c) { return (string)($c->round ?? 0); });
-                                $roundKeys = $coursesByRound->keys()->sort(function ($a, $b) {
-                                    $an = (int)$a; $bn = (int)$b;
-                                    if ($an === 0) return 1; if ($bn === 0) return -1;
-                                    return $an <=> $bn;
+                                $coursesByStudentRound = $courses->groupBy(function ($c) { return ($c->student_id ?? 0) . '-' . ($c->round ?? 0); });
+                                $sortedKeys = $coursesByStudentRound->keys()->sort(function ($a, $b) use ($coursesByStudentRound) {
+                                    $firstA = $coursesByStudentRound->get($a)->first();
+                                    $firstB = $coursesByStudentRound->get($b)->first();
+                                    $nameA = $firstA && $firstA->student ? $firstA->student->name : '';
+                                    $nameB = $firstB && $firstB->student ? $firstB->student->name : '';
+                                    if ($nameA !== $nameB) return strcasecmp($nameA, $nameB);
+                                    $partsA = explode('-', $a); $partsB = explode('-', $b);
+                                    $rA = (int)($partsA[1] ?? 0); $rB = (int)($partsB[1] ?? 0);
+                                    if ($rA === 0) return 1; if ($rB === 0) return -1;
+                                    return $rA <=> $rB;
                                 })->values();
                             @endphp
-                            @foreach($roundKeys as $roundKey)
+                            @foreach($sortedKeys as $comboKey)
                                 @php
-                                    $roundCourses = $coursesByRound->get($roundKey);
-                                    $roundNum = (int)$roundKey;
+                                    $roundCourses = $coursesByStudentRound->get($comboKey);
+                                    $firstCourse = $roundCourses->first();
+                                    $studentName = $firstCourse && $firstCourse->student ? $firstCourse->student->name : 'N/A';
+                                    $parts = explode('-', $comboKey);
+                                    $roundNum = (int)($parts[1] ?? 0);
                                     $roundLabel = $roundNum === 0 ? 'Round 0' : 'Round ' . $roundNum;
-                                    $roundId = 'round-' . $roundKey;
+                                    $roundId = 'round-' . str_replace('-', '_', $comboKey);
                                 @endphp
                                 <tr class="round-header-row" data-round-id="{{ $roundId }}" style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0; cursor: pointer; font-weight: 700;" onclick="toggleRound('{{ $roundId }}')" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
                                     <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s;"></i></td>
-                                    <td colspan="10" style="padding: 14px 16px;"><span style="font-weight: 700; color: #1e293b;">{{ $roundLabel }}</span> <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span></td>
+                                    <td colspan="10" style="padding: 14px 16px;"><span style="font-weight: 700; color: #1e293b;">{{ $studentName }} — {{ $roundLabel }}</span> <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span></td>
                                 </tr>
                                 @foreach($roundCourses as $course)
                                     @php
