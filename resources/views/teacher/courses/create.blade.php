@@ -12,25 +12,16 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
                 <!-- Left Column -->
                 <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <!-- Student Name (Nom) -->
-                    <div>
-                        <label for="student_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <!-- Student (real-time search) -->
+                    <div style="position: relative; overflow: visible;">
+                        <label for="student_search" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-user" style="color: #3b82f6;"></i>
-                            {{ __('teacher.name') }}
+                            {{ __('teacher.student') }}
                         </label>
-                        <input type="text" name="student_name" id="student_name" 
-                               style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                                placeholder="{{ __('teacher.student_name') }}" readonly>
+                        <input type="text" id="student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Type to search student...">
                         <input type="hidden" name="student_id" id="student_id" required>
-                        <select id="student_select" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; margin-top: 8px;"
-                                onchange="document.getElementById('student_id').value = this.value; document.getElementById('student_name').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                            <option value="">{{ __('teacher.select_a_student') }}</option>
-                            @foreach($students as $student)
-                                <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>
-                                    {{ $student->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="hidden" name="student_name" id="student_name" value="">
+                        <div id="student_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999;"></div>
                         @error('student_id')
                             <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
                         @enderror
@@ -269,6 +260,57 @@
 
 @section('scripts')
     <script>
+        window.createPageStudentsList = @json($students->map(function($s) { return ['id' => $s->id, 'name' => $s->name]; })->values());
+        function renderStudentDropdown(query) {
+            var dropdown = document.getElementById('student_dropdown');
+            if (!dropdown) return;
+            var q = String(query || '').trim().toLowerCase();
+            var list = window.createPageStudentsList || [];
+            var filtered = !q ? list : list.filter(function(s) { return String(s.name || '').toLowerCase().indexOf(q) !== -1; });
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No matching students</div>';
+            } else {
+                dropdown.innerHTML = filtered.map(function(s) {
+                    var name = String(s.name || '');
+                    return '<div class="create-student-option" data-id="' + s.id + '" data-name="' + name.replace(/"/g, '&quot;') + '" style="padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'white\'">' + name + '</div>';
+                }).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var search = document.getElementById('student_search');
+            var dropdown = document.getElementById('student_dropdown');
+            if (search && dropdown) {
+                search.addEventListener('focus', function() { renderStudentDropdown(this.value); });
+                search.addEventListener('input', function() {
+                    document.getElementById('student_id').value = '';
+                    document.getElementById('student_name').value = '';
+                    renderStudentDropdown(this.value);
+                });
+                search.addEventListener('keyup', function() { renderStudentDropdown(this.value); });
+                dropdown.addEventListener('click', function(e) {
+                    var el = e.target.closest('.create-student-option');
+                    if (!el) return;
+                    document.getElementById('student_id').value = el.getAttribute('data-id');
+                    document.getElementById('student_name').value = el.getAttribute('data-name');
+                    document.getElementById('student_search').value = el.getAttribute('data-name');
+                    this.style.display = 'none';
+                });
+            }
+            document.addEventListener('click', function(e) {
+                var searchEl = document.getElementById('student_search');
+                var dropEl = document.getElementById('student_dropdown');
+                if (searchEl && dropEl && !searchEl.contains(e.target) && !dropEl.contains(e.target)) dropEl.style.display = 'none';
+            });
+            var oldId = @json(old('student_id'));
+            var oldName = @json(old('student_name', ''));
+            if (oldId && oldName) {
+                document.getElementById('student_id').value = oldId;
+                document.getElementById('student_name').value = oldName;
+                if (document.getElementById('student_search')) document.getElementById('student_search').value = oldName;
+            }
+        });
+
         function showLoadingOverlay() {
             var overlay = document.getElementById('loadingOverlay');
             if (overlay) {

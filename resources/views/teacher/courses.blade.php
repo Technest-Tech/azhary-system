@@ -80,6 +80,21 @@
                     <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s;">
                 </div>
                 
+                <!-- Per page -->
+                <div style="position: relative;">
+                    <label for="per_page" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-list" style="color: #64748b; margin-right: 6px;"></i>
+                        {{ __('teacher.per_page') }}
+                    </label>
+                    <select name="per_page" id="per_page" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
+                        <option value="10" {{ request('per_page', 100) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ request('per_page', 100) == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ request('per_page', 100) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>{{ __('teacher.all') }}</option>
+                    </select>
+                </div>
+                
                 <!-- Filter Button -->
                 <div style="display: flex; gap: 12px; align-items: end;">
                     <button type="submit" style="flex: 1; padding: 12px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
@@ -153,12 +168,12 @@
         <div class="card-body" style="padding: 0;">
             @if($courses->count() > 0)
                 <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-                    <table style="width: 100%; min-width: 1200px; border-collapse: separate; border-spacing: 0;">
+                    <table style="width: 100%; min-width: 1200px; border-collapse: separate; border-spacing: 0; white-space: nowrap;">
                         <thead>
                             <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-hashtag" style="color: #3b82f6; margin-right: 6px;"></i>
-                                    {{ __('teacher.no') }}
+                                    {{ __('teacher.no') }} / {{ __('teacher.round') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-user-graduate" style="color: #34d399; margin-right: 6px;"></i>
@@ -185,10 +200,6 @@
                                     {{ __('teacher.status') }}
                                 </th>
                                 <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
-                                    <i class="fas fa-user-shield" style="color: #8b5cf6; margin-right: 6px;"></i>
-                                    {{ __('teacher.admin_status') }}
-                                </th>
-                                <th style="padding: 20px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; white-space: nowrap;">
                                     <i class="fas fa-dollar-sign" style="color: #059669; margin-right: 6px;"></i>
                                     {{ __('teacher.income') }}
                                 </th>
@@ -199,68 +210,53 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $coursesByStudentRound = $courses->groupBy(function ($c) { return ($c->student_id ?? 0) . '-' . ($c->round ?? 0); });
-                                $sortedKeys = $coursesByStudentRound->keys()->sort(function ($a, $b) use ($coursesByStudentRound) {
-                                    $firstA = $coursesByStudentRound->get($a)->first();
-                                    $firstB = $coursesByStudentRound->get($b)->first();
-                                    $nameA = $firstA && $firstA->student ? $firstA->student->name : '';
-                                    $nameB = $firstB && $firstB->student ? $firstB->student->name : '';
-                                    if ($nameA !== $nameB) return strcasecmp($nameA, $nameB);
-                                    $partsA = explode('-', $a); $partsB = explode('-', $b);
-                                    $rA = (int)($partsA[1] ?? 0); $rB = (int)($partsB[1] ?? 0);
-                                    if ($rA === 0) return 1; if ($rB === 0) return -1;
-                                    return $rA <=> $rB;
-                                })->values();
-                            @endphp
-                            @foreach($sortedKeys as $comboKey)
+                            @foreach($courses as $course)
                                 @php
-                                    $roundCourses = $coursesByStudentRound->get($comboKey);
-                                    $firstCourse = $roundCourses->first();
-                                    $studentName = $firstCourse && $firstCourse->student ? $firstCourse->student->name : 'N/A';
-                                    $parts = explode('-', $comboKey);
-                                    $roundNum = (int)($parts[1] ?? 0);
-                                    $roundLabel = $roundNum === 0 ? 'Round 0' : 'Round ' . $roundNum;
-                                    $roundId = 'round-' . str_replace('-', '_', $comboKey);
+                                    $studentColor = $course->student->display_color ?? '#1565c0';
+                                    $darkerColor = \App\Services\StudentColorService::getDarkerShade($studentColor);
+                                    $roundNum = (int)($course->round ?? 0);
+                                    $roundLabel = $roundNum === 0 ? __('teacher.round') . ' 0' : __('teacher.round') . ' ' . $roundNum;
                                 @endphp
-                                <tr class="round-header-row" data-round-id="{{ $roundId }}" style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0; cursor: pointer; font-weight: 700;" onclick="toggleRound('{{ $roundId }}')" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                                    <td style="padding: 14px 16px; width: 48px;"><i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s; transform: rotate(90deg);"></i></td>
-                                    <td colspan="10" style="padding: 14px 16px;"><span style="font-weight: 700; color: #1e293b;">{{ $studentName }} — {{ $roundLabel }}</span> <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span></td>
-                                </tr>
-                                @foreach($roundCourses as $course)
-                                    @php
-                                        $studentColor = $course->student->display_color ?? '#1565c0';
-                                        $darkerColor = \App\Services\StudentColorService::getDarkerShade($studentColor);
-                                    @endphp
-                                    <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                                        <td style="padding: 20px 16px; font-weight: 700; color: #1e293b; font-size: 16px; white-space: nowrap;">
-                                            <div style="display: flex; align-items: center; gap: 8px;"><div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">{{ number_format($course->n_value, 2) }}</div></div>
-                                        </td>
+                                <tr style="border-bottom: 1px solid #f1f5f9; white-space: nowrap;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                    <td style="padding: 20px 16px; white-space: nowrap;">
+                                        <span style="font-weight: 700; color: #1e293b; font-size: 16px;">{{ number_format($course->n_value, 2) }}</span>
+                                        <span style="display: inline-block; margin-left: 8px; padding: 4px 10px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">{{ $roundLabel }}</span>
+                                    </td>
                                         <td style="padding: 20px 16px; white-space: nowrap;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <div style="width: 40px; height: 40px; background: linear-gradient(135deg, {{ $studentColor }} 0%, {{ $darkerColor }} 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px;">{{ substr($course->student->name, 0, 1) }}</div>
-                                                <div>
+                                                <div style="white-space: nowrap;">
                                                     <span style="display: inline-block; padding: 6px 12px; background: {{ $studentColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name }}</span>
-                                                    <div style="font-size: 12px; color: #334155; font-weight: 600; margin-top: 4px;">Package: {{ $course->student->package_number }} lessons</div>
+                                                    <span style="font-size: 12px; color: #334155; font-weight: 600; margin-left: 8px;">Package: {{ $course->student->package_number }} lessons</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style="padding: 20px 16px; white-space: nowrap;"><div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->name }}</div><div style="font-size: 12px; color: #64748b;">Created {{ $course->created_at->diffForHumans() }}</div></td>
+                                        <td style="padding: 20px 16px; white-space: nowrap;"><span style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->name }}</span> <span style="font-size: 12px; color: #64748b;">Created {{ $course->created_at->diffForHumans() }}</span></td>
                                         <td style="padding: 20px 16px; white-space: nowrap;"><span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7c3aed; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #d8b4fe;"><i class="fas fa-book"></i> {{ $course->course_type }}</span></td>
-                                        <td style="padding: 20px 16px; white-space: nowrap;"><div style="font-weight: 600; color: #1e293b; font-size: 14px;"><i class="fas fa-calendar" style="color: #fbbf24; margin-right: 6px;"></i>{{ $course->course_date->format('M d, Y') }}</div><div style="font-size: 12px; color: #64748b;"><i class="fas fa-clock" style="color: #34d399; margin-right: 4px;"></i>{{ \Carbon\Carbon::parse($course->class_time)->format('H:i') }}</div></td>
-                                        <td style="padding: 20px 16px; white-space: nowrap;"><div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->duration_hours }}h {{ $course->duration_minutes }}m</div><div style="font-size: 12px; color: #64748b;">{{ $course->total_hours }}h total</div></td>
+                                        <td style="padding: 20px 16px; white-space: nowrap;"><span style="font-weight: 600; color: #1e293b; font-size: 14px;"><i class="fas fa-calendar" style="color: #fbbf24; margin-right: 6px;"></i>{{ $course->course_date->format('M d, Y') }}</span> <span style="font-size: 12px; color: #64748b;"><i class="fas fa-clock" style="color: #34d399; margin-right: 4px;"></i>{{ \Carbon\Carbon::parse($course->class_time)->format('H:i') }}</span></td>
+                                        <td style="padding: 20px 16px; white-space: nowrap;"><span style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ $course->duration_hours }}h {{ $course->duration_minutes }}m</span> <span style="font-size: 12px; color: #64748b;">{{ $course->total_hours }}h total</span></td>
                                         <td style="padding: 20px 16px; white-space: nowrap;">
-                                            @if($course->status === 'Present')<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700;">{{ __('teacher.present') }}</span>
-                                            @elseif($course->status === 'Absent')<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border-radius: 25px; font-size: 12px; font-weight: 700;">{{ __('teacher.absent') }}</span>
-                                            @elseif($course->status === 'Free')<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #374151; border-radius: 25px; font-size: 12px; font-weight: 700;">{{ __('teacher.free') }}</span>@endif
+                                            @php
+                                                $statusLabel = $course->status === 'Present' ? __('teacher.present') : ($course->status === 'Absent' ? __('teacher.absent') : __('teacher.free'));
+                                                $adminLabel = $course->admin_status === 'approved' ? __('teacher.approved') : ($course->admin_status === 'pending' ? __('teacher.pending') : ($course->admin_status === 'rejected' ? __('teacher.rejected') : 'Approved'));
+                                                $combined = $statusLabel . ' · ' . $adminLabel;
+                                                if ($course->status === 'Present' && $course->admin_status === 'approved') {
+                                                    $badgeStyle = 'background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534;';
+                                                } elseif ($course->status === 'Present' && $course->admin_status === 'pending') {
+                                                    $badgeStyle = 'background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706;';
+                                                } elseif ($course->status === 'Absent') {
+                                                    $badgeStyle = 'background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626;';
+                                                } elseif ($course->status === 'Free') {
+                                                    $badgeStyle = 'background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #374151;';
+                                                } elseif ($course->admin_status === 'rejected') {
+                                                    $badgeStyle = 'background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626;';
+                                                } else {
+                                                    $badgeStyle = 'background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534;';
+                                                }
+                                            @endphp
+                                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; {{ $badgeStyle }} border-radius: 25px; font-size: 12px; font-weight: 700;">{{ $combined }}</span>
                                         </td>
-                                        <td style="padding: 20px 16px; white-space: nowrap;">
-                                            @if($course->admin_status === 'approved')<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700;">{{ __('teacher.approved') }}</span>
-                                            @elseif($course->admin_status === 'pending')<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border-radius: 25px; font-size: 12px; font-weight: 700;">{{ __('teacher.pending') }}</span>
-                                            @elseif($course->admin_status === 'rejected')<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border-radius: 25px; font-size: 12px; font-weight: 700;">{{ __('teacher.rejected') }}</span>
-                                            @else<span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-radius: 25px; font-size: 12px; font-weight: 700;">Approved</span>@endif
-                                        </td>
-                                        <td style="padding: 20px 16px; white-space: nowrap;"><div style="font-weight: 700; color: #1e293b; font-size: 16px;">${{ number_format($course->income, 2) }}</div></td>
+                                        <td style="padding: 20px 16px; white-space: nowrap;"><span style="font-weight: 700; color: #1e293b; font-size: 16px;">${{ number_format($course->income, 2) }}</span></td>
                                         <td style="padding: 20px 16px; white-space: nowrap;">
                                             <div style="display: flex; gap: 8px; justify-content: center;">
                                                 <button type="button" onclick="event.stopPropagation(); openEditCourseModal({{ $course->id }})" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border: 1px solid #fde68a; border-radius: 8px; cursor: pointer;" title="Edit"><i class="fas fa-edit" style="font-size: 14px;"></i></button>
@@ -268,7 +264,6 @@
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
                             @endforeach
                         </tbody>
                     </table>
@@ -345,19 +340,15 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
                         <!-- Left Column -->
                         <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <!-- Student Selection -->
-                            <div>
-                                <label for="modal_student_id" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                            <!-- Student Selection (real-time search) -->
+                            <div style="position: relative; overflow: visible;">
+                                <label for="modal_student_search" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
                                     <i class="fas fa-user" style="color: #3b82f6;"></i> Student
                                 </label>
-                                <select name="student_id" id="modal_student_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;" required
-                                        onchange="document.getElementById('modal_student_name').value = this.options[this.selectedIndex].text;">
-                                    <option value="">Select a student</option>
-                                    @foreach($students as $student)
-                                        <option value="{{ $student->id }}">{{ $student->name }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="modal_student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Type to search student...">
+                                <input type="hidden" name="student_id" id="modal_student_id" required>
                                 <input type="hidden" name="student_name" id="modal_student_name" value="">
+                                <div id="modal_student_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999;"></div>
                                 <div class="field-error" data-field="student_id" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
@@ -548,15 +539,47 @@
     <script>
         var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        // ===================== ROUND TOGGLE (collapsible rounds) =====================
-        function toggleRound(roundId) {
-            var rows = document.querySelectorAll('tr.round-course-row.' + roundId);
-            var icon = document.getElementById(roundId + '-icon');
-            if (!rows.length || !icon) return;
-            var isHidden = rows[0].style.display === 'none';
-            rows.forEach(function(r) { r.style.display = isHidden ? '' : 'none'; });
-            icon.style.transform = isHidden ? 'rotate(90deg)' : '';
+        // ===================== STUDENT REAL-TIME SEARCH =====================
+        window.modalStudentsList = @json($students->map(function($s) { return ['id' => $s->id, 'name' => $s->name]; })->values());
+        function renderModalStudentDropdown(query) {
+            var dropdown = document.getElementById('modal_student_dropdown');
+            if (!dropdown) return;
+            var q = String(query || '').trim().toLowerCase();
+            var list = window.modalStudentsList || [];
+            var filtered = !q ? list : list.filter(function(s) { return String(s.name || '').toLowerCase().indexOf(q) !== -1; });
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No matching students</div>';
+            } else {
+                dropdown.innerHTML = filtered.map(function(s) {
+                    var name = String(s.name || '');
+                    return '<div class="modal-student-option" data-id="' + s.id + '" data-name="' + name.replace(/"/g, '&quot;') + '" style="padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'white\'">' + name + '</div>';
+                }).join('');
+            }
+            dropdown.style.display = 'block';
         }
+        (function() {
+            var search = document.getElementById('modal_student_search');
+            var dropdown = document.getElementById('modal_student_dropdown');
+            if (!search || !dropdown) return;
+            search.addEventListener('focus', function() { renderModalStudentDropdown(this.value); });
+            search.addEventListener('input', function() {
+                document.getElementById('modal_student_id').value = '';
+                document.getElementById('modal_student_name').value = '';
+                renderModalStudentDropdown(this.value);
+            });
+            search.addEventListener('keyup', function() { renderModalStudentDropdown(this.value); });
+            dropdown.addEventListener('click', function(e) {
+                var el = e.target.closest('.modal-student-option');
+                if (!el) return;
+                document.getElementById('modal_student_id').value = el.getAttribute('data-id');
+                document.getElementById('modal_student_name').value = el.getAttribute('data-name');
+                document.getElementById('modal_student_search').value = el.getAttribute('data-name');
+                this.style.display = 'none';
+            });
+            document.addEventListener('click', function(e) {
+                if (!search.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
+            });
+        })();
 
         // ===================== COURSE MODAL FUNCTIONS =====================
         function openCourseModal() {
@@ -570,6 +593,10 @@
             document.getElementById('modal_status').value = 'Present';
             document.getElementById('modal_student_id').value = '';
             document.getElementById('modal_student_name').value = '';
+            var searchEl = document.getElementById('modal_student_search');
+            if (searchEl) { searchEl.value = ''; }
+            var dropEl = document.getElementById('modal_student_dropdown');
+            if (dropEl) { dropEl.style.display = 'none'; }
             document.getElementById('modal_souvenir_preview').style.display = 'none';
             document.getElementById('modal_souvenir_image_text').value = '';
             
@@ -599,6 +626,8 @@
                 
                 document.getElementById('modal_student_id').value = c.student_id;
                 document.getElementById('modal_student_name').value = c.student_name;
+                var searchEl = document.getElementById('modal_student_search');
+                if (searchEl) searchEl.value = c.student_name || '';
                 document.getElementById('modal_name').value = c.name;
                 document.getElementById('modal_class_time').value = c.class_time;
                 document.getElementById('modal_course_type').value = c.course_type;

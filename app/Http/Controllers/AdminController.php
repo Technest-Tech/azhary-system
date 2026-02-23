@@ -20,67 +20,76 @@ class AdminController extends Controller
 {
     public function dashboard(Request $request)
     {
-        // Calculate metrics
-        $totalStudents = Student::count();
-        
-        // Total Hours - sum of all total_hours from all courses (all students)
-        $totalHours = Course::sum('total_hours') ?? 0;
-        
-        // Monthly Revenue - sum of income for current month
-        $monthlyRevenue = Course::whereMonth('course_date', now()->month)
-            ->whereYear('course_date', now()->year)
-            ->sum('income') ?? 0;
-        
         // Get all teachers and students for filter dropdowns
         $teachers = Teacher::all();
         $students = Student::all();
-        
+
         // Fix any duplicate colors and ensure all students have colors
         StudentColorService::assignColorsToAllStudents();
-        
-        // Query courses with filters - show ALL courses from all rounds
+
+        // Build filtered query (same filters as table)
         $query = Course::with(['student', 'teacher', 'evaluation', 'student.paymentStatus']);
-        
-        // Filter by teacher_id
+
         if ($request->filled('teacher_id')) {
             $query->where('teacher_id', $request->teacher_id);
         }
-        
-        // Filter by student_id
+
         if ($request->filled('student_id')) {
             $query->where('student_id', $request->student_id);
         }
-        
-        // Filter by date
+
         if ($request->filled('date')) {
             $query->whereDate('course_date', $request->date);
         }
-        
-        // Filter by status
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('course_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('course_date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('month_year')) {
+            [$month, $year] = explode('-', $request->month_year);
+            $query->whereMonth('course_date', $month)->whereYear('course_date', $year);
+        }
+
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
-        
-        // Search functionality
+
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('student_name', 'like', "%{$search}%")
-                  ->orWhere('course_type', 'like', "%{$search}%")
-                  ->orWhereHas('student', function($sq) use ($search) {
-                      $sq->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('student_name', 'like', "%{$search}%")
+                    ->orWhere('course_type', 'like', "%{$search}%")
+                    ->orWhereHas('student', function ($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
-        
-        // Pagination
+
+        // Top stat cards: reflect current filters
+        $filteredCourses = (clone $query)->get();
+        $totalStudents = $filteredCourses->pluck('student_id')->unique()->filter()->count();
+        $totalHours = round($filteredCourses->sum(function ($c) {
+            return ($c->duration_hours ?? 0) + ((int)($c->duration_minutes ?? 0) / 60.0);
+        }), 1);
+        $monthlyRevenue = $filteredCourses->sum('income');
+
         $perPage = $request->get('per_page', 100);
+        if ($perPage === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = (int) $perPage ?: 100;
+        }
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
-                        ->orderBy('n_value', 'asc')
-                        ->orderBy('course_date', 'asc')
-                        ->orderBy('class_time', 'asc')
-                        ->paginate($perPage);
+            ->orderBy('n_value', 'asc')
+            ->orderBy('course_date', 'asc')
+            ->orderBy('class_time', 'asc')
+            ->paginate($perPage);
         
         // Get subjects and evaluations for course modal
         $subjects = Subject::all();

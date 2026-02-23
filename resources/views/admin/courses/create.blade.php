@@ -32,27 +32,16 @@
                         @enderror
                     </div>
 
-                    <!-- Student Name (Nom) -->
-                    <div>
-                        <label for="student_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <!-- Student (real-time search) -->
+                    <div style="position: relative; overflow: visible;">
+                        <label for="student_search" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-user" style="color: #3b82f6;"></i>
-                            Name
+                            Student
                         </label>
-                        <input type="text" name="student_name" id="student_name" 
-                               style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;"
-                                placeholder="Student name" readonly>
+                        <input type="text" id="student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Type to search student...">
                         <input type="hidden" name="student_id" id="student_id" required>
-                        <select id="student_select" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; margin-top: 8px;"
-                                onchange="document.getElementById('student_id').value = this.value; document.getElementById('student_name').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                            <option value="">Select a student</option>
-                            @if(old('teacher_id'))
-                                @foreach($students->where('teacher_id', old('teacher_id')) as $student)
-                                    <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>
-                                        {{ $student->name }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
+                        <input type="hidden" name="student_name" id="student_name" value="">
+                        <div id="student_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999;"></div>
                         <div id="student_loading" style="display: none; margin-top: 8px; color: #64748b; font-size: 12px;">
                             <i class="fas fa-spinner fa-spin"></i> Loading students...
                         </div>
@@ -285,32 +274,49 @@
     </style>
 
     <script>
-        // Store old student_id for restoration after AJAX load
         var oldStudentId = @json(old('student_id'));
+        var oldStudentName = @json(old('student_name', ''));
+        window.createPageStudentsList = [];
         
-        // Function to load students by teacher ID
+        function renderStudentDropdown(query) {
+            var dropdown = document.getElementById('student_dropdown');
+            if (!dropdown) return;
+            var q = String(query || '').trim().toLowerCase();
+            var list = window.createPageStudentsList || [];
+            var filtered = !q ? list : list.filter(function(s) { return String(s.name || '').toLowerCase().indexOf(q) !== -1; });
+            if (list.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">Select a teacher first</div>';
+            } else if (filtered.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No matching students</div>';
+            } else {
+                dropdown.innerHTML = filtered.map(function(s) {
+                    var name = String(s.name || '');
+                    return '<div class="create-student-option" data-id="' + s.id + '" data-name="' + name.replace(/"/g, '&quot;') + '" style="padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'white\'">' + name + '</div>';
+                }).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+        
         function loadStudentsByTeacher(teacherId) {
-            var studentSelect = document.getElementById('student_select');
+            var studentSearch = document.getElementById('student_search');
             var studentId = document.getElementById('student_id');
             var studentName = document.getElementById('student_name');
             var studentLoading = document.getElementById('student_loading');
             var studentError = document.getElementById('student_error');
+            var dropdown = document.getElementById('student_dropdown');
             
-            // Reset student fields
-            studentSelect.innerHTML = '<option value="">Select a student</option>';
+            studentSearch.value = '';
             studentId.value = '';
             studentName.value = '';
+            dropdown.style.display = 'none';
+            window.createPageStudentsList = [];
             studentError.style.display = 'none';
             
-            if (!teacherId) {
-                return;
-            }
+            if (!teacherId) return;
             
-            // Show loading
             studentLoading.style.display = 'block';
-            studentSelect.disabled = true;
+            studentSearch.disabled = true;
             
-            // Fetch students via AJAX
             fetch('/admin/teachers/' + teacherId + '/students', {
                 method: 'GET',
                 headers: {
@@ -319,54 +325,62 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 studentLoading.style.display = 'none';
-                studentSelect.disabled = false;
-                
-                if (data.students && data.students.length > 0) {
-                    data.students.forEach(function(student) {
-                        var option = document.createElement('option');
-                        option.value = student.id;
-                        option.textContent = student.name;
-                        // Preserve selected student if it matches old value
-                        if (oldStudentId && student.id == oldStudentId) {
-                            option.selected = true;
-                            studentId.value = student.id;
-                            studentName.value = student.name;
-                        }
-                        studentSelect.appendChild(option);
-                    });
-                } else {
-                    studentSelect.innerHTML = '<option value="">No students found for this teacher</option>';
+                studentSearch.disabled = false;
+                window.createPageStudentsList = data.students || [];
+                if (oldStudentId && oldStudentName) {
+                    var found = (data.students || []).find(function(s) { return s.id == oldStudentId; });
+                    if (found) {
+                        studentId.value = found.id;
+                        studentName.value = found.name;
+                        studentSearch.value = found.name;
+                    }
                 }
+                renderStudentDropdown(studentSearch.value);
             })
-            .catch(error => {
+            .catch(function() {
                 studentLoading.style.display = 'none';
-                studentSelect.disabled = false;
+                studentSearch.disabled = false;
                 studentError.textContent = 'Error loading students. Please try again.';
                 studentError.style.display = 'block';
-                console.error('Error:', error);
             });
         }
         
-        // AJAX: Load students when teacher is selected
         document.getElementById('teacher_id').addEventListener('change', function() {
-            oldStudentId = null; // Clear old value when teacher changes
+            oldStudentId = null;
+            oldStudentName = '';
             loadStudentsByTeacher(this.value);
         });
         
-        // Load students on page load if teacher is already selected
+        var studentSearchEl = document.getElementById('student_search');
+        if (studentSearchEl) {
+            studentSearchEl.addEventListener('focus', function() { renderStudentDropdown(this.value); });
+            studentSearchEl.addEventListener('input', function() {
+                document.getElementById('student_id').value = '';
+                document.getElementById('student_name').value = '';
+                renderStudentDropdown(this.value);
+            });
+            studentSearchEl.addEventListener('keyup', function() { renderStudentDropdown(this.value); });
+        }
+        document.getElementById('student_dropdown').addEventListener('click', function(e) {
+            var el = e.target.closest('.create-student-option');
+            if (!el) return;
+            document.getElementById('student_id').value = el.getAttribute('data-id');
+            document.getElementById('student_name').value = el.getAttribute('data-name');
+            document.getElementById('student_search').value = el.getAttribute('data-name');
+            this.style.display = 'none';
+        });
+        document.addEventListener('click', function(e) {
+            var search = document.getElementById('student_search');
+            var dropdown = document.getElementById('student_dropdown');
+            if (search && dropdown && !search.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
+        });
+        
         document.addEventListener('DOMContentLoaded', function() {
             var teacherSelect = document.getElementById('teacher_id');
-            if (teacherSelect.value) {
-                loadStudentsByTeacher(teacherSelect.value);
-            }
+            if (teacherSelect.value) loadStudentsByTeacher(teacherSelect.value);
         });
         
         // Function to show loading overlay

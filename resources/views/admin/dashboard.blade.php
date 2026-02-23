@@ -50,43 +50,35 @@
     <div class="card" style="background: white; border-radius: 16px; padding: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
         <!-- Search and Filters -->
         <div style="background: #f8fafc; padding: 24px; border-bottom: 1px solid #e2e8f0;">
-            <form method="GET" action="{{ route('admin.dashboard') }}" style="display: grid; grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr auto; gap: 16px; align-items: end;">
-                <!-- Teacher Filter (First) -->
+            <form method="GET" action="{{ route('admin.dashboard') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; align-items: end;">
+                <!-- Teacher Filter -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.teacher') }}</label>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.teacher') }}</label>
                     <select name="teacher_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="">{{ __('admin.all_teachers') }}</option>
                         @foreach($teachers as $teacher)
-                            <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                {{ $teacher->name }}
-                            </option>
+                            <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>{{ $teacher->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                
-                <!-- Student Filter (Second) -->
+                <!-- Student Filter -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.students') }}</label>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.students') }}</label>
                     <select name="student_id" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="">{{ __('admin.all_students') }}</option>
                         @foreach($students as $student)
-                            <option value="{{ $student->id }}" {{ request('student_id') == $student->id ? 'selected' : '' }}>
-                                {{ $student->name }}
-                            </option>
+                            <option value="{{ $student->id }}" {{ request('student_id') == $student->id ? 'selected' : '' }}>{{ $student->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                
                 <!-- Search -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.search') }}</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}" 
-                           style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.search') }}</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
                 </div>
-                
                 <!-- Status Filter -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.status') }}</label>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.status') }}</label>
                     <select name="status" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>{{ __('admin.all_statuses') }}</option>
                         <option value="Present" {{ request('status') == 'Present' ? 'selected' : '' }}>{{ __('admin.present') }}</option>
@@ -94,35 +86,49 @@
                         <option value="Free" {{ request('status') == 'Free' ? 'selected' : '' }}>{{ __('admin.free') }}</option>
                     </select>
                 </div>
-                
-                <!-- Per Page Selector -->
+                <!-- Month/Year Filter -->
                 <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.show') }}</label>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.month_year') }}</label>
+                    <select name="month_year" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
+                        <option value="">{{ __('admin.all_months') }}</option>
+                        @for($i = 0; $i < 12; $i++)
+                            @php $d = now()->subMonths($i); $val = $d->format('n-Y'); $lab = $d->format('F Y'); @endphp
+                            <option value="{{ $val }}" {{ request('month_year') == $val ? 'selected' : '' }}>{{ $lab }}</option>
+                        @endfor
+                    </select>
+                </div>
+                <!-- From date -->
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.from_date') }}</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
+                </div>
+                <!-- To date -->
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.to_date') }}</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
+                </div>
+                <!-- Per page -->
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 13px;">{{ __('admin.show') }}</label>
                     <select name="per_page" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="10" {{ request('per_page', 100) == 10 ? 'selected' : '' }}>10</option>
                         <option value="20" {{ request('per_page', 100) == 20 ? 'selected' : '' }}>20</option>
                         <option value="50" {{ request('per_page', 100) == 50 ? 'selected' : '' }}>50</option>
                         <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>{{ __('admin.all') }}</option>
                     </select>
                 </div>
-                
-                <!-- Date picker -->
-                <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">{{ __('admin.date') }}</label>
-                    <input type="date" name="date" value="{{ request('date') }}" 
-                           style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;">
-                </div>
-                
                 <!-- Submit button -->
                 <div>
-                    <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; height: fit-content;">
+                    <label style="display: block; margin-bottom: 6px; font-size: 13px; visibility: hidden;">.</label>
+                    <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                         <i class="fas fa-search"></i> {{ __('admin.filter') }}
                     </button>
                 </div>
             </form>
             
             <!-- Active Filter Tags -->
-            @if(request('teacher_id') || request('student_id') || request('status') && request('status') != 'all' || request('date') || request('search'))
+            @if(request()->hasAny(['teacher_id', 'student_id', 'status', 'date', 'date_from', 'date_to', 'month_year', 'search', 'per_page']) && (request('status') !== 'all' || request('teacher_id') || request('student_id') || request('date') || request('date_from') || request('date_to') || request('month_year') || request('search') || (request('per_page') && request('per_page') != '100')))
                 <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
                     @if(request('teacher_id'))
                         @php $selectedTeacher = $teachers->firstWhere('id', request('teacher_id')); @endphp
@@ -148,6 +154,30 @@
                             <a href="{{ route('admin.dashboard', array_merge(request()->except(['status', 'page']))) }}" style="color: white; text-decoration: none; margin-left: 4px;">×</a>
                         </span>
                     @endif
+                    @if(request('month_year'))
+                        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #3b82f6; color: white; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                            {{ request('month_year') }}
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['month_year', 'page']))) }}" style="color: white; text-decoration: none; margin-left: 4px;">×</a>
+                        </span>
+                    @endif
+                    @if(request('date_from'))
+                        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #3b82f6; color: white; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                            {{ __('admin.from_date') }}: {{ request('date_from') }}
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['date_from', 'page']))) }}" style="color: white; text-decoration: none; margin-left: 4px;">×</a>
+                        </span>
+                    @endif
+                    @if(request('date_to'))
+                        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #3b82f6; color: white; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                            {{ __('admin.to_date') }}: {{ request('date_to') }}
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['date_to', 'page']))) }}" style="color: white; text-decoration: none; margin-left: 4px;">×</a>
+                        </span>
+                    @endif
+                    @if(request('search'))
+                        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #3b82f6; color: white; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                            {{ request('search') }}
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['search', 'page']))) }}" style="color: white; text-decoration: none; margin-left: 4px;">×</a>
+                        </span>
+                    @endif
                 </div>
             @endif
         </div>
@@ -167,8 +197,8 @@
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">
                             <input type="checkbox" style="cursor: pointer;">
                         </th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">No.</th>
-                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Round</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">No. / Round</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">Package</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.name') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.course') }}</th>
                         <th style="padding: 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; white-space: nowrap;">{{ __('admin.date') }}</th>
@@ -183,20 +213,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $coursesByStudentRound = $courses->groupBy(function ($c) { return ($c->student_id ?? 0) . '-' . ($c->round ?? 0); });
-                        $sortedKeys = $coursesByStudentRound->keys()->sort(function ($a, $b) use ($coursesByStudentRound) {
-                            $firstA = $coursesByStudentRound->get($a)->first();
-                            $firstB = $coursesByStudentRound->get($b)->first();
-                            $nameA = $firstA && $firstA->student ? $firstA->student->name : '';
-                            $nameB = $firstB && $firstB->student ? $firstB->student->name : '';
-                            if ($nameA !== $nameB) return strcasecmp($nameA, $nameB);
-                            $partsA = explode('-', $a); $partsB = explode('-', $b);
-                            $rA = (int)($partsA[1] ?? 0); $rB = (int)($partsB[1] ?? 0);
-                            if ($rA === 0) return 1; if ($rB === 0) return -1;
-                            return $rA <=> $rB;
-                        })->values();
-                    @endphp
                     @if($courses->isEmpty())
                         <tr>
                             <td colspan="14" style="padding: 40px; text-align: center; color: #64748b;">
@@ -205,60 +221,38 @@
                             </td>
                         </tr>
                     @else
-                        @foreach($sortedKeys as $comboKey)
+                        @foreach($courses as $course)
                             @php
-                                $roundCourses = $coursesByStudentRound->get($comboKey);
-                                $firstCourse = $roundCourses->first();
-                                $studentName = $firstCourse && $firstCourse->student ? ($firstCourse->student->name ?? $firstCourse->student_name ?? 'N/A') : 'N/A';
-                                $parts = explode('-', $comboKey);
-                                $roundNum = (int)($parts[1] ?? 0);
+                                $completionPercentage = 0;
+                                if ($course->student && $course->student->package_number > 0) {
+                                    $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
+                                }
+                                $nameColor = $course->student && $course->student->teacher_id
+                                    ? ($course->student->display_color ?? '#1565c0')
+                                    : '#1565c0';
+                                $roundNum = (int)($course->round ?? 0);
                                 $roundLabel = $roundNum === 0 ? 'Round 0' : 'Round ' . $roundNum;
-                                $roundId = 'round-' . str_replace('-', '_', $comboKey);
                             @endphp
-                            <!-- Student + Round header row (collapsed parent) -->
-                            <tr class="round-header-row" data-round-id="{{ $roundId }}" style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0; cursor: pointer; font-weight: 700;"
-                                onclick="toggleRound('{{ $roundId }}')"
-                                onmouseover="this.style.background='#e2e8f0'"
-                                onmouseout="this.style.background='#f1f5f9'">
-                                <td style="padding: 14px 16px; white-space: nowrap; width: 48px;">
-                                    <i class="fas fa-chevron-right round-toggle-icon" id="{{ $roundId }}-icon" style="color: #64748b; transition: transform 0.2s; transform: rotate(90deg);"></i>
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;"
+                                onmouseover="this.style.background='#f8fafc'"
+                                onmouseout="this.style.background='white'">
+                                <td style="padding: 16px; white-space: nowrap;">
+                                    <input type="checkbox" style="cursor: pointer;" onclick="event.stopPropagation();">
                                 </td>
-                                <td colspan="13" style="padding: 14px 16px; white-space: nowrap;">
-                                    <span style="font-weight: 700; color: #1e293b;">{{ $studentName }} — {{ $roundLabel }}</span>
-                                    <span style="color: #64748b; font-weight: 600; margin-left: 12px;">{{ $roundCourses->count() }} {{ $roundCourses->count() === 1 ? 'course' : 'courses' }}</span>
+                                <td style="padding: 16px; white-space: nowrap;">
+                                    <span style="font-weight: 600; color: #1e293b;">{{ number_format($course->n_value, 2) }}</span>
+                                    <span style="display: inline-block; margin-left: 8px; padding: 4px 10px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">{{ $roundLabel }}</span>
                                 </td>
-                            </tr>
-                            <!-- Course rows under this round (hidden by default) -->
-                            @foreach($roundCourses as $course)
-                                @php
-                                    $completionPercentage = 0;
-                                    if ($course->student && $course->student->package_number > 0) {
-                                        $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
-                                    }
-                                    $nameColor = $course->student && $course->student->teacher_id
-                                        ? ($course->student->display_color ?? '#1565c0')
-                                        : '#1565c0';
-                                @endphp
-                                <tr class="round-course-row {{ $roundId }}" style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;"
-                                    onmouseover="this.style.background='#f8fafc'"
-                                    onmouseout="this.style.background='white'">
-                                    <td style="padding: 16px; white-space: nowrap;">
-                                        <input type="checkbox" style="cursor: pointer;" onclick="event.stopPropagation();">
-                                    </td>
-                                    <td style="padding: 16px; white-space: nowrap; font-weight: 600; color: #1e293b;">
-                                        {{ number_format($course->n_value, 2) }}
-                                    </td>
-                                    <td style="padding: 16px; white-space: nowrap;">
-                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                            <span style="font-weight: 600; color: #3b82f6;">R{{ $course->round ?? 1 }}</span>
-                                            @php $paymentBadge = $course->getPaymentStatusBadge(); @endphp
-                                            <span style="display: inline-block; padding: 4px 10px; background: {{ $paymentBadge['bg_color'] }}; color: {{ $paymentBadge['text_color'] }}; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">{{ $paymentBadge['label'] }}</span>
-                                            <button onclick="event.stopPropagation(); showRoundsModal({{ $course->student_id }})"
-                                                style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;" title="View all rounds">
-                                                <i class="fas fa-history"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                                <td style="padding: 16px; white-space: nowrap;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        @php $paymentBadge = $course->getPaymentStatusBadge(); @endphp
+                                        <span style="display: inline-block; padding: 4px 10px; background: {{ $paymentBadge['bg_color'] }}; color: {{ $paymentBadge['text_color'] }}; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">{{ $paymentBadge['label'] }}</span>
+                                        <button onclick="event.stopPropagation(); showRoundsModal({{ $course->student_id }})"
+                                            style="padding: 4px 8px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;" title="View all rounds">
+                                            <i class="fas fa-history"></i>
+                                        </button>
+                                    </div>
+                                </td>
                                     <td style="padding: 16px; white-space: nowrap;">
                                         <span style="display: inline-block; padding: 6px 12px; background: {{ $nameColor }}; color: #fff; font-weight: 600; font-size: 14px; border-radius: 8px;">{{ $course->student->name ?? $course->student_name ?? 'N/A' }}</span>
                                     </td>
@@ -310,7 +304,6 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
                         @endforeach
                     @endif
                 </tbody>
@@ -396,17 +389,15 @@
                                 <div class="field-error" data-field="teacher_id" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
 
-                            <!-- Student Selection -->
-                            <div>
-                                <label for="modal_student_select" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                            <!-- Student Selection (real-time search) -->
+                            <div style="position: relative; overflow: visible;">
+                                <label for="modal_student_search" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
                                     <i class="fas fa-user" style="color: #3b82f6;"></i> Student
                                 </label>
-                                <input type="text" id="modal_student_name" name="student_name" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Student name" readonly>
+                                <input type="text" id="modal_student_search" autocomplete="off" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="Type to search student...">
                                 <input type="hidden" name="student_id" id="modal_student_id" required>
-                                <select id="modal_student_select" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; margin-top: 8px;"
-                                        onchange="document.getElementById('modal_student_id').value = this.value; document.getElementById('modal_student_name').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                                    <option value="">Select a student</option>
-                                </select>
+                                <input type="hidden" name="student_name" id="modal_student_name" value="">
+                                <div id="modal_student_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999;"></div>
                                 <div id="modal_student_loading" style="display: none; margin-top: 8px; color: #64748b; font-size: 12px;">
                                     <i class="fas fa-spinner fa-spin"></i> Loading students...
                                 </div>
@@ -585,16 +576,6 @@
     </style>
 
     <script>
-        // ===================== ROUND TOGGLE (collapsible rounds) =====================
-        function toggleRound(roundId) {
-            var rows = document.querySelectorAll('tr.round-course-row.' + roundId);
-            var icon = document.getElementById(roundId + '-icon');
-            if (!rows.length || !icon) return;
-            var isHidden = rows[0].style.display === 'none';
-            rows.forEach(function(r) { r.style.display = isHidden ? '' : 'none'; });
-            icon.style.transform = isHidden ? 'rotate(90deg)' : '';
-        }
-
         // ===================== ROUNDS MODAL =====================
         function showRoundsModal(studentId) {
             const modal = document.getElementById('roundsModal');
@@ -697,9 +678,10 @@
             document.getElementById('modal_duration_hours').value = '1';
             document.getElementById('modal_duration_minutes').value = '0';
             document.getElementById('modal_status').value = 'Present';
-            document.getElementById('modal_student_select').innerHTML = '<option value="">Select a student</option>';
+            document.getElementById('modal_student_search').value = '';
             document.getElementById('modal_student_id').value = '';
             document.getElementById('modal_student_name').value = '';
+            document.getElementById('modal_student_dropdown').style.display = 'none';
             document.getElementById('modal_souvenir_preview').style.display = 'none';
             document.getElementById('modal_souvenir_image_text').value = '';
             
@@ -775,58 +757,75 @@
             if (e.target === this) closeCourseModal();
         });
 
-        // ===================== STUDENT LOADING =====================
+        // ===================== STUDENT LOADING & REAL-TIME SEARCH =====================
+        window.modalStudentsList = @json($students->map(function($s) { return ['id' => $s->id, 'name' => $s->name]; })->values());
+        
+        function renderModalStudentDropdown(query) {
+            var dropdown = document.getElementById('modal_student_dropdown');
+            if (!dropdown) return;
+            var q = String(query || '').trim().toLowerCase();
+            var list = window.modalStudentsList || [];
+            var filtered = !q ? list : list.filter(function(s) { return String(s.name || '').toLowerCase().indexOf(q) !== -1; });
+            if (list.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No students found</div>';
+            } else if (filtered.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 12px 16px; color: #64748b; font-size: 14px;">No matching students</div>';
+            } else {
+                dropdown.innerHTML = filtered.map(function(s) {
+                    var name = String(s.name || '');
+                    return '<div class="modal-student-option" data-id="' + s.id + '" data-name="' + name.replace(/"/g, '&quot;') + '" style="padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'white\'">' + name + '</div>';
+                }).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+        function filterModalStudentDropdown() {
+            var search = document.getElementById('modal_student_search');
+            if (search) renderModalStudentDropdown(search.value);
+        }
+        
         function loadModalStudents(teacherId, selectStudentId, selectStudentName) {
-            var studentSelect = document.getElementById('modal_student_select');
+            var studentSearch = document.getElementById('modal_student_search');
             var studentIdField = document.getElementById('modal_student_id');
             var studentNameField = document.getElementById('modal_student_name');
-            var loading = document.getElementById('modal_student_loading');
-            
-            studentSelect.innerHTML = '<option value="">Select a student</option>';
-            studentIdField.value = '';
-            studentNameField.value = '';
-            
-            if (!teacherId) return;
-            
-            loading.style.display = 'block';
-            studentSelect.disabled = true;
-            
-            fetch('/admin/teachers/' + teacherId + '/students', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
-            })
-            .then(r => r.json())
-            .then(data => {
-                loading.style.display = 'none';
-                studentSelect.disabled = false;
-                
-                if (data.students && data.students.length > 0) {
-                    data.students.forEach(function(student) {
-                        var opt = document.createElement('option');
-                        opt.value = student.id;
-                        opt.textContent = student.name;
-                        if (selectStudentId && student.id == selectStudentId) {
-                            opt.selected = true;
-                            studentIdField.value = student.id;
-                            studentNameField.value = student.name;
-                        }
-                        studentSelect.appendChild(opt);
-                    });
-                    // If we had a name but no matching ID (edge case)
-                    if (selectStudentName && !studentIdField.value) {
-                        studentNameField.value = selectStudentName;
-                    }
-                } else {
-                    studentSelect.innerHTML = '<option value="">No students found for this teacher</option>';
-                }
-            })
-            .catch(() => {
-                loading.style.display = 'none';
-                studentSelect.disabled = false;
-                studentSelect.innerHTML = '<option value="">Error loading students</option>';
-            });
+            var dropdown = document.getElementById('modal_student_dropdown');
+            if (selectStudentId && selectStudentName) {
+                studentIdField.value = selectStudentId;
+                studentNameField.value = selectStudentName;
+                if (studentSearch) studentSearch.value = selectStudentName;
+            } else {
+                if (studentSearch) studentSearch.value = '';
+                studentIdField.value = '';
+                studentNameField.value = '';
+            }
+            dropdown.style.display = 'none';
         }
+        
+        var modalStudentSearchEl = document.getElementById('modal_student_search');
+        if (modalStudentSearchEl) {
+            modalStudentSearchEl.addEventListener('focus', function() { filterModalStudentDropdown(); });
+            modalStudentSearchEl.addEventListener('input', function() {
+                document.getElementById('modal_student_id').value = '';
+                document.getElementById('modal_student_name').value = '';
+                filterModalStudentDropdown();
+            });
+            modalStudentSearchEl.addEventListener('keyup', function() { filterModalStudentDropdown(); });
+        }
+        document.getElementById('modal_student_dropdown').addEventListener('click', function(e) {
+            var el = e.target.closest('.modal-student-option');
+            if (!el) return;
+            document.getElementById('modal_student_id').value = el.getAttribute('data-id');
+            document.getElementById('modal_student_name').value = el.getAttribute('data-name');
+            document.getElementById('modal_student_search').value = el.getAttribute('data-name');
+            this.style.display = 'none';
+        });
+        document.addEventListener('click', function(e) {
+            var search = document.getElementById('modal_student_search');
+            var dropdown = document.getElementById('modal_student_dropdown');
+            if (search && dropdown && !search.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
 
-        // When teacher changes in modal, reload students
         document.getElementById('modal_teacher_id').addEventListener('change', function() {
             loadModalStudents(this.value, null, null);
         });

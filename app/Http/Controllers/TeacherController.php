@@ -116,81 +116,8 @@ class TeacherController extends Controller
     public function dashboard(Request $request)
     {
         $teacher = Auth::guard('teacher')->user();
-        
-        // Get teacher's students
-        $studentsCount = Student::where('teacher_id', $teacher->id)->count();
-        
-        // Get teacher's courses/lessons
-        $coursesQuery = Course::where('teacher_id', $teacher->id);
-        
-        // Get this month's stats
-        $thisMonthCoursesQuery = clone $coursesQuery;
-        $thisMonthCourses = $thisMonthCoursesQuery->whereMonth('course_date', now()->month)
-                                                  ->whereYear('course_date', now()->year);
-        
-        $thisMonthHours = $thisMonthCourses->sum(DB::raw('duration_hours + (duration_minutes / 60.0)'));
-        $thisMonthRevenue = $thisMonthCourses->sum('income');
-        
-        // Calculate teacher performance level
-        // Based on attendance rate and student progress
-        $totalCourses = Course::where('teacher_id', $teacher->id)->count();
-        $presentCourses = Course::where('teacher_id', $teacher->id)
-                               ->where('status', 'Present')
-                               ->count();
-        
-        $attendanceRate = $totalCourses > 0 ? ($presentCourses / $totalCourses) * 100 : 0;
-        
-        // Calculate student progress (average n_value completion)
-        $students = Student::where('teacher_id', $teacher->id)->get();
-        $progressSum = 0;
-        $progressCount = 0;
-        
-        foreach ($students as $student) {
-            $lastCourse = Course::where('student_id', $student->id)
-                               ->where('teacher_id', $teacher->id)
-                               ->orderBy('n_value', 'desc')
-                               ->first();
-            
-            if ($lastCourse && $student->package_number > 0) {
-                $progress = min(100, ($lastCourse->n_value / $student->package_number) * 100);
-                $progressSum += $progress;
-                $progressCount++;
-            }
-        }
-        
-        $avgProgress = $progressCount > 0 ? ($progressSum / $progressCount) : 0;
-        $teacherPerformanceLevel = ($attendanceRate * 0.5 + $avgProgress * 0.5);
-        
-        // Get weekly data for bar chart (last 4 weeks)
-        $weeklyData = [];
-        $maxWeekCourses = 0;
-        for ($i = 3; $i >= 0; $i--) {
-            $weekStart = now()->subWeeks($i)->startOfWeek();
-            $weekEnd = now()->subWeeks($i)->endOfWeek();
-            
-            $weekCourses = Course::where('teacher_id', $teacher->id)
-                                ->whereBetween('course_date', [$weekStart, $weekEnd])
-                                ->count();
-            
-            $maxWeekCourses = max($maxWeekCourses, $weekCourses);
-        }
-        
-        // Normalize to 0-100 scale
-        for ($i = 3; $i >= 0; $i--) {
-            $weekStart = now()->subWeeks($i)->startOfWeek();
-            $weekEnd = now()->subWeeks($i)->endOfWeek();
-            
-            $weekCourses = Course::where('teacher_id', $teacher->id)
-                                ->whereBetween('course_date', [$weekStart, $weekEnd])
-                                ->count();
-            
-            $weeklyData[] = [
-                'label' => $weekStart->format('d/m'),
-                'value' => $maxWeekCourses > 0 ? ($weekCourses / $maxWeekCourses) * 100 : 0
-            ];
-        }
-        
-        // Course listing with filters and search - show ALL courses from all rounds
+
+        // Build filtered query (same filters as table)
         $query = Course::where('teacher_id', $teacher->id)
                       ->with(['student', 'evaluation', 'student.paymentStatus']);
         
@@ -218,17 +145,78 @@ class TeacherController extends Controller
                   ->whereYear('course_date', $year);
         }
         
-        // Date filter
+        // Date filter (single date)
         if ($request->filled('date')) {
             $query->whereDate('course_date', $request->date);
+        }
+        // Date range filters
+        if ($request->filled('date_from')) {
+            $query->whereDate('course_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('course_date', '<=', $request->date_to);
         }
         
         // Course type filter
         if ($request->filled('course_type')) {
             $query->where('course_type', $request->course_type);
         }
-        
+
+        // Top stat cards: reflect current search/filters
+        $filteredCourses = (clone $query)->get();
+        $studentsCount = $filteredCourses->pluck('student_id')->unique()->filter()->count();
+        $thisMonthHours = round($filteredCourses->sum(function ($c) {
+            return $c->duration_hours + ($c->duration_minutes / 60.0);
+        }), 1);
+        $thisMonthRevenue = $filteredCourses->sum('income');
+
+        $totalFiltered = $filteredCourses->count();
+        $presentFiltered = $filteredCourses->where('status', 'Present')->count();
+        $attendanceRate = $totalFiltered > 0 ? ($presentFiltered / $totalFiltered) * 100 : 0;
+        $progressSum = 0;
+        $progressCount = 0;
+        foreach ($filteredCourses->groupBy('student_id') as $studentId => $studentCourses) {
+            $student = Student::find($studentId);
+            if (!$student || $student->package_number <= 0) {
+                continue;
+            }
+            $maxN = $studentCourses->max('n_value');
+            $progressSum += min(100, ($maxN / $student->package_number) * 100);
+            $progressCount++;
+        }
+        $avgProgress = $progressCount > 0 ? ($progressSum / $progressCount) : 0;
+        $teacherPerformanceLevel = round($attendanceRate * 0.5 + $avgProgress * 0.5, 2);
+
+        $weeklyData = [];
+        $maxWeekCourses = 0;
+        for ($i = 3; $i >= 0; $i--) {
+            $weekStart = now()->subWeeks($i)->startOfWeek();
+            $weekEnd = now()->subWeeks($i)->endOfWeek();
+            $weekCourses = $filteredCourses->filter(function ($c) use ($weekStart, $weekEnd) {
+                $d = \Carbon\Carbon::parse($c->course_date);
+                return $d->between($weekStart, $weekEnd);
+            })->count();
+            $maxWeekCourses = max($maxWeekCourses, $weekCourses);
+        }
+        for ($i = 3; $i >= 0; $i--) {
+            $weekStart = now()->subWeeks($i)->startOfWeek();
+            $weekEnd = now()->subWeeks($i)->endOfWeek();
+            $weekCourses = $filteredCourses->filter(function ($c) use ($weekStart, $weekEnd) {
+                $d = \Carbon\Carbon::parse($c->course_date);
+                return $d->between($weekStart, $weekEnd);
+            })->count();
+            $weeklyData[] = [
+                'label' => $weekStart->format('d/m'),
+                'value' => $maxWeekCourses > 0 ? ($weekCourses / $maxWeekCourses) * 100 : 0
+            ];
+        }
+
         $perPage = $request->get('per_page', 100);
+        if ($perPage === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = (int) $perPage ?: 100;
+        }
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
                         ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')
@@ -294,12 +282,18 @@ class TeacherController extends Controller
         if ($request->filled('date_to')) {
             $query->whereDate('course_date', '<=', $request->date_to);
         }
-        
+
+        $perPage = $request->get('per_page', 100);
+        if ($perPage === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = (int) $perPage ?: 100;
+        }
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
                         ->orderBy('n_value', 'asc')
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
-->paginate($request->get('per_page', 100));
+                        ->paginate($perPage);
 
         // Get students for filter dropdown
         $students = Student::where('teacher_id', $teacher->id)->get();
