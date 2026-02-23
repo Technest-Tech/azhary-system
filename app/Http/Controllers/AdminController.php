@@ -1020,8 +1020,26 @@ class AdminController extends Controller
                 'content' => $course->content,
                 'notes' => $course->notes,
                 'souvenir_image' => $course->souvenir_image,
+                'n_value' => $course->n_value,
             ],
         ]);
+    }
+
+    /**
+     * Update only the n_value for a course (e.g. when correcting count manually).
+     * Subsequent courses in the same round are recalculated from this value (7, 8, 9... until package limit).
+     */
+    public function updateCourseNValue(Request $request, Course $course)
+    {
+        $validated = $request->validate([
+            'n_value' => 'required|numeric|min:0',
+        ]);
+        $course->update(['n_value' => $validated['n_value']]);
+        $this->recalculateNValuesFromCourseForward($course);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'n_value' => $course->n_value]);
+        }
+        return redirect()->route('admin.dashboard')->with('success', 'N value updated.');
     }
 
     public function updateCourse(Request $request, Course $course)
@@ -1043,6 +1061,7 @@ class AdminController extends Controller
             'content' => 'nullable|string',
             'notes' => 'nullable|string',
             'souvenir_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'n_value' => 'nullable|numeric|min:0',
         ]);
         
         // Get student and teacher info
@@ -1056,10 +1075,12 @@ class AdminController extends Controller
             $validated['souvenir_image'] = $imagePath;
         }
         
-        // Recalculate n_value and income if teacher or duration changed
-        if ($course->teacher_id != $validated['teacher_id'] || 
-            $course->duration_hours != $validated['duration_hours'] || 
-            $course->duration_minutes != $validated['duration_minutes']) {
+        $manualNValue = $request->filled('n_value') ? (float) $request->input('n_value') : null;
+        
+        // Recalculate n_value and income only if not manually set and teacher or duration changed
+        if ($manualNValue === null && ($course->teacher_id != $validated['teacher_id'] ||
+            $course->duration_hours != $validated['duration_hours'] ||
+            $course->duration_minutes != $validated['duration_minutes'])) {
             
             $courseRound = $course->round;
             $previousLessons = Course::where('student_id', $student->id)
@@ -1080,14 +1101,20 @@ class AdminController extends Controller
             $validated['n_value'] = $nValue;
             $validated['total_hours'] = $currentDuration;
             $validated['income'] = $income;
+        } elseif ($manualNValue !== null) {
+            $validated['n_value'] = $manualNValue;
         }
         
         $validated['student_name'] = $validated['student_name'] ?? $student->name;
         
         $course->update($validated);
         
-        // Recalculate all n_values for this student in the same round to ensure consistency
-        $this->recalculateNValues($student->id, $teacher->id);
+        if ($manualNValue !== null) {
+            // Propagate manual n_value to subsequent courses in the same round (7, 8, 9...)
+            $this->recalculateNValuesFromCourseForward($course);
+        } else {
+            $this->recalculateNValues($student->id, $teacher->id);
+        }
         
         // Generate and send report via WhatsApp only if requested
         if ($request->input('send_whatsapp')) {
@@ -1634,6 +1661,51 @@ class AdminController extends Controller
                     
                     $course->update($updateData);
                 }
+            }
+        }
+    }
+
+    /**
+     * Recalculate n_values only for courses that come AFTER the given course in the same round.
+     * Used when the user manually sets n_value (e.g. to 6) so the next courses become 7, 8, 9... until package limit.
+     */
+    private function recalculateNValuesFromCourseForward(Course $course)
+    {
+        $round = $course->round;
+        $studentId = $course->student_id;
+        $teacherId = $course->teacher_id;
+
+        $allInRound = Course::where('student_id', $studentId)
+            ->where('teacher_id', $teacherId)
+            ->where('round', $round)
+            ->orderBy('course_date', 'asc')
+            ->orderBy('class_time', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $found = false;
+        $cumulativeValue = (float) $course->n_value;
+
+        foreach ($allInRound as $c) {
+            if ($c->id === $course->id) {
+                $found = true;
+                continue;
+            }
+            if (!$found) {
+                continue;
+            }
+
+            $duration = (float) $c->duration_hours + ((int) ($c->duration_minutes ?? 0) / 60.0);
+
+            if ($c->admin_status === 'pending' || $c->admin_status === 'rejected') {
+                $c->update(['n_value' => $cumulativeValue]);
+            } elseif ($c->status === 'Free') {
+                $c->update(['n_value' => $cumulativeValue]);
+            } elseif ($c->name === '0.0') {
+                $c->update(['n_value' => $cumulativeValue]);
+            } else {
+                $cumulativeValue += $duration;
+                $c->update(['n_value' => $cumulativeValue]);
             }
         }
     }

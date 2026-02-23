@@ -240,7 +240,7 @@
                                     <input type="checkbox" style="cursor: pointer;" onclick="event.stopPropagation();">
                                 </td>
                                 <td style="padding: 16px; white-space: nowrap;">
-                                    <span style="font-weight: 600; color: #1e293b;">{{ number_format($course->n_value, 2) }}</span>
+                                    <span class="n-value-cell" data-course-id="{{ $course->id }}" data-n-value="{{ $course->n_value }}" role="button" tabindex="0" title="Click to edit n value" style="font-weight: 600; color: #1e293b; cursor: pointer; padding: 4px 8px; border-radius: 4px; display: inline-block; min-width: 48px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="if(!this.querySelector('input')) this.style.background='transparent'">{{ number_format($course->n_value, 2) }}</span>
                                     <span style="display: inline-block; margin-left: 8px; padding: 4px 10px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">{{ $roundLabel }}</span>
                                 </td>
                                 <td style="padding: 16px; white-space: nowrap;">
@@ -469,6 +469,15 @@
                                 </select>
                                 <div class="field-error" data-field="status" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
+
+                            <!-- N value (editable when correcting count, shown only in edit mode) -->
+                            <div id="modal_n_value_wrap" style="display: none;">
+                                <label for="modal_n_value" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                                    <i class="fas fa-sort-numeric-up" style="color: #3b82f6;"></i> N value
+                                </label>
+                                <input type="number" name="n_value" id="modal_n_value" step="0.01" min="0" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" placeholder="0.00">
+                                <div class="field-error" data-field="n_value" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
+                            </div>
                         </div>
 
                         <!-- Right Column -->
@@ -677,6 +686,56 @@
         // ===================== COURSE MODAL =====================
         var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
+        // ===================== INLINE EDIT N VALUE =====================
+        document.addEventListener('click', function(e) {
+            var cell = e.target.closest('.n-value-cell');
+            if (!cell || cell.querySelector('input')) return;
+            var courseId = cell.getAttribute('data-course-id');
+            var currentVal = cell.getAttribute('data-n-value');
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.01';
+            input.min = '0';
+            input.value = parseFloat(currentVal);
+            input.style.cssText = 'width: 64px; padding: 4px 8px; font-weight: 600; color: #1e293b; border: 2px solid #3b82f6; border-radius: 4px; font-size: 14px;';
+            input.onblur = function() { saveNValue(input, cell, courseId); };
+            input.onkeydown = function(ev) {
+                if (ev.key === 'Enter') { input.blur(); }
+                if (ev.key === 'Escape') { revertNValue(input, cell, currentVal); }
+            };
+            cell.textContent = '';
+            cell.appendChild(input);
+            cell.style.background = 'transparent';
+            input.focus();
+            input.select();
+        });
+        function saveNValue(input, cell, courseId) {
+            var val = parseFloat(input.value);
+            if (isNaN(val) || val < 0) { revertNValue(input, cell, cell.getAttribute('data-n-value')); return; }
+            fetch('/admin/courses/' + courseId + '/n-value', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ n_value: val })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var displayVal = parseFloat(data.n_value);
+                    cell.removeChild(input);
+                    cell.textContent = displayVal.toFixed(2);
+                    cell.setAttribute('data-n-value', displayVal);
+                } else {
+                    revertNValue(input, cell, cell.getAttribute('data-n-value'));
+                }
+            })
+            .catch(function() { revertNValue(input, cell, cell.getAttribute('data-n-value')); });
+        }
+        function revertNValue(input, cell, currentVal) {
+            if (input.parentNode !== cell) return;
+            cell.removeChild(input);
+            cell.textContent = parseFloat(currentVal).toFixed(2);
+        }
+
         function openCourseModal() {
             // Reset form
             document.getElementById('courseForm').reset();
@@ -693,6 +752,9 @@
             document.getElementById('modal_student_dropdown').style.display = 'none';
             document.getElementById('modal_souvenir_preview').style.display = 'none';
             document.getElementById('modal_souvenir_image_text').value = '';
+            document.getElementById('modal_n_value').value = '';
+            var nWrap = document.getElementById('modal_n_value_wrap');
+            if (nWrap) nWrap.style.display = 'none';
             
             // Update title
             document.getElementById('courseModalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #3b82f6;"></i><span>' + (window.adminCreateNewCourseLabel || 'Create New Course') + '</span>';
@@ -734,6 +796,9 @@
                 document.getElementById('modal_evaluation_id').value = c.evaluation_id || '';
                 document.getElementById('modal_content').value = c.content || '';
                 document.getElementById('modal_notes').value = c.notes || '';
+                document.getElementById('modal_n_value').value = c.n_value != null ? parseFloat(c.n_value) : '';
+                var nWrap = document.getElementById('modal_n_value_wrap');
+                if (nWrap) nWrap.style.display = 'block';
                 
                 // Show souvenir preview if exists
                 if (c.souvenir_image) {
@@ -878,6 +943,10 @@
             var form = document.getElementById('courseForm');
             var formData = new FormData(form);
             formData.append('send_whatsapp', sendWhatsapp ? '1' : '0');
+            if (method === 'PUT' && courseId) {
+                var nVal = document.getElementById('modal_n_value').value;
+                if (nVal !== '') formData.set('n_value', nVal);
+            }
             
             // Determine URL
             var url;
