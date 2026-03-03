@@ -961,6 +961,27 @@ class AdminController extends Controller
                 
                 $course = Course::create($validated);
                 
+                // Check if package is completed (n_value >= package_number)
+                if ($nValue >= $student->package_number) {
+                    $message = $student->name . ' has completed the course !!';
+                    Notification::create([
+                        'type' => 'progress_update',
+                        'course_id' => $course->id,
+                        'student_id' => $student->id,
+                        'teacher_id' => $teacher->id,
+                        'message' => $message,
+                        'is_read' => false,
+                        'is_approved' => null,
+                    ]);
+                    
+                    // Set payment status to "EN ATTENTE DE PAYEMENT"
+                    $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+                    if ($waitingPaymentStatus) {
+                        $student->payment_status_id = $waitingPaymentStatus->id;
+                        $student->save();
+                    }
+                }
+                
                 // Generate and send report via WhatsApp only if requested
                 if ($request->input('send_whatsapp')) {
                     $teacherController = new \App\Http\Controllers\TeacherController();

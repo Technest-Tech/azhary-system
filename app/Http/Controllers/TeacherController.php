@@ -704,6 +704,13 @@ class TeacherController extends Controller
                 'is_read' => false,
                 'is_approved' => null,
             ]);
+            
+            // Set payment status to "EN ATTENTE DE PAYEMENT"
+            $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+            if ($waitingPaymentStatus) {
+                $student->payment_status_id = $waitingPaymentStatus->id;
+                $student->save();
+            }
         }
         
         // Generate and send report via WhatsApp for any created course
