@@ -24,10 +24,6 @@
                     {{ __('admin.manage_view_students') }}
                 </p>
             </div>
-            <a href="{{ route('admin.students.create') }}" class="btn" style="background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%); color: white; text-decoration: none;">
-                <i class="fas fa-plus"></i>
-                {{ __('admin.add_new_student') }}
-            </a>
         </div>
     </div>
 
@@ -208,4 +204,12 @@
             </div>
         @endif
     </div>
+
+    <!-- Fixed Add Student Button -->
+    <a href="{{ route('admin.students.create') }}" 
+       style="position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4); z-index: 1000; transition: all 0.3s; font-size: 14px;"
+       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(20, 184, 166, 0.5)'"
+       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(20, 184, 166, 0.4)'">
+        <i class="fas fa-plus"></i> {{ __('admin.add_new_student') }}
+    </a>
 @endsection

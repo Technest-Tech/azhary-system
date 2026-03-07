@@ -97,8 +97,18 @@
                             <td style="padding: 16px; color: #1e293b; font-weight: 600; white-space: nowrap;">{{ $student->name }}</td>
                             <td style="padding: 16px; color: #64748b; white-space: nowrap;">{{ $student->teacher->name ?? 'N/A' }}</td>
                             <td style="padding: 16px; color: #64748b; white-space: nowrap;">{{ $student->phone }}</td>
-                            <td style="padding: 16px; color: #64748b; white-space: nowrap;">{{ $student->package_number }}</td>
-                            <td style="padding: 16px; color: #1e293b; font-weight: 600; white-space: nowrap;">{{ number_format($totalPrice, 0) }} €</td>
+                            <td style="padding: 16px; white-space: nowrap;">
+                                <span class="editable-pack" data-student-id="{{ $student->id }}" data-value="{{ $student->package_number }}" 
+                                      style="cursor: pointer; padding: 4px 10px; border-radius: 6px; color: #64748b; display: inline-block; min-width: 40px; transition: background 0.2s;" 
+                                      onmouseover="this.style.background='#f1f5f9'" onmouseout="if(!this.querySelector('input')) this.style.background='transparent'" 
+                                      title="Click to edit">{{ $student->package_number }}</span>
+                            </td>
+                            <td style="padding: 16px; white-space: nowrap;">
+                                <span class="editable-price" data-student-id="{{ $student->id }}" data-value="{{ $student->package_rate }}" 
+                                      style="cursor: pointer; padding: 4px 10px; border-radius: 6px; color: #1e293b; font-weight: 600; display: inline-block; min-width: 60px; transition: background 0.2s;" 
+                                      onmouseover="this.style.background='#f1f5f9'" onmouseout="if(!this.querySelector('input')) this.style.background='transparent'" 
+                                      title="Click to edit">{{ number_format($student->package_rate, 0) }} €</span>
+                            </td>
                             <td style="padding: 16px; white-space: nowrap;">
                                 <select class="payment-status-select" data-student-id="{{ $student->id }}" 
                                         style="width: 100%; min-width: 150px; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white; cursor: pointer;">
@@ -154,6 +164,8 @@
 
     @section('scripts')
     <script>
+        var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
         // Auto-submit form on filter change
         document.querySelectorAll('select[name="teacher_id"], select[name="pack"], select[name="reminder"], input[name="student_search"]').forEach(function(element) {
             element.addEventListener('change', function() {
@@ -171,7 +183,7 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         payment_status_id: statusId
@@ -180,7 +192,6 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Show success message or reload page
                         location.reload();
                     } else {
                         alert('Error updating payment status');
@@ -193,6 +204,95 @@
             });
         });
 
+        // ===================== INLINE EDIT PACK =====================
+        document.addEventListener('click', function(e) {
+            var cell = e.target.closest('.editable-pack');
+            if (!cell || cell.querySelector('input')) return;
+            var studentId = cell.getAttribute('data-student-id');
+            var currentVal = cell.getAttribute('data-value');
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1';
+            input.step = '1';
+            input.value = parseInt(currentVal);
+            input.style.cssText = 'width: 64px; padding: 4px 8px; font-weight: 600; color: #1e293b; border: 2px solid #10b981; border-radius: 6px; font-size: 14px; outline: none;';
+            input.onblur = function() { saveStudentField(input, cell, studentId, 'package_number', true); };
+            input.onkeydown = function(ev) {
+                if (ev.key === 'Enter') { input.blur(); }
+                if (ev.key === 'Escape') { revertField(cell, currentVal); }
+            };
+            cell.textContent = '';
+            cell.appendChild(input);
+            cell.style.background = 'transparent';
+            input.focus();
+            input.select();
+        });
+
+        // ===================== INLINE EDIT PRICE =====================
+        document.addEventListener('click', function(e) {
+            var cell = e.target.closest('.editable-price');
+            if (!cell || cell.querySelector('input')) return;
+            var studentId = cell.getAttribute('data-student-id');
+            var currentVal = cell.getAttribute('data-value');
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.min = '0';
+            input.step = '0.01';
+            input.value = parseFloat(currentVal);
+            input.style.cssText = 'width: 80px; padding: 4px 8px; font-weight: 600; color: #1e293b; border: 2px solid #10b981; border-radius: 6px; font-size: 14px; outline: none;';
+            input.onblur = function() { saveStudentField(input, cell, studentId, 'package_rate', false); };
+            input.onkeydown = function(ev) {
+                if (ev.key === 'Enter') { input.blur(); }
+                if (ev.key === 'Escape') { revertPriceField(cell, currentVal); }
+            };
+            cell.textContent = '';
+            cell.appendChild(input);
+            cell.style.background = 'transparent';
+            input.focus();
+            input.select();
+        });
+
+        function saveStudentField(input, cell, studentId, fieldName, isInt) {
+            var val = isInt ? parseInt(input.value) : parseFloat(input.value);
+            if (isNaN(val) || val < 0) { 
+                revertField(cell, cell.getAttribute('data-value')); 
+                return; 
+            }
+            var body = {};
+            body[fieldName] = val;
+
+            // Show saving indicator
+            input.style.borderColor = '#f59e0b';
+            input.disabled = true;
+
+            fetch('/admin/students/' + studentId + '/quick-update', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify(body)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    // Reload page to reflect recalculated values
+                    location.reload();
+                } else {
+                    revertField(cell, cell.getAttribute('data-value'));
+                }
+            })
+            .catch(function() { revertField(cell, cell.getAttribute('data-value')); });
+        }
+
+        function revertField(cell, currentVal) {
+            cell.innerHTML = '';
+            cell.textContent = currentVal;
+            cell.setAttribute('data-value', currentVal);
+        }
+
+        function revertPriceField(cell, currentVal) {
+            cell.innerHTML = '';
+            cell.textContent = parseFloat(currentVal).toFixed(0) + ' €';
+        }
+
         // Handle notes update (optional - can be implemented with debounce)
         document.querySelectorAll('.student-notes').forEach(function(input) {
             let timeout;
@@ -203,7 +303,6 @@
                 
                 timeout = setTimeout(function() {
                     // Implement notes update API if needed
-                    // fetch(`/admin/students/${studentId}/notes`, { ... })
                 }, 1000);
             });
         });
