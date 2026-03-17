@@ -934,9 +934,8 @@ class AdminController extends Controller
                 // Normal lesson - calculate n_value and create course
                 $nValue = $previousNValue + $currentDuration;
                 
-                // Auto-calculate lesson number (count of valid named courses in this round + 1)
+                // Auto-calculate lesson number (student-scoped, all teachers in the same round)
                 $lastLessonInRound = Course::where('student_id', $student->id)
-                    ->where('teacher_id', $teacher->id)
                     ->where('round', $currentRound)
                     ->where('name', '!=', '0')
                     ->where('name', '!=', '0.0')
@@ -1131,11 +1130,15 @@ class AdminController extends Controller
         $course->update($validated);
         
         if ($manualNValue !== null) {
-            // Propagate manual n_value to subsequent courses in the same round (7, 8, 9...)
+            // Propagate manual n_value to subsequent courses in the same round only
             $this->recalculateNValuesFromCourseForward($course);
-        } else {
-            $this->recalculateNValues($student->id, $teacher->id);
+        } elseif ($manualNValue === null && ($course->getOriginal('teacher_id') != $validated['teacher_id'] ||
+            $course->getOriginal('duration_hours') != $validated['duration_hours'] ||
+            $course->getOriginal('duration_minutes') != $validated['duration_minutes'])) {
+            // Duration or teacher changed — cascade forward from this course only, same round
+            $this->recalculateNValuesFromCourseForward($course);
         }
+        // If nothing affecting n_value changed, no recalc needed
         
         // Generate and send report via WhatsApp only if requested
         if ($request->input('send_whatsapp')) {
@@ -1156,11 +1159,10 @@ class AdminController extends Controller
     public function destroyCourse(Course $course)
     {
         $studentId = $course->student_id;
-        $teacherId = $course->teacher_id;
         $course->delete();
         
-        // Recalculate all n_values for this student to ensure consistency
-        $this->recalculateNValues($studentId, $teacherId);
+        // Recalculate all n_values for this student (student-scoped)
+        $this->recalculateNValues($studentId);
         
         return redirect()->route('admin.dashboard')
                         ->with('success', 'Course deleted successfully!');
@@ -1241,9 +1243,8 @@ class AdminController extends Controller
         $courseRound = $course->round;
         $currentDuration = (float)$course->total_hours;
         
-        // Find the last approved lesson IN THE SAME ROUND
+        // Find the last approved lesson IN THE SAME ROUND (student-scoped)
         $previousLessons = Course::where('student_id', $student->id)
-                               ->where('teacher_id', $teacher->id)
                                ->where('round', $courseRound)
                                ->where('id', '!=', $course->id)
                                ->where('name', '!=', '0')
@@ -1254,9 +1255,8 @@ class AdminController extends Controller
 
         $previousNValue = $previousLessons ? (float)$previousLessons->n_value : 0;
         
-        // Get the last lesson number IN THE SAME ROUND
+        // Get the last lesson number IN THE SAME ROUND (student-scoped)
         $lastLesson = Course::where('student_id', $student->id)
-                          ->where('teacher_id', $teacher->id)
                           ->where('round', $courseRound)
                           ->where('id', '!=', $course->id)
                           ->where('name', '!=', '0')
@@ -1347,8 +1347,8 @@ class AdminController extends Controller
             }
         }
         
-        // Recalculate n_values for consistency
-        (new self)->recalculateNValues($student->id, $teacher->id);
+        // Recalculate n_values for consistency (student-scoped)
+        (new self)->recalculateNValues($student->id);
         
         // If package is completed, create notification and set payment status
         if ($packageCompleted) {
@@ -1622,19 +1622,19 @@ class AdminController extends Controller
 
     /**
      * Recalculate n_values for all courses of a specific student
-     * This method ensures the cumulative calculation is correct PER ROUND
+     * Student-scoped: correct PER ROUND across ALL teachers
      */
-    public function recalculateNValues($studentId, $teacherId)
+    public function recalculateNValues($studentId)
     {
         // Get the student's package limit
         $student = Student::find($studentId);
         $packageLimit = $student ? $student->package_number : 0;
         
-        // Get all courses for this student and teacher, ordered by round, date, created_at
+        // Get all courses for this student ordered by round, date, time, created_at
         $courses = Course::where('student_id', $studentId)
-                        ->where('teacher_id', $teacherId)
                         ->orderBy('round', 'asc')
                         ->orderBy('course_date', 'asc')
+                        ->orderBy('class_time', 'asc')
                         ->orderBy('created_at', 'asc')
                         ->get();
         
