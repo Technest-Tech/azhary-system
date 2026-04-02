@@ -192,8 +192,8 @@ class AdminController extends Controller
     public function destroyTeacher(Teacher $teacher)
     {
         $teacher->update([
-            'deleted_by_type' => get_class(Auth::user()),
-            'deleted_by_id' => Auth::id()
+            'deleted_by_type' => get_class(Auth::guard('admin')->user()),
+            'deleted_by_id' => Auth::guard('admin')->id()
         ]);
         $teacher->delete();
         return redirect()->route('admin.teachers')->with('success', 'Teacher deleted successfully!');
@@ -330,8 +330,8 @@ class AdminController extends Controller
     public function destroyStudent(Student $student)
     {
         $student->update([
-            'deleted_by_type' => get_class(Auth::user()),
-            'deleted_by_id' => Auth::id()
+            'deleted_by_type' => get_class(Auth::guard('admin')->user()),
+            'deleted_by_id' => Auth::guard('admin')->id()
         ]);
         $student->delete();
         return redirect()->route('admin.students')->with('success', 'Student deleted successfully!');
@@ -990,8 +990,8 @@ class AdminController extends Controller
         $studentId = $course->student_id;
         
         $course->update([
-            'deleted_by_type' => get_class(Auth::user()),
-            'deleted_by_id' => Auth::id()
+            'deleted_by_type' => get_class(Auth::guard('admin')->user()),
+            'deleted_by_id' => Auth::guard('admin')->id()
         ]);
         
         $course->delete();
