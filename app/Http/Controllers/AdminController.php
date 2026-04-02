@@ -780,11 +780,28 @@ class AdminController extends Controller
         if (!empty($requestedRound)) {
             $currentRound = $requestedRound;
         } else {
-            // Get current active round for this student (exclude pending round 0)
-            $currentRound = Course::where('student_id', $student->id)
-                ->where('teacher_id', $teacher->id)
+            // Get current max valid round for this student (exclude round 0)
+            $maxRound = Course::where('student_id', $student->id)
                 ->where('round', '>', 0)
                 ->max('round') ?? 1;
+            
+            // Check if that round is already at/over its package limit
+            // This happens after payment activation — the paid round is full and we must start fresh
+            $roundMaxNValue = (float) (Course::where('student_id', $student->id)
+                ->where('round', $maxRound)
+                ->max('n_value') ?? 0);
+            
+            $roundPackageLimit = (float) (Course::where('student_id', $student->id)
+                ->where('round', $maxRound)
+                ->whereNotNull('package_limit')
+                ->value('package_limit') ?? $student->package_number);
+            
+            if ($roundMaxNValue >= $roundPackageLimit) {
+                // Current max round is full — start a new round
+                $currentRound = $maxRound + 1;
+            } else {
+                $currentRound = $maxRound;
+            }
         }
         
         // Calculate n_value based on package_number and previous lessons IN THE CURRENT ROUND
