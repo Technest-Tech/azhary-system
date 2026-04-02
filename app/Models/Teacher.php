@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Teacher extends Authenticatable
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'email',
@@ -41,5 +44,10 @@ class Teacher extends Authenticatable
     public function courses()
     {
         return $this->hasMany(Course::class);
+    }
+
+    public function deletedBy()
+    {
+        return $this->morphTo('deleted_by', 'deleted_by_type', 'deleted_by_id');
     }
 }

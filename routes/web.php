@@ -122,6 +122,12 @@ Route::prefix('admin')->group(function () {
         
         // Student Rounds API
         Route::get('/students/{student}/rounds', [AdminController::class, 'getStudentRounds'])->name('admin.students.rounds');
+        
+        // Recovery System
+        Route::get('/recovery', [AdminController::class, 'recovery'])->name('admin.recovery');
+        Route::post('/recovery/teachers/{id}', [AdminController::class, 'restoreTeacher'])->name('admin.recovery.teacher');
+        Route::post('/recovery/students/{id}', [AdminController::class, 'restoreStudent'])->name('admin.recovery.student');
+        Route::post('/recovery/courses/{id}', [AdminController::class, 'restoreCourse'])->name('admin.recovery.course');
     });
 });
 

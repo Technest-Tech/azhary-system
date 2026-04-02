@@ -75,13 +75,13 @@
         <div class="card-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title">{{ __('admin.teachers_list') }}</h3>
-                <div style="display: flex; gap: 12px;">
-                    <input type="text" placeholder="{{ __('admin.search_teachers') }}" style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; width: 250px;">
-                    <button class="btn" style="background: #f1f5f9; color: #475569; padding: 8px 16px;">
+                <form method="GET" action="{{ route('admin.teachers') }}" style="display: flex; gap: 12px;">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search_teachers') }}" style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; width: 250px;">
+                    <button type="submit" class="btn" style="background: #f1f5f9; color: #475569; padding: 8px 16px;">
                         <i class="fas fa-filter"></i>
                         {{ __('admin.filter') }}
                     </button>
-                </div>
+                </form>
             </div>
         </div>
 

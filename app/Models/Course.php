@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'teacher_id',
         'student_id',
@@ -29,6 +32,8 @@ class Course extends Model
         'income',
         'is_recurring',
         'recurring_course_id',
+        'is_manual_n_value',
+        'package_limit',
     ];
 
     protected function casts(): array
@@ -41,6 +46,7 @@ class Course extends Model
             'n_value' => 'decimal:2',
             'duration_hours' => 'integer',
             'duration_minutes' => 'integer',
+            'is_manual_n_value' => 'boolean',
         ];
     }
 
@@ -62,6 +68,11 @@ class Course extends Model
     public function recurringCourse()
     {
         return $this->belongsTo(RecurringCourse::class, 'recurring_course_id');
+    }
+
+    public function deletedBy()
+    {
+        return $this->morphTo('deleted_by', 'deleted_by_type', 'deleted_by_id');
     }
 
     /**

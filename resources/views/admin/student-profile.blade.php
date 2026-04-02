@@ -72,17 +72,6 @@
                     @enderror
                 </div>
 
-                <!-- Date of Birth -->
-                <div>
-                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 14px;">
-                        Date of Birth <span style="color: #dc2626;">*</span>
-                    </label>
-                    <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $student->date_of_birth ? $student->date_of_birth->format('Y-m-d') : '') }}" required
-                        style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                    @error('date_of_birth')
-                        <span style="color: #dc2626; font-size: 13px; margin-top: 4px; display: block;">{{ $message }}</span>
-                    @enderror
-                </div>
 
                 <!-- Section -->
                 <div>

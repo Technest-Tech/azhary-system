@@ -71,13 +71,13 @@
         <div class="card-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title">{{ __('admin.students_list') }}</h3>
-                <div style="display: flex; gap: 12px;">
-                    <input type="text" placeholder="{{ __('admin.search_students') }}" style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; width: 250px;">
-                    <button class="btn" style="background: #f1f5f9; color: #475569; padding: 8px 16px;">
+                <form method="GET" action="{{ route('admin.students') }}" style="display: flex; gap: 12px;">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search_students') }}" style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; width: 250px;">
+                    <button type="submit" class="btn" style="background: #f1f5f9; color: #475569; padding: 8px 16px;">
                         <i class="fas fa-filter"></i>
                         {{ __('admin.filter') }}
                     </button>
-                </div>
+                </form>
             </div>
         </div>
 
@@ -128,7 +128,6 @@
                                     </div>
                                     <div>
                                         <p style="font-weight: 600; color: #1e293b; font-size: 14px; margin: 0;">{{ $student->name }}</p>
-                                        <p style="font-size: 12px; color: #64748b; margin: 0;">{{ $student->date_of_birth }}</p>
                                     </div>
                                 </div>
                             </td>

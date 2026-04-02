@@ -746,11 +746,23 @@
             document.getElementById('modal_duration_hours').value = '1';
             document.getElementById('modal_duration_minutes').value = '0';
             document.getElementById('modal_status').value = 'Present';
-            document.getElementById('modal_student_search').value = '';
+            
+            var studentSearch = document.getElementById('modal_student_search');
+            if (studentSearch) {
+                studentSearch.value = '';
+                studentSearch.disabled = true;
+                studentSearch.placeholder = 'Please select a teacher first';
+                studentSearch.style.backgroundColor = '#f1f5f9';
+            }
+            window.modalStudentsList = [];
+            
             document.getElementById('modal_student_id').value = '';
             document.getElementById('modal_student_name').value = '';
-            document.getElementById('modal_student_dropdown').style.display = 'none';
-            document.getElementById('modal_souvenir_preview').style.display = 'none';
+            var dropdown = document.getElementById('modal_student_dropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            
+            var preview = document.getElementById('modal_souvenir_preview');
+            if (preview) preview.style.display = 'none';
             document.getElementById('modal_souvenir_image_text').value = '';
             document.getElementById('modal_n_value').value = '';
             var nWrap = document.getElementById('modal_n_value_wrap');
@@ -862,6 +874,9 @@
             var studentIdField = document.getElementById('modal_student_id');
             var studentNameField = document.getElementById('modal_student_name');
             var dropdown = document.getElementById('modal_student_dropdown');
+            var loading = document.getElementById('modal_student_loading');
+            
+            // Clear selections
             if (selectStudentId && selectStudentName) {
                 studentIdField.value = selectStudentId;
                 studentNameField.value = selectStudentName;
@@ -871,7 +886,47 @@
                 studentIdField.value = '';
                 studentNameField.value = '';
             }
-            dropdown.style.display = 'none';
+            if (dropdown) dropdown.style.display = 'none';
+            
+            if (!teacherId) {
+                window.modalStudentsList = [];
+                if (studentSearch) {
+                    studentSearch.disabled = true;
+                    studentSearch.placeholder = 'Please select a teacher first';
+                    studentSearch.style.backgroundColor = '#f1f5f9';
+                }
+                return;
+            }
+            
+            if (studentSearch) {
+                studentSearch.disabled = false;
+                studentSearch.placeholder = '{{ __("admin.type_to_search_student") }}';
+                studentSearch.style.backgroundColor = 'white';
+            }
+            
+            if (loading) loading.style.display = 'block';
+            
+            fetch('/admin/teachers/' + teacherId + '/students', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (loading) loading.style.display = 'none';
+                if (data.success) {
+                    window.modalStudentsList = data.students || [];
+                    if (document.activeElement === studentSearch) {
+                        filterModalStudentDropdown();
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load students', err);
+                if (loading) loading.style.display = 'none';
+                window.modalStudentsList = [];
+            });
         }
         
         var modalStudentSearchEl = document.getElementById('modal_student_search');
@@ -1004,6 +1059,9 @@
                         throw { type: 'validation', errors: data.errors };
                     });
                 }
+                if (response.status === 419) {
+                    throw { type: 'server', message: 'Your session has expired (419 Error). Please copy your notes, refresh the page, and try again.' };
+                }
                 if (!response.ok) {
                     throw { type: 'server', message: 'Server error (' + response.status + ')' };
                 }
@@ -1056,5 +1114,15 @@
                 showSuccessToast(@json(session('success')));
             });
         @endif
+        
+        // Keep session alive to prevent 419 CSRF token expiration errors
+        // Ping the server every 15 minutes
+        setInterval(function() {
+            fetch(window.location.href, { 
+                method: 'HEAD',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).catch(e => console.log('Session keep-alive ping silently failed.'));
+        }, 15 * 60 * 1000);
+        
     </script>
 @endsection

@@ -521,8 +521,12 @@
                 <div class="menu-section">
                     <div class="menu-section-title">{{ __('admin.configuration') }}</div>
                     <a href="{{ route('admin.settings') }}" class="menu-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
-                        <i class="fas fa-cog"></i>
-                        <span>{{ __('admin.settings') }}</span>
+                        <i class="fas fa-cogs"></i>
+                        Settings
+                    </a>
+                    <a href="{{ route('admin.recovery') }}" class="menu-item {{ request()->routeIs('admin.recovery') ? 'active' : '' }}">
+                        <i class="fas fa-trash-restore" style="color: #ef4444;"></i>
+                        Trash / Recovery
                     </a>
                 </div>
             </nav>

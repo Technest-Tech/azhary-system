@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -10,6 +11,8 @@ use App\Services\StudentColorService;
 
 class Student extends Authenticatable
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'email',
@@ -68,6 +71,11 @@ class Student extends Authenticatable
     public function waitingList()
     {
         return $this->hasMany(WaitingList::class);
+    }
+
+    public function deletedBy()
+    {
+        return $this->morphTo('deleted_by', 'deleted_by_type', 'deleted_by_id');
     }
 
     /**

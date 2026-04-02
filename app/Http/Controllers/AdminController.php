@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Services\StudentColorService;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -36,6 +37,15 @@ class AdminController extends Controller
 
         if ($request->filled('student_id')) {
             $query->where('student_id', $request->student_id);
+        }
+
+        // Set default month to current month if NO date filters are requested
+        // (If the user explicitly selects "All Months", month_year is present but empty, bypassing this)
+        $hasAnyDateFilter = $request->filled('date') || $request->filled('date_from') || $request->filled('date_to') || $request->has('month_year');
+        if (!$hasAnyDateFilter) {
+            $currentMonth = date('n');
+            $currentYear = date('Y');
+            $request->merge(['month_year' => $currentMonth . '-' . $currentYear]);
         }
 
         if ($request->filled('date')) {
@@ -72,7 +82,9 @@ class AdminController extends Controller
         }
 
         // Top stat cards: reflect current filters
-        $filteredCourses = (clone $query)->get();
+        $filteredCourses = clone $query;
+        $filteredCourses = $filteredCourses->get();
+        
         $totalStudents = $filteredCourses->pluck('student_id')->unique()->filter()->count();
         $totalHours = round($filteredCourses->sum(function ($c) {
             return ($c->duration_hours ?? 0) + ((int)($c->duration_minutes ?? 0) / 60.0);
@@ -86,7 +98,7 @@ class AdminController extends Controller
             $perPage = (int) $perPage ?: 100;
         }
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
-            ->orderBy('n_value', 'asc')
+            
             ->orderBy('course_date', 'asc')
             ->orderBy('class_time', 'asc')
             ->paginate($perPage);
@@ -108,9 +120,20 @@ class AdminController extends Controller
     }
 
     // Teachers Management
-    public function teachers()
+    public function teachers(Request $request)
     {
-        $teachers = Teacher::all();
+        $query = Teacher::query();
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        
+        $teachers = $query->get();
         return view('admin.teachers', compact('teachers'));
     }
 
@@ -168,14 +191,29 @@ class AdminController extends Controller
 
     public function destroyTeacher(Teacher $teacher)
     {
+        $teacher->update([
+            'deleted_by_type' => get_class(Auth::user()),
+            'deleted_by_id' => Auth::id()
+        ]);
         $teacher->delete();
         return redirect()->route('admin.teachers')->with('success', 'Teacher deleted successfully!');
     }
 
     // Students Management
-    public function students()
+    public function students(Request $request)
     {
-        $students = Student::with(['teacher', 'subject'])->get();
+        $query = Student::with(['teacher', 'subject']);
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        
+        $students = $query->get();
         return view('admin.students', compact('students'));
     }
 
@@ -192,7 +230,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:students,email',
             'phone' => 'required|string|max:20',
-            'date_of_birth' => 'required|date',
+            'date_of_birth' => 'nullable|date',
             'password' => 'nullable|string|min:8',
             'section' => 'required|string|max:10',
             'package_number' => 'required|integer|min:1',
@@ -232,7 +270,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:students,email,' . $student->id,
             'phone' => 'required|string|max:20',
-            'date_of_birth' => 'required|date',
+            'date_of_birth' => 'nullable|date',
             'section' => 'required|string|max:10',
             'package_number' => 'required|integer|min:1',
             'hour_rate' => 'required|numeric|min:0',
@@ -291,6 +329,10 @@ class AdminController extends Controller
 
     public function destroyStudent(Student $student)
     {
+        $student->update([
+            'deleted_by_type' => get_class(Auth::user()),
+            'deleted_by_id' => Auth::id()
+        ]);
         $student->delete();
         return redirect()->route('admin.students')->with('success', 'Student deleted successfully!');
     }
@@ -603,16 +645,37 @@ class AdminController extends Controller
             $query->where('student_id', $request->student_id);
         }
         
+        // Set default month to current month if NO date filters are requested
+        $hasAnyDateFilter = $request->filled('date') || $request->filled('date_from') || $request->filled('date_to') || $request->has('month_year');
+        if (!$hasAnyDateFilter) {
+            $currentMonth = date('n');
+            $currentYear = date('Y');
+            $request->merge(['month_year' => $currentMonth . '-' . $currentYear]);
+        }
+
         if ($request->filled('date')) {
             $query->whereDate('course_date', $request->date);
         }
         
+        if ($request->filled('date_from')) {
+            $query->whereDate('course_date', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $query->whereDate('course_date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('month_year')) {
+            [$month, $year] = explode('-', $request->month_year);
+            $query->whereMonth('course_date', $month)->whereYear('course_date', $year);
+        }
+
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
         
         $courses = $query->orderByRaw('CASE WHEN round = 0 THEN 999999 ELSE round END ASC')
-                        ->orderBy('n_value', 'asc')
+                        
                         ->orderBy('course_date', 'asc')
                         ->orderBy('class_time', 'asc')
                         ->paginate(20);
@@ -639,10 +702,19 @@ class AdminController extends Controller
 
     /**
      * Get students by teacher ID (AJAX endpoint)
+     * Returns students assigned to this teacher OR who have courses with this teacher.
      */
     public function getTeacherStudents(Teacher $teacher)
     {
-        $students = Student::where('teacher_id', $teacher->id)
+        $courseStudentIds = Course::where('teacher_id', $teacher->id)
+            ->distinct()
+            ->pluck('student_id')
+            ->toArray();
+
+        $students = Student::where(function($q) use ($teacher, $courseStudentIds) {
+                $q->where('teacher_id', $teacher->id)
+                  ->orWhereIn('id', $courseStudentIds);
+            })
             ->orderBy('name', 'asc')
             ->get(['id', 'name']);
         
@@ -670,7 +742,7 @@ class AdminController extends Controller
             'evaluation_id' => 'nullable|exists:evaluations,id',
             'content' => 'nullable|string',
             'notes' => 'nullable|string',
-            'souvenir_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'souvenir_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:65536',
         ]);
         
         // Get student and teacher info
@@ -698,7 +770,7 @@ class AdminController extends Controller
                                ->where('name', '!=', '0') // Exclude unapproved absences
                                ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
                                ->where('admin_status', '!=', 'pending') // Exclude pending courses
-                               ->orderBy('n_value', 'desc')
+                               
                                ->first();
         
         $previousNValue = $previousLessons ? $previousLessons->n_value : 0;
@@ -713,296 +785,61 @@ class AdminController extends Controller
             ->where('is_read', false)
             ->exists();
         
+        // Prepare base course data
+        $validated['teacher_id'] = $teacher->id;
+        $validated['student_name'] = $validated['student_name'] ?? $student->name;
+        $validated['total_hours'] = $currentDuration;
+        $validated['round'] = $currentRound;
+        $validated['n_value'] = 0; // Temp, recalculated later
+        $validated['package_limit'] = $student->package_number;
+        
         // Calculate income based on teacher's hourly rate
         $income = $currentDuration * $teacher->hourly_rate;
         
-        // Set admin_status: pending for absences, special handling for Free lessons
+        // Handle specific statuses
+        $validated['admin_status'] = 'approved';
+        
         if ($validated['status'] === 'Absent') {
-            $validated['admin_status'] = 'pending';
             $validated['name'] = '0';
-            $nValue = $previousNValue; // Don't increment n_value for absences until approved
-            
-            $validated['student_name'] = $validated['student_name'] ?? $student->name;
-            $validated['n_value'] = $nValue;
-            $validated['total_hours'] = $currentDuration;
             $validated['income'] = $income;
-            $validated['round'] = $currentRound;
-            
-            $course = Course::create($validated);
-            
-            // Generate and send report via WhatsApp only if requested
-            if ($request->input('send_whatsapp')) {
-                $teacherController = new \App\Http\Controllers\TeacherController();
-                $teacherController->generateAndSendReport($course);
-            }
-            
-            $successMsg = $request->input('send_whatsapp') 
-                ? 'Course created successfully! Report image has been sent to student\'s WhatsApp.'
-                : 'Course created successfully!';
-            
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
-            }
-            return redirect()->route('admin.dashboard')->with('success', $successMsg);
         } elseif ($validated['status'] === 'Free') {
-            // Free lesson: no billing, no impact on n_value / package
-            $nValue = $previousNValue;
-            $income = 0;
-
-            $validated['teacher_id'] = $teacher->id;
-            $validated['student_name'] = $validated['student_name'] ?? $student->name;
-            $validated['n_value'] = $nValue; // keep cumulative hours unchanged
-            $validated['total_hours'] = $currentDuration; // still store duration for info
-            $validated['income'] = $income; // no salary for free lessons
-            $validated['admin_status'] = 'approved';
-            $validated['round'] = $currentRound;
-
-            $course = Course::create($validated);
+            $validated['income'] = 0;
         } else {
-            // Check if lesson exceeds package limit
-            $remainingInPackage = $student->package_number - $previousNValue;
-            $exceedsPackage = $currentDuration > $remainingInPackage && $remainingInPackage > 0;
-            
-            if ($exceedsPackage) {
-                // Split the lesson: one completes the package, one is pending from new package
-                $hoursToComplete = $remainingInPackage;
-                $hoursPending = $currentDuration - $remainingInPackage;
-                
-                // Convert hours to hours and minutes
-                $completeHours = floor($hoursToComplete);
-                $completeMinutes = round(($hoursToComplete - $completeHours) * 60);
-                
-                $pendingHours = floor($hoursPending);
-                $pendingMinutes = round(($hoursPending - $pendingHours) * 60);
-                
-                // First course: completes the package
-                $nValueComplete = $previousNValue + $hoursToComplete;
-                $incomeComplete = $hoursToComplete * $teacher->hourly_rate;
-                
-                $completeCourseData = $validated;
-                $completeCourseData['student_name'] = $validated['student_name'] ?? $student->name;
-                $completeCourseData['duration_hours'] = $completeHours;
-                $completeCourseData['duration_minutes'] = $completeMinutes;
-                $completeCourseData['total_hours'] = $hoursToComplete;
-                $completeCourseData['n_value'] = $nValueComplete;
-                $completeCourseData['income'] = $incomeComplete;
-                $completeCourseData['admin_status'] = 'approved';
-                $completeCourseData['round'] = $currentRound;
-                
-                $completeCourse = Course::create($completeCourseData);
-                
-                // Second course: pending from new package (will get new round when activated)
-                $pendingCourseData = $validated;
-                $pendingCourseData['student_name'] = $validated['student_name'] ?? $student->name;
-                $pendingCourseData['duration_hours'] = $pendingHours;
-                $pendingCourseData['duration_minutes'] = $pendingMinutes;
-                $pendingCourseData['total_hours'] = $hoursPending;
-                $pendingCourseData['n_value'] = 0; // Will be recalculated when package is activated
-                $pendingCourseData['income'] = $hoursPending * $teacher->hourly_rate;
-                $pendingCourseData['admin_status'] = 'pending';
-                $pendingCourseData['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
-                $pendingCourseData['round'] = 0; // Will be set to new round when package is activated
-                
-                // Determine course name based on payment status
-                $paymentStatus = $student->paymentStatus;
-                if ($paymentStatus && ($paymentStatus->name === 'PAYÉ' || $paymentStatus->name === 'Active')) {
-                    // Package is paid - assign next course number
-                    $lastLesson = Course::where('student_id', $student->id)
-                        ->where('teacher_id', $teacher->id)
-                        ->where('name', '!=', '0')
-                        ->where('name', '!=', '0.0')
-                        ->where('admin_status', '!=', 'pending') // Exclude pending courses
-                        ->orderBy('course_date', 'desc')
-                        ->orderBy('class_time', 'desc')
-                        ->first();
-                    
-                    if ($lastLesson && is_numeric($lastLesson->name)) {
-                        $lessonNumber = (float)$lastLesson->name + 1;
-                    } else {
-                        $lessonNumber = 1;
-                    }
-                    $pendingCourseData['name'] = (string)$lessonNumber;
-                } else {
-                    // Package is not paid - use "0"
-                    $pendingCourseData['name'] = '0';
-                }
-                
-                Course::create($pendingCourseData);
-                
-                // Set payment status to "EN ATTENTE DE PAYEMENT"
-                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
-                if ($waitingPaymentStatus) {
-                    $student->payment_status_id = $waitingPaymentStatus->id;
-                    $student->save();
-                }
-                
-                // Create notification for package completion (so admin can activate payment)
-                $message = $student->name . ' has completed the course !!';
-                Notification::create([
-                    'type' => 'progress_update',
-                    'course_id' => $completeCourse->id,
-                    'student_id' => $student->id,
-                    'teacher_id' => $teacher->id,
-                    'message' => $message,
-                    'is_read' => false,
-                    'is_approved' => null,
-                ]);
-                
-                $nValue = $nValueComplete;
-            } elseif ($packageLimitReached && $hasPackageNotification) {
-                // Package limit reached and notification exists - create as pending
-                $validated['student_name'] = $validated['student_name'] ?? $student->name;
-                $validated['n_value'] = 0; // Will be recalculated when package is activated
-                $validated['total_hours'] = $currentDuration;
-                $validated['income'] = $income;
-                $validated['admin_status'] = 'pending';
-                $validated['status'] = 'Present'; // Use Present status, admin_status='pending' indicates pending
-                $validated['round'] = 0; // Will be set to new round when package is activated
-                
-                // Determine course name based on payment status
-                $paymentStatus = $student->paymentStatus;
-                if ($paymentStatus && ($paymentStatus->name === 'PAYÉ' || $paymentStatus->name === 'Active')) {
-                    // Package is paid - assign next course number
-                    $lastLesson = Course::where('student_id', $student->id)
-                        ->where('teacher_id', $teacher->id)
-                        ->where('name', '!=', '0')
-                        ->where('name', '!=', '0.0')
-                        ->where('admin_status', '!=', 'pending') // Exclude pending courses
-                        ->orderBy('course_date', 'desc')
-                        ->orderBy('class_time', 'desc')
-                        ->first();
-                    
-                    if ($lastLesson && is_numeric($lastLesson->name)) {
-                        $lessonNumber = (float)$lastLesson->name + 1;
-                    } else {
-                        $lessonNumber = 1;
-                    }
-                    $validated['name'] = (string)$lessonNumber;
-                } else {
-                    // Package is not paid - use "0"
-                    $validated['name'] = '0';
-                }
-                
-                Course::create($validated);
-                
-                // Set payment status to "EN ATTENTE DE PAYEMENT"
-                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
-                if ($waitingPaymentStatus) {
-                    $student->payment_status_id = $waitingPaymentStatus->id;
-                    $student->save();
-                }
-                
-                $nValue = null; // Not set for pending courses
-            } elseif ($packageLimitReached) {
-                // Package limit reached but no notification - add to waiting list
-                WaitingList::create([
-                    'teacher_id' => $teacher->id,
-                    'student_id' => $student->id,
-                    'student_name' => $validated['student_name'] ?? $student->name,
-                    'name' => $validated['name'],
-                    'course_date' => $validated['course_date'],
-                    'class_time' => $validated['class_time'],
-                    'duration_hours' => $validated['duration_hours'],
-                    'duration_minutes' => $validated['duration_minutes'],
-                    'total_hours' => $currentDuration,
-                    'course_type' => $validated['course_type'],
-                    'status' => $validated['status'],
-                    'admin_status' => 'approved',
-                    'homework' => $validated['homework'] ?? null,
-                    'evaluation_id' => $validated['evaluation_id'] ?? null,
-                    'content' => $validated['content'] ?? null,
-                    'notes' => $validated['notes'] ?? null,
-                    'souvenir_image' => $validated['souvenir_image'] ?? null,
-                    'income' => $income,
-                    'is_recurring' => false,
-                    'recurring_course_id' => null,
-                ]);
-                
-                // Set payment status to "EN ATTENTE DE PAYEMENT"
-                $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
-                if ($waitingPaymentStatus) {
-                    $student->payment_status_id = $waitingPaymentStatus->id;
-                    $student->save();
-                }
-                
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json(['success' => true, 'message' => 'Lesson added to waiting list. Package limit reached.']);
-                }
-                return redirect()->route('admin.dashboard')
-                                ->with('success', 'Lesson added to waiting list. Package limit reached.');
-            } else {
-                // Normal lesson - calculate n_value and create course
-                $nValue = $previousNValue + $currentDuration;
-                
-                // Auto-calculate lesson number (student-scoped, all teachers in the same round)
-                $lastLessonInRound = Course::where('student_id', $student->id)
-                    ->where('round', $currentRound)
-                    ->where('name', '!=', '0')
-                    ->where('name', '!=', '0.0')
-                    ->where('admin_status', '!=', 'pending')
-                    ->where('status', '!=', 'Free')
-                    ->orderByRaw('CAST(name AS DECIMAL) DESC')
-                    ->first();
-                
-                if ($lastLessonInRound && is_numeric($lastLessonInRound->name)) {
-                    $autoLessonNumber = (int)$lastLessonInRound->name + 1;
-                } else {
-                    $autoLessonNumber = 1;
-                }
-                $validated['name'] = (string)$autoLessonNumber;
-                
-                $validated['student_name'] = $validated['student_name'] ?? $student->name;
-                $validated['n_value'] = $nValue;
-                $validated['total_hours'] = $currentDuration;
-                $validated['income'] = $income;
-                $validated['admin_status'] = 'approved';
-                $validated['round'] = $currentRound;
-                
-                $course = Course::create($validated);
-                
-                // Check if package is completed (n_value >= package_number)
-                if ($nValue >= $student->package_number) {
-                    $message = $student->name . ' has completed the course !!';
-                    Notification::create([
-                        'type' => 'progress_update',
-                        'course_id' => $course->id,
-                        'student_id' => $student->id,
-                        'teacher_id' => $teacher->id,
-                        'message' => $message,
-                        'is_read' => false,
-                        'is_approved' => null,
-                    ]);
-                    
-                    // Set payment status to "EN ATTENTE DE PAYEMENT"
-                    $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
-                    if ($waitingPaymentStatus) {
-                        $student->payment_status_id = $waitingPaymentStatus->id;
-                        $student->save();
-                    }
-                }
-                
-                // Generate and send report via WhatsApp only if requested
-                if ($request->input('send_whatsapp')) {
-                    $teacherController = new \App\Http\Controllers\TeacherController();
-                    $teacherController->generateAndSendReport($course);
-                }
-                
-                $successMsg = $request->input('send_whatsapp') 
-                    ? 'Course created successfully! Report image has been sent to student\'s WhatsApp.'
-                    : 'Course created successfully!';
-                
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
-                }
-                return redirect()->route('admin.dashboard')->with('success', $successMsg);
-            }
+            $validated['income'] = $income;
         }
         
-        $msg = 'Course created successfully!';
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => $msg]);
+        // Save the course
+        $course = Course::create($validated);
+        
+        // Recalculate chronologically (this assigns n_value, name, handles limit splits, and overflow)
+        $this->recalculateSequenceAndLimits($student->id, $teacher->id, $currentRound);
+        
+        // Refresh the course to get its true final state
+        $course = $course->fresh();
+        
+        // If the entire course was pushed to overflow (round 0)
+        if ($course->round == 0 && $course->admin_status == 'pending') {
+            $successMsg = 'Lesson added to waiting list. Package limit reached.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $successMsg]);
+            }
+            return redirect()->route('admin.dashboard')->with('success', $successMsg);
         }
-        return redirect()->route('admin.dashboard')->with('success', $msg);
+        
+        // Generate and send report via WhatsApp only if requested & approved
+        if ($request->input('send_whatsapp') && $course->admin_status !== 'pending') {
+            $teacherController = new \App\Http\Controllers\TeacherController();
+            $teacherController->generateAndSendReport($course);
+        }
+        
+        $successMsg = $request->input('send_whatsapp') 
+            ? 'Course created successfully! Report image has been sent to student\'s WhatsApp.'
+            : 'Course created successfully!';
+            
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
+        }
+        return redirect()->route('admin.dashboard')->with('success', $successMsg);
     }
 
     public function editCourse(Course $course)
@@ -1046,18 +883,23 @@ class AdminController extends Controller
     }
 
     /**
-     * Update only the n_value for a course (e.g. when correcting count manually).
-     * Subsequent courses in the same round are recalculated from this value (7, 8, 9... until package limit).
+     * Update only the n_value for a course (manual correction).
+     * This overrides the chronological calculation, making this value an anchor point.
      */
     public function updateCourseNValue(Request $request, Course $course)
     {
         $validated = $request->validate([
             'n_value' => 'required|numeric|min:0',
         ]);
-        $course->update(['n_value' => $validated['n_value']]);
-        $this->recalculateNValuesFromCourseForward($course);
+        $course->update([
+            'n_value' => $validated['n_value'],
+            'is_manual_n_value' => true
+        ]);
+        
+        $this->recalculateSequenceAndLimits($course->student_id, $course->teacher_id, $course->round);
+
         if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'n_value' => $course->n_value]);
+            return response()->json(['success' => true, 'n_value' => $course->fresh()->n_value]);
         }
         return redirect()->route('admin.dashboard')->with('success', 'N value updated.');
     }
@@ -1080,7 +922,7 @@ class AdminController extends Controller
             'evaluation_id' => 'nullable|exists:evaluations,id',
             'content' => 'nullable|string',
             'notes' => 'nullable|string',
-            'souvenir_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'souvenir_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:65536',
             'n_value' => 'nullable|numeric|min:0',
         ]);
         
@@ -1097,48 +939,35 @@ class AdminController extends Controller
         
         $manualNValue = $request->filled('n_value') ? (float) $request->input('n_value') : null;
         
-        // Recalculate n_value and income only if not manually set and teacher or duration changed
-        if ($manualNValue === null && ($course->teacher_id != $validated['teacher_id'] ||
-            $course->duration_hours != $validated['duration_hours'] ||
-            $course->duration_minutes != $validated['duration_minutes'])) {
-            
-            $courseRound = $course->round;
-            $previousLessons = Course::where('student_id', $student->id)
-                                   ->where('teacher_id', $teacher->id)
-                                   ->where('round', $courseRound)
-                                   ->where('id', '!=', $course->id)
-                                   ->where('name', '!=', '0')
-                                   ->where('name', '!=', '0.0')
-                                   ->where('admin_status', '!=', 'pending')
-                                   ->orderBy('n_value', 'desc')
-                                   ->first();
-            
-            $previousNValue = $previousLessons ? $previousLessons->n_value : 0;
-            $currentDuration = $validated['duration_hours'] + ($validated['duration_minutes'] / 60.0);
-            $nValue = $previousNValue + $currentDuration;
-            $income = $currentDuration * $teacher->hourly_rate;
-            
-            $validated['n_value'] = $nValue;
-            $validated['total_hours'] = $currentDuration;
-            $validated['income'] = $income;
-        } elseif ($manualNValue !== null) {
-            $validated['n_value'] = $manualNValue;
-        }
-        
         $validated['student_name'] = $validated['student_name'] ?? $student->name;
+        
+        // Handle basic properties
+        $currentDuration = $validated['duration_hours'] + ($validated['duration_minutes'] / 60.0);
+        $validated['total_hours'] = $currentDuration;
+        $validated['income'] = ($validated['status'] === 'Free') ? 0 : ($currentDuration * $teacher->hourly_rate);
+        
+        if ($manualNValue !== null) {
+            $validated['n_value'] = $manualNValue;
+            $validated['is_manual_n_value'] = true;
+        }
+
+        // Check if chronological position or duration changed before saving
+        // Assuming course_date and class_time might be Carbon objects
+        $dateChanged = clone $course->course_date != new \Carbon\Carbon($validated['course_date']);
+        $timeChanged = clone $course->class_time != new \Carbon\Carbon($validated['class_time']);
+        $durationChanged = $course->duration_hours != $validated['duration_hours'] || $course->duration_minutes != $validated['duration_minutes'];
+        $teacherChanged = $course->teacher_id != $validated['teacher_id'];
+        $statusChanged = $course->status !== $validated['status'];
         
         $course->update($validated);
         
-        if ($manualNValue !== null) {
-            // Propagate manual n_value to subsequent courses in the same round only
-            $this->recalculateNValuesFromCourseForward($course);
-        } elseif ($manualNValue === null && ($course->getOriginal('teacher_id') != $validated['teacher_id'] ||
-            $course->getOriginal('duration_hours') != $validated['duration_hours'] ||
-            $course->getOriginal('duration_minutes') != $validated['duration_minutes'])) {
-            // Duration or teacher changed — cascade forward from this course only, same round
-            $this->recalculateNValuesFromCourseForward($course);
+        if ($manualNValue !== null || $dateChanged || $timeChanged || $durationChanged || $teacherChanged || $statusChanged) {
+            // If anything affecting the chronological sequence, limits, or manual anchor changed, recalculate the whole round
+            $this->recalculateSequenceAndLimits($student->id, $teacher->id, $course->round);
+            
+            // Refresh course to get its final state after potential splits
+            $course = $course->fresh();
         }
-        // If nothing affecting n_value changed, no recalc needed
         
         // Generate and send report via WhatsApp only if requested
         if ($request->input('send_whatsapp')) {
@@ -1159,6 +988,12 @@ class AdminController extends Controller
     public function destroyCourse(Course $course)
     {
         $studentId = $course->student_id;
+        
+        $course->update([
+            'deleted_by_type' => get_class(Auth::user()),
+            'deleted_by_id' => Auth::id()
+        ]);
+        
         $course->delete();
         
         // Recalculate all n_values for this student (student-scoped)
@@ -1250,7 +1085,7 @@ class AdminController extends Controller
                                ->where('name', '!=', '0')
                                ->where('name', '!=', '0.0')
                                ->where('admin_status', '!=', 'pending')
-                               ->orderBy('n_value', 'desc')
+                               
                                ->first();
 
         $previousNValue = $previousLessons ? (float)$previousLessons->n_value : 0;
@@ -1687,49 +1522,180 @@ class AdminController extends Controller
     }
 
     /**
-     * Recalculate n_values only for courses that come AFTER the given course in the same round.
-     * Used when the user manually sets n_value (e.g. to 6) so the next courses become 7, 8, 9... until package limit.
+     * Rebuilds the chronological sequence of courses for a specific round,
+     * calculates n_value, assigns lesson numbers, and handles package limits (splitting/overflowing to round 0).
      */
-    private function recalculateNValuesFromCourseForward(Course $course)
+    public function recalculateSequenceAndLimits($studentId, $teacherId, $round)
     {
-        $round = $course->round;
-        $studentId = $course->student_id;
-        $teacherId = $course->teacher_id;
-
-        $allInRound = Course::where('student_id', $studentId)
-            ->where('teacher_id', $teacherId)
-            ->where('round', $round)
-            ->orderBy('course_date', 'asc')
-            ->orderBy('class_time', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
-
-        $found = false;
-        $cumulativeValue = (float) $course->n_value;
-
-        foreach ($allInRound as $c) {
-            if ($c->id === $course->id) {
-                $found = true;
+        $student = Student::find($studentId);
+        if (!$student || $student->package_number <= 0) return null;
+        
+        // Get all courses that either belong to this round OR are currently overflow (round 0)
+    // We evaluate them chronologically for the ENTIRE student, regardless of teacher.
+    $courses = Course::with('teacher')->where('student_id', $studentId)
+        ->whereIn('round', [$round, 0])
+        ->orderBy('course_date', 'asc')
+        ->orderBy('class_time', 'asc')
+        ->orderBy('id', 'asc')
+        ->get();
+        
+    // Determine the package limit to use for this round.
+    // If it's a historical round, we lock it to the package_limit recorded on its first course.
+    // Otherwise, we fallback to the current global student package_number.
+    $roundCourses = $courses->where('round', $round);
+    $packageLimit = $roundCourses->isNotEmpty() && $roundCourses->first()->package_limit 
+                    ? $roundCourses->first()->package_limit 
+                    : $student->package_number;
+            
+        $cumulativeValue = 0;
+        $lessonNumber = 1;
+        $limitReached = false;
+        
+        foreach ($courses as $course) {
+            $duration = $course->duration_hours + ($course->duration_minutes / 60.0);
+            $hourlyRate = $course->teacher ? $course->teacher->hourly_rate : 0;
+            
+            // Skip courses that don't consume package hours
+            if ($course->status === 'Free') {
+                $course->update(['n_value' => $cumulativeValue, 'round' => $round]);
+                continue;
+            } elseif ($course->name === '0.0') {
+                // "Unpaid beyond-limit lessons" - keep as is, but put in round 0
+                $course->update(['n_value' => $cumulativeValue, 'round' => 0]);
                 continue;
             }
-            if (!$found) {
+            
+            // At this point, it's a valid course that consumes hours
+            if ($limitReached) {
+                // Course is entirely AFTER the package limit was reached
+                $course->update([
+                    'round' => 0,
+                    'n_value' => 0,
+                    'name' => '0',
+                    'admin_status' => 'pending',
+                    'is_manual_n_value' => false
+                ]);
                 continue;
             }
-
-            $duration = (float) $c->duration_hours + ((int) ($c->duration_minutes ?? 0) / 60.0);
-
-            if ($c->admin_status === 'pending' || $c->admin_status === 'rejected') {
-                $c->update(['n_value' => $cumulativeValue]);
-            } elseif ($c->status === 'Free') {
-                $c->update(['n_value' => $cumulativeValue]);
-            } elseif ($c->name === '0.0') {
-                $c->update(['n_value' => $cumulativeValue]);
+            
+            if ($course->is_manual_n_value) {
+                // Treat the manual override as an absolute anchor point
+                $projectedNValue = (float) $course->n_value;
+                // The cumulative value is reset to match the manual override
+                $cumulativeValue = $projectedNValue;
             } else {
-                $cumulativeValue += $duration;
-                $c->update(['n_value' => $cumulativeValue]);
+                // Normal chronological calculation
+                $projectedNValue = $cumulativeValue + $duration;
+            }
+            
+            if ($projectedNValue > $packageLimit) {
+                // Course OVERFLOWS the package limit. It must be split.
+                $limitReached = true;
+                
+                $hoursToComplete = $packageLimit - $cumulativeValue;
+                $hoursPending = $duration - $hoursToComplete;
+                
+                if ($hoursToComplete > 0) {
+                    // Update this course to perfectly complete the package
+                    $completeHours = floor($hoursToComplete);
+                    $completeMinutes = round(($hoursToComplete - $completeHours) * 60);
+                    
+                    $course->update([
+                        'duration_hours' => $completeHours,
+                        'duration_minutes' => $completeMinutes,
+                        'total_hours' => $hoursToComplete,
+                        'n_value' => $packageLimit,
+                        'income' => $hoursToComplete * $hourlyRate,
+                        'name' => (string)$lessonNumber,
+                        'round' => $round,
+                        'admin_status' => 'approved' // ensure it's approved
+                    ]);
+                    $lessonNumber++;
+                } else {
+                    // Edge case: exactly at limit, so entire course is overflow
+                    $course->update([
+                        'round' => 0,
+                        'n_value' => 0,
+                        'name' => '0',
+                        'admin_status' => 'pending',
+                    ]);
+                    continue;
+                }
+                
+                if ($hoursPending > 0) {
+                    // Create the overflow course (round 0)
+                    $pendingHours = floor($hoursPending);
+                    $pendingMinutes = round(($hoursPending - $pendingHours) * 60);
+                    
+                    $pendingCourseData = $course->toArray();
+                    unset($pendingCourseData['id'], $pendingCourseData['created_at'], $pendingCourseData['updated_at'], $pendingCourseData['teacher']);
+                    
+                    $pendingCourseData['duration_hours'] = $pendingHours;
+                    $pendingCourseData['duration_minutes'] = $pendingMinutes;
+                    $pendingCourseData['total_hours'] = $hoursPending;
+                    $pendingCourseData['n_value'] = 0;
+                    $pendingCourseData['income'] = $hoursPending * $hourlyRate;
+                    $pendingCourseData['admin_status'] = 'pending';
+                    $pendingCourseData['status'] = 'Present';
+                    $pendingCourseData['round'] = 0;
+                    $pendingCourseData['name'] = '0';
+                    
+                    Course::create($pendingCourseData);
+                }
+                
+                // Trigger package completion DB updates, using the teacher of the SPLIT course!
+                $this->handlePackageCompletion($student, $course->teacher_id, $course->id);
+                
+            } else {
+                // Course fits completely within the package
+                $cumulativeValue = $projectedNValue;
+                $course->update([
+                    'n_value' => $cumulativeValue,
+                    'name' => (string)$lessonNumber,
+                    'round' => $round,
+                    'admin_status' => 'approved'
+                ]);
+                $lessonNumber++;
+                
+                // If it hits EXACTLY the limit
+                if (round($cumulativeValue, 2) >= $packageLimit) {
+                    $limitReached = true;
+                    $this->handlePackageCompletion($student, $course->teacher_id, $course->id);
+                }
             }
         }
+        
+        return $courses;
     }
+
+    private function handlePackageCompletion($student, $teacherId, $courseId)
+    {
+        $waitingPaymentStatus = PaymentStatus::where('name', 'EN ATTENTE DE PAYEMENT')->first();
+        if ($waitingPaymentStatus) {
+            $student->payment_status_id = $waitingPaymentStatus->id;
+            $student->save();
+        }
+        
+        // Prevent duplicate notifications
+        $exists = Notification::where('student_id', $student->id)
+            ->where('type', 'progress_update')
+            ->where('is_read', false)
+            ->exists();
+            
+        if (!$exists) {
+            Notification::create([
+                'type' => 'progress_update',
+                'course_id' => $courseId,
+                'student_id' => $student->id,
+                'teacher_id' => $teacherId,
+                'message' => $student->name . ' has completed the course !!',
+                'is_read' => false,
+            ]);
+        }
+    }
+
+    // The recalculateNValuesFromCourseForward method was removed because manual manual edits
+    // now correctly act as an anchor using the `is_manual_n_value` flag directly in `recalculateSequenceAndLimits`.
 
     /**
      * Apply waiting list lessons and rename lessons with name "0.0" after package limit
@@ -1746,6 +1712,7 @@ class AdminController extends Controller
 
         // Get all pending courses for this student (from new package)
         $pendingCourses = Course::where('student_id', $student->id)
+            ->where('round', 0)
             ->where('admin_status', 'pending')
             ->orderBy('course_date', 'asc')
             ->orderBy('class_time', 'asc')
@@ -1767,7 +1734,7 @@ class AdminController extends Controller
             ->where('name', '!=', '0') // Exclude unapproved absences
             ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
             ->where('admin_status', '!=', 'pending') // Exclude pending courses
-            ->orderBy('n_value', 'desc')
+            
             ->first();
 
         // Start from 0 for the new package cycle
@@ -2023,5 +1990,45 @@ class AdminController extends Controller
             'message' => 'Student updated successfully',
             'student' => $student->load(['teacher', 'paymentStatus'])
         ]);
+    }
+
+    // Recovery System Management
+    public function recovery(Request $request)
+    {
+        $deletedStudents = Student::onlyTrashed()->with('deletedBy')->orderBy('deleted_at', 'desc')->get();
+        $deletedTeachers = Teacher::onlyTrashed()->with('deletedBy')->orderBy('deleted_at', 'desc')->get();
+        $deletedCourses = Course::onlyTrashed()->with(['deletedBy', 'teacher', 'student'])->orderBy('deleted_at', 'desc')->get();
+        
+        return view('admin.recovery', compact('deletedStudents', 'deletedTeachers', 'deletedCourses'));
+    }
+
+    public function restoreTeacher($id)
+    {
+        $teacher = Teacher::onlyTrashed()->findOrFail($id);
+        $teacher->update(['deleted_by_type' => null, 'deleted_by_id' => null]);
+        $teacher->restore();
+        
+        return redirect()->route('admin.recovery')->with('success', 'Teacher restored successfully!');
+    }
+
+    public function restoreStudent($id)
+    {
+        $student = Student::onlyTrashed()->findOrFail($id);
+        $student->update(['deleted_by_type' => null, 'deleted_by_id' => null]);
+        $student->restore();
+        
+        return redirect()->route('admin.recovery')->with('success', 'Student restored successfully!');
+    }
+
+    public function restoreCourse($id)
+    {
+        $course = Course::onlyTrashed()->findOrFail($id);
+        $course->update(['deleted_by_type' => null, 'deleted_by_id' => null]);
+        $course->restore();
+        
+        // Ensure student n_values recalculation after restoring a course
+        $this->recalculateNValues($course->student_id);
+        
+        return redirect()->route('admin.recovery')->with('success', 'Course restored successfully!');
     }
 }

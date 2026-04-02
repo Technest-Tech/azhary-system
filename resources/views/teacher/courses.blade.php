@@ -62,6 +62,21 @@
                     </select>
                 </div>
                 
+                <!-- Month/Year Filter -->
+                <div style="position: relative;">
+                    <label for="month_year" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                        <i class="fas fa-calendar" style="color: #3b82f6; margin-right: 6px;"></i>
+                        Month / Year
+                    </label>
+                    <select name="month_year" id="month_year" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; transition: all 0.3s; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;">
+                        <option value="">All Months</option>
+                        @for($i = 0; $i < 12; $i++)
+                            @php $d = now()->subMonths($i); $val = $d->format('n-Y'); $lab = $d->format('F Y'); @endphp
+                            <option value="{{ $val }}" {{ request('month_year') == $val ? 'selected' : '' }}>{{ $lab }}</option>
+                        @endfor
+                    </select>
+                </div>
+                
                 <!-- Date From Filter -->
                 <div style="position: relative;">
                     <label for="date_from" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
@@ -109,13 +124,19 @@
             </form>
             
             <!-- Active Filters Display -->
-            @if(request()->hasAny(['student_id', 'status', 'course_type', 'date_from', 'date_to']))
+            @if(request()->hasAny(['student_id', 'status', 'course_type', 'date_from', 'date_to', 'month_year']))
                 <div style="margin-top: 20px; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                         <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
                         <span style="font-weight: 600; color: #1e40af;">{{ __('teacher.active_filters') }}:</span>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        @if(request('month_year'))
+                            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #e0e7ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-calendar"></i>
+                                Month: {{ request('month_year') }}
+                            </span>
+                        @endif
                         @if(request('student_id'))
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <i class="fas fa-user-graduate"></i>
@@ -275,15 +296,15 @@
                         <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(59, 130, 246, 0.1); border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2);">
                                 <i class="fas fa-list" style="color: #3b82f6;"></i>
-                                <span style="font-weight: 600; color: #1e40af; font-size: 14px;">{{ __('teacher.courses_count', ['count' => $courses->count()]) }}</span>
+                                <span style="font-weight: 600; color: #1e40af; font-size: 14px;">{{ __('teacher.courses_count', ['count' => $totalCoursesCount]) }}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);">
                                 <i class="fas fa-clock" style="color: #34d399;"></i>
-                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ __('teacher.total_hours', ['hours' => $courses->sum('total_hours')]) }}</span>
+                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ __('teacher.total_hours', ['hours' => $totalCoursesHours]) }}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(5, 150, 105, 0.1); border-radius: 20px; border: 1px solid rgba(5, 150, 105, 0.2);">
                                 <i class="fas fa-dollar-sign" style="color: #059669;"></i>
-                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ __('teacher.earned_amount', ['amount' => number_format($courses->sum('income'), 2)]) }}</span>
+                                <span style="font-weight: 600; color: #166534; font-size: 14px;">{{ __('teacher.earned_amount', ['amount' => number_format($totalCoursesIncome, 2)]) }}</span>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 12px;">
@@ -761,6 +782,9 @@
                         throw { type: 'validation', errors: data.errors };
                     });
                 }
+                if (response.status === 419) {
+                    throw { type: 'server', message: 'Your session has expired (419 Error). Please copy your notes, refresh the page, and try again.' };
+                }
                 if (!response.ok) {
                     throw { type: 'server', message: 'Server error (' + response.status + ')' };
                 }
@@ -901,6 +925,15 @@
                 closeRoundsModal();
             }
         });
+        
+        // Keep session alive to prevent 419 CSRF token expiration errors
+        // Ping the server every 15 minutes
+        setInterval(function() {
+            fetch(window.location.href, { 
+                method: 'HEAD',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).catch(e => console.log('Session keep-alive ping silently failed.'));
+        }, 15 * 60 * 1000);
         
     </script>
 @endsection
