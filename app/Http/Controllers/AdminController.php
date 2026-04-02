@@ -1776,7 +1776,7 @@ class AdminController extends Controller
             ->orderBy('class_time', 'asc')
             ->get();
 
-        // Get all pending courses for this student (from new package)
+        // Get all pending courses for this student (overflow in round 0)
         $pendingCourses = Course::where('student_id', $student->id)
             ->where('round', 0)
             ->where('admin_status', 'pending')
@@ -1784,26 +1784,16 @@ class AdminController extends Controller
             ->orderBy('class_time', 'asc')
             ->get();
 
-        // Get the current max round for this student
-        $currentMaxRound = Course::where('student_id', $student->id)->max('round') ?? 0;
+        // Get the current max VALID round (exclude round 0 which is the pending overflow bucket)
+        $currentMaxRound = Course::where('student_id', $student->id)
+            ->where('round', '>', 0)
+            ->max('round') ?? 0;
         $newRound = $currentMaxRound + 1;
 
-        // Get the last valid course to determine starting n_value
-        // If we have waiting list entries or pending courses, use the teacher_id from the first entry
-        $firstEntry = $waitingListEntries->isNotEmpty() ? $waitingListEntries->first() : ($pendingCourses->isNotEmpty() ? $pendingCourses->first() : null);
-        $teacherId = $firstEntry ? $firstEntry->teacher_id : null;
-        
-        $lastValidCourse = Course::where('student_id', $student->id)
-            ->when($teacherId, function($query) use ($teacherId) {
-                return $query->where('teacher_id', $teacherId);
-            })
-            ->where('name', '!=', '0') // Exclude unapproved absences
-            ->where('name', '!=', '0.0') // Exclude unpaid lessons beyond limit
-            ->where('admin_status', '!=', 'pending') // Exclude pending courses
-            
-            ->first();
+        // The package limit for the new round is the student's updated package_number
+        $newPackageLimit = $student->package_number;
 
-        // Start from 0 for the new package cycle
+        // Start counting lessons from 0 for the new package cycle
         $baseNValue = 0;
         $lessonNumber = 0;
 
@@ -1816,6 +1806,7 @@ class AdminController extends Controller
             $courseData = $waitingEntry->toCourse($baseNValue);
             $courseData['name'] = (string)$lessonNumber;
             $courseData['round'] = $newRound;
+            $courseData['package_limit'] = $newPackageLimit;
             
             Course::create($courseData);
             
@@ -1823,15 +1814,17 @@ class AdminController extends Controller
             $waitingEntry->delete();
         }
         
-        // Activate pending courses from the new package
+        // Activate pending courses from the new package and assign proper lesson names
         foreach ($pendingCourses as $pendingCourse) {
+            $lessonNumber++;
             $baseNValue += $pendingCourse->total_hours;
             
             $pendingCourse->update([
-                'n_value' => $baseNValue,
-                'admin_status' => 'approved',
-                'round' => $newRound,
-                // Status remains as 'Present' (it was already set to Present when created)
+                'n_value'       => $baseNValue,
+                'name'          => (string)$lessonNumber,
+                'admin_status'  => 'approved',
+                'round'         => $newRound,
+                'package_limit' => $newPackageLimit,
             ]);
         }
 
@@ -1849,6 +1842,7 @@ class AdminController extends Controller
                 $course->name = (string)$lessonNumber;
                 $course->n_value = $baseNValue;
                 $course->round = $newRound;
+                $course->package_limit = $newPackageLimit;
                 $course->save();
             }
         }
