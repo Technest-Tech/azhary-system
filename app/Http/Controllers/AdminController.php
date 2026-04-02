@@ -39,14 +39,7 @@ class AdminController extends Controller
             $query->where('student_id', $request->student_id);
         }
 
-        // Set default month to current month if NO date filters are requested
-        // (If the user explicitly selects "All Months", month_year is present but empty, bypassing this)
-        $hasAnyDateFilter = $request->filled('date') || $request->filled('date_from') || $request->filled('date_to') || $request->has('month_year');
-        if (!$hasAnyDateFilter) {
-            $currentMonth = date('n');
-            $currentYear = date('Y');
-            $request->merge(['month_year' => $currentMonth . '-' . $currentYear]);
-        }
+        // No default date filter — show all-time data unless user explicitly filters
 
         if ($request->filled('date')) {
             $query->whereDate('course_date', $request->date);
