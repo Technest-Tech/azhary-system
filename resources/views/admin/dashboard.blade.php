@@ -435,6 +435,17 @@
                                 <input type="date" name="course_date" id="modal_course_date" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;" value="{{ date('Y-m-d') }}" required>
                                 <div class="field-error" data-field="course_date" style="display:none; color: #dc2626; font-size: 12px; margin-top: 4px;"></div>
                             </div>
+                            
+                            <!-- Round Assignment -->
+                            <div>
+                                <label for="modal_round" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                                    <i class="fas fa-layer-group" style="color: #3b82f6;"></i> Round Assignment
+                                </label>
+                                <select name="round" id="modal_round" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white; appearance: none;">
+                                    <option value="">Current Active Round (Default)</option>
+                                    <!-- Options populated dynamically -->
+                                </select>
+                            </div>
 
                             <!-- Duration -->
                             <div>
@@ -873,6 +884,28 @@
                 // Load students for this teacher, then select the right one
                 loadModalStudents(c.teacher_id, c.student_id, c.student_name);
                 
+                // Fetch and populate Round Assignment Select for this student
+                var roundSelect = document.getElementById('modal_round');
+                if (roundSelect && c.student_id) {
+                    roundSelect.innerHTML = '<option value="">Loading Rounds...</option>';
+                    fetch(`/admin/students/${c.student_id}/rounds`)
+                        .then(r => r.json())
+                        .then(data => {
+                            let html = '<option value="">Current Active Round (Default)</option>';
+                            if (data.rounds && data.rounds.length > 0) {
+                                const sortedRounds = [...data.rounds].sort((a,b) => a.round - b.round);
+                                sortedRounds.forEach(rData => {
+                                    const isSelected = (c.round == rData.round) ? 'selected' : '';
+                                    html += `<option value="${rData.round}" ${isSelected}>Round ${rData.round}</option>`;
+                                });
+                            }
+                            roundSelect.innerHTML = html;
+                        })
+                        .catch(() => {
+                            roundSelect.innerHTML = '<option value="">Current Active Round (Default)</option>';
+                        });
+                }
+                
                 document.getElementById('btnSaveOnly').disabled = false;
                 document.getElementById('btnSaveWhatsapp').disabled = false;
             })
@@ -994,10 +1027,33 @@
         document.getElementById('modal_student_dropdown').addEventListener('click', function(e) {
             var el = e.target.closest('.modal-student-option');
             if (!el) return;
-            document.getElementById('modal_student_id').value = el.getAttribute('data-id');
+            var studentId = el.getAttribute('data-id');
+            document.getElementById('modal_student_id').value = studentId;
             document.getElementById('modal_student_name').value = el.getAttribute('data-name');
             document.getElementById('modal_student_search').value = el.getAttribute('data-name');
             this.style.display = 'none';
+            
+            // Populate Round Assignment Select
+            var roundSelect = document.getElementById('modal_round');
+            if (roundSelect && studentId) {
+                roundSelect.innerHTML = '<option value="">Loading Rounds...</option>';
+                fetch(`/admin/students/${studentId}/rounds`)
+                    .then(r => r.json())
+                    .then(data => {
+                        let html = '<option value="">Current Active Round (Default)</option>';
+                        if (data.rounds && data.rounds.length > 0) {
+                            // Sort ascending for better UX in a dropdown
+                            const sortedRounds = [...data.rounds].sort((a,b) => a.round - b.round);
+                            sortedRounds.forEach(roundData => {
+                                html += `<option value="${roundData.round}">Round ${roundData.round}</option>`;
+                            });
+                        }
+                        roundSelect.innerHTML = html;
+                    })
+                    .catch(err => {
+                        roundSelect.innerHTML = '<option value="">Current Active Round (Default)</option>';
+                    });
+            }
         });
         document.addEventListener('click', function(e) {
             var search = document.getElementById('modal_student_search');

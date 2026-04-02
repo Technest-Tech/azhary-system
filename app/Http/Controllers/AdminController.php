@@ -737,144 +737,10 @@ class AdminController extends Controller
             ->where('round', $round)
             ->update(['package_limit' => $newLimit]);
             
-        // Trigger the global visual re-pack logic
-        $this->globalRecalculateRounds($student->id);
+        // Trigger calculation cleanly only inside this modified round
+        $this->recalculateSequenceAndLimits($student->id, null, $round);
         
         return response()->json(['success' => true]);
-    }
-    
-    public function globalRecalculateRounds($studentId)
-    {
-        $student = Student::find($studentId);
-        if (!$student) return;
-
-        // Fetch ALL courses that count towards package limits
-        $courses = Course::with('teacher')->where('student_id', $studentId)
-            ->where('status', '!=', 'Free') // ignore entirely free lessons
-            ->where('name', '!=', '0.0') // ignore entirely beyond limit unpaid
-            ->where(function($q) {
-                $q->where('admin_status', 'approved')
-                  ->orWhereNull('admin_status'); // older records
-            })
-            ->orderBy('course_date', 'asc')
-            ->orderBy('class_time', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
-            
-        if ($courses->isEmpty()) return;
-        
-        $currentRound = 1;
-        $cumulativeValue = 0;
-        $lessonNumber = 1;
-        
-        $customLimits = Course::where('student_id', $studentId)
-            ->whereNotNull('package_limit')
-            ->select('round', 'package_limit')
-            ->groupBy('round', 'package_limit')
-            ->pluck('package_limit', 'round')
-            ->toArray();
-
-        foreach ($courses as $course) {
-            $durationRemaining = (float) $course->total_hours;
-            $hourlyRate = $course->teacher ? $course->teacher->hourly_rate : 0;
-            $isFirstPiece = true;
-            
-            while ($durationRemaining > 0.001) {
-                $currentLimit = $customLimits[$currentRound] ?? $student->package_number;
-                
-                // Manual anchoring only applies to the first piece of the sliced course
-                if ($isFirstPiece && $course->is_manual_n_value && $course->n_value > 0) {
-                    $cumulativeValue = (float) $course->n_value - $durationRemaining; // reset cumulative
-                }
-                
-                $spaceLeft = max(0, $currentLimit - $cumulativeValue);
-                
-                if ($durationRemaining > $spaceLeft && $spaceLeft > 0.001) {
-                    // Overflow
-                    $chunk = $spaceLeft;
-                    $durationRemaining -= $chunk;
-                    $cumulativeValue = $currentLimit;
-                    
-                    $cHours = floor($chunk);
-                    $cMins = round(($chunk - $cHours) * 60);
-                    
-                    if ($isFirstPiece) {
-                        $course->update([
-                            'duration_hours' => $cHours,
-                            'duration_minutes' => $cMins,
-                            'total_hours' => $chunk,
-                            'n_value' => $currentLimit,
-                            'income' => $chunk * $hourlyRate,
-                            'name' => (string)$lessonNumber,
-                            'round' => $currentRound,
-                            'package_limit' => $currentLimit,
-                        ]);
-                        $isFirstPiece = false;
-                        $this->handlePackageCompletion($student, $course->teacher_id, $course->id);
-                    } else {
-                        $newData = $course->toArray();
-                        unset($newData['id'], $newData['created_at'], $newData['updated_at'], $newData['teacher']);
-                        $newData['duration_hours'] = $cHours;
-                        $newData['duration_minutes'] = $cMins;
-                        $newData['total_hours'] = $chunk;
-                        $newData['n_value' ] = $currentLimit;
-                        $newData['income'] = $chunk * $hourlyRate;
-                        $newData['name'] = (string)$lessonNumber;
-                        $newData['round'] = $currentRound;
-                        $newData['package_limit'] = $currentLimit;
-                        $createdCourse = Course::create($newData);
-                        $this->handlePackageCompletion($student, $createdCourse->teacher_id, $createdCourse->id);
-                    }
-                    
-                    $currentRound++;
-                    $cumulativeValue = 0;
-                    $lessonNumber = 1;
-                    
-                } else {
-                    // Fits
-                    $chunk = $durationRemaining;
-                    $cumulativeValue += $chunk;
-                    $durationRemaining = 0;
-                    
-                    $cHours = floor($chunk);
-                    $cMins = round(($chunk - $cHours) * 60);
-                    
-                    if ($isFirstPiece) {
-                        $course->update([
-                            'duration_hours' => $cHours,
-                            'duration_minutes' => $cMins,
-                            'total_hours' => $chunk,
-                            'n_value' => $cumulativeValue,
-                            'income' => $chunk * $hourlyRate,
-                            'name' => (string)$lessonNumber,
-                            'round' => $currentRound,
-                            'package_limit' => $currentLimit,
-                        ]);
-                    } else {
-                        $newData = $course->toArray();
-                        unset($newData['id'], $newData['created_at'], $newData['updated_at'], $newData['teacher']);
-                        $newData['duration_hours'] = $cHours;
-                        $newData['duration_minutes'] = $cMins;
-                        $newData['total_hours'] = $chunk;
-                        $newData['n_value'] = $cumulativeValue;
-                        $newData['income'] = $chunk * $hourlyRate;
-                        $newData['name'] = (string)$lessonNumber;
-                        $newData['round'] = $currentRound;
-                        $newData['package_limit'] = $currentLimit;
-                        $course = Course::create($newData);
-                    }
-                    
-                    if (abs($cumulativeValue - $currentLimit) < 0.001) {
-                        $this->handlePackageCompletion($student, $course->teacher_id, $course->id);
-                        $currentRound++;
-                        $cumulativeValue = 0;
-                        $lessonNumber = 1;
-                    } else {
-                        $lessonNumber++;
-                    }
-                }
-            }
-        }
     }
 
     public function storeCourse(Request $request)
@@ -909,11 +775,17 @@ class AdminController extends Controller
             $validated['souvenir_image'] = $imagePath;
         }
         
-        // Get current active round for this student (exclude pending round 0)
-        $currentRound = Course::where('student_id', $student->id)
-            ->where('teacher_id', $teacher->id)
-            ->where('round', '>', 0)
-            ->max('round') ?? 1;
+        // Determine round: use explicitly requested round, or default to current active round
+        $requestedRound = $request->input('round');
+        if (!empty($requestedRound)) {
+            $currentRound = $requestedRound;
+        } else {
+            // Get current active round for this student (exclude pending round 0)
+            $currentRound = Course::where('student_id', $student->id)
+                ->where('teacher_id', $teacher->id)
+                ->where('round', '>', 0)
+                ->max('round') ?? 1;
+        }
         
         // Calculate n_value based on package_number and previous lessons IN THE CURRENT ROUND
         // Exclude unapproved absences (name = "0") and lessons beyond limit that haven't been paid (name = "0.0")
