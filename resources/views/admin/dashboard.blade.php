@@ -623,7 +623,14 @@
                                     <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">
                                         Round ${roundData.round} ${isCurrentRound ? '<span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">Current</span>' : ''}
                                     </h3>
-                                    <span style="color: #64748b; font-size: 14px;">${roundData.courses_count} courses</span>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <span style="color: #64748b; font-size: 14px;">${roundData.courses_count} courses</span>
+                                        <div style="display: flex; align-items: center; gap: 6px; background: white; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                            <span style="font-size: 12px; font-weight: 600; color: #475569;">Limit:</span>
+                                            <input type="number" step="1" min="1" id="limit_input_${roundData.round}" value="${roundData.package_limit || data.student.package_number}" style="width: 50px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; font-weight: 600; text-align: center; color: #1e293b;" onclick="event.stopPropagation();">
+                                            <button onclick="event.stopPropagation(); updateRoundLimit(${studentId}, ${roundData.round}, event)" style="background: #10b981; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s;"><i class="fas fa-check"></i> Save</button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div style="color: #64748b; font-size: 12px; margin-bottom: 12px;">
                                     ${roundData.start_date ? new Date(roundData.start_date).toLocaleDateString() : 'N/A'} - ${roundData.end_date ? new Date(roundData.end_date).toLocaleDateString() : 'N/A'}
@@ -683,7 +690,52 @@
             if (e.target === this) closeRoundsModal();
         });
 
-        // ===================== COURSE MODAL =====================
+        function updateRoundLimit(studentId, round, event) {
+            const input = document.getElementById(`limit_input_${round}`);
+            const newLimit = input.value;
+            
+            if (!newLimit || newLimit < 1) {
+                alert('Please enter a valid round package limit greater than 0');
+                return;
+            }
+            
+            const btn = event.currentTarget || event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '{{ csrf_token() }}';
+            
+            fetch(`/admin/students/${studentId}/rounds/${round}/update-limit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ package_limit: newLimit })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refetch the modal to render newly repacked sequence
+                    showRoundsModal(studentId);
+                } else {
+                    alert('Error updating package limit.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Processing error.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+    </script>
+
+    <!-- ===================== COURSE MODAL ===================== -->
+    <script>
         var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
         // ===================== INLINE EDIT N VALUE =====================

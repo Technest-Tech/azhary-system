@@ -122,6 +122,7 @@ Route::prefix('admin')->group(function () {
         
         // Student Rounds API
         Route::get('/students/{student}/rounds', [AdminController::class, 'getStudentRounds'])->name('admin.students.rounds');
+        Route::post('/students/{student}/rounds/{round}/update-limit', [AdminController::class, 'updateRoundLimit'])->name('admin.students.rounds.update-limit');
         
         // Recovery System
         Route::get('/recovery', [AdminController::class, 'recovery'])->name('admin.recovery');
