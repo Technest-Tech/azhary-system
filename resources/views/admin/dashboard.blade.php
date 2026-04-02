@@ -225,7 +225,8 @@
                             @php
                                 $completionPercentage = 0;
                                 if ($course->student && $course->student->package_number > 0) {
-                                    $completionPercentage = min(100, ($course->n_value / $course->student->package_number) * 100);
+                                    $effectiveLimit = $course->package_limit ?? $course->student->package_number;
+                                    $completionPercentage = min(100, ($course->n_value / max(1, $effectiveLimit)) * 100);
                                 }
                                 $nameColor = $course->student && $course->student->teacher_id
                                     ? ($course->student->display_color ?? '#1565c0')

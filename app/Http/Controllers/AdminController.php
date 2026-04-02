@@ -810,6 +810,45 @@ class AdminController extends Controller
             ->where('is_read', false)
             ->exists();
         
+        $isHistoricalRound = !empty($requestedRound);
+        
+        if ($isHistoricalRound) {
+            // For old rounds: inherit the package_limit already set on that round
+            $roundPackageLimit = Course::where('student_id', $student->id)
+                ->where('round', $currentRound)
+                ->whereNotNull('package_limit')
+                ->value('package_limit') ?? $student->package_number;
+                
+            $validated['package_limit'] = $roundPackageLimit;
+            
+            // Prepare base course data
+            $validated['teacher_id'] = $teacher->id;
+            $validated['student_name'] = $validated['student_name'] ?? $student->name;
+            $validated['total_hours'] = $currentDuration;
+            $validated['round'] = $currentRound;
+            $validated['n_value'] = 0; // Will be recalculated
+            $validated['admin_status'] = 'approved';
+            
+            $income = $currentDuration * $teacher->hourly_rate;
+            if ($validated['status'] === 'Absent') {
+                $validated['name'] = '0';
+                $validated['income'] = $income;
+            } elseif ($validated['status'] === 'Free') {
+                $validated['income'] = 0;
+            } else {
+                $validated['income'] = $income;
+            }
+            
+            // Save the course
+            $course = Course::create($validated);
+            
+            // Recalculate ONLY n_values and lesson numbers for this isolated old round
+            // NO notifications, NO payment status changes
+            $this->recalculateNValues($student->id);
+            $course = $course->fresh();
+            
+        } else {
+        
         // Prepare base course data
         $validated['teacher_id'] = $teacher->id;
         $validated['student_name'] = $validated['student_name'] ?? $student->name;
@@ -865,6 +904,8 @@ class AdminController extends Controller
             return response()->json(['success' => true, 'message' => $successMsg, 'course_id' => $course->id]);
         }
         return redirect()->route('admin.dashboard')->with('success', $successMsg);
+        
+        } // end else (active round path)
     }
 
     public function editCourse(Course $course)
