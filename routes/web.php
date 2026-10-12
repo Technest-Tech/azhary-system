@@ -30,10 +30,6 @@ Route::get('/', function () {
 // Test PDF Report Route (Public - for testing)
 Route::get('/test-pdf-report', [TeacherController::class, 'testPdfReport'])->name('test.pdf.report');
 
-// Test Send WhatsApp Routes (Public - for testing)
-Route::get('/test-send-whatsapp-text', [TeacherController::class, 'testSendWhatsAppText'])->name('test.send.whatsapp.text');
-Route::get('/test-send-whatsapp', [TeacherController::class, 'testSendWhatsApp'])->name('test.send.whatsapp');
-
 // Test Image Generation Route (Public - for local testing)
 Route::get('/test-generate-image', [TeacherController::class, 'testGenerateImage'])->name('test.generate.image');
 

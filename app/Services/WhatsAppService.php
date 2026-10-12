@@ -3,50 +3,43 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
+/**
+ * Sends WhatsApp messages through the Acadmyq gateway (api.acadmyq.com).
+ *
+ * Acadmyq answers 202 when a message is queued for delivery — not when it is
+ * delivered — and 200 + status=duplicate when an Idempotency-Key is replayed.
+ * It only sends text and images; images must be a public https URL, which the
+ * gateway downloads itself.
+ */
 class WhatsAppService
 {
-    private $apiUrl = 'https://wasenderapi.com/api';
+    private $apiUrl;
     private $apiKey;
+    private $timeout;
 
     public function __construct()
     {
-        // Use provided API key or get from env
-        $this->apiKey = env('WASENDER_API_KEY', '8b40f461c42db71793ddff8e42887837b0367ab11ccddbffc02e7b833b2ab39e');
+        $this->apiUrl = rtrim(config('services.acadmyq.base_url'), '/');
+        $this->apiKey = config('services.acadmyq.api_key');
+        $this->timeout = (int) config('services.acadmyq.timeout', 30);
     }
 
     /**
-     * Format phone number to WhatsApp JID format
-     * JID format: countrycode+number@s.whatsapp.net
+     * Acadmyq wants the number as digits in international format (e.g. 33612345678).
      */
-    public function formatPhoneToJid($phoneNumber)
+    public function formatPhone($phoneNumber)
     {
-        // Remove all non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phoneNumber);
-        
-        // If phone doesn't start with country code, assume it's local format
-        // You may need to adjust this based on your country code
-        // For example, if your numbers are stored without country code, add it here
-        
-        return $phone . '@s.whatsapp.net';
-    }
+        $phone = preg_replace('/[^0-9]/', '', (string) $phoneNumber);
 
-    /**
-     * Upload PDF to a publicly accessible location and get URL
-     */
-    public function uploadPdf($pdfContent, $filename)
-    {
-        // Save PDF to storage
-        $path = 'reports/' . $filename;
-        Storage::disk('public')->put($path, $pdfContent);
-        
-        // Get public URL - ensure it's a full URL
-        $baseUrl = config('app.url');
-        $url = $baseUrl . '/storage/' . $path;
-        
-        return $url;
+        // 0033… is the same number as +33…
+        if (str_starts_with($phone, '00')) {
+            $phone = substr($phone, 2);
+        }
+
+        return $phone;
     }
 
     /**
@@ -57,23 +50,23 @@ class WhatsAppService
         // Save image directly to public/reports/ for better accessibility
         // This bypasses storage symlink issues and CDN blocks
         $publicPath = public_path('reports');
-        
+
         // Ensure reports directory exists
         if (!file_exists($publicPath)) {
             mkdir($publicPath, 0755, true);
         }
-        
+
         // Save file
         $filePath = $publicPath . '/' . $filename;
         file_put_contents($filePath, $imageContent);
-        
+
         // Set proper permissions
         chmod($filePath, 0644);
-        
+
         // Get public URL - direct access without /storage/ prefix
         $baseUrl = config('app.url');
         $url = $baseUrl . '/reports/' . $filename;
-        
+
         return $url;
     }
 
@@ -83,83 +76,35 @@ class WhatsAppService
     public function sendImage($phoneNumber, $imageContent, $fileName, $caption = null)
     {
         try {
-            $jid = $this->formatPhoneToJid($phoneNumber);
-            
             // Upload image to get a publicly accessible URL
             $imageUrl = $this->uploadImage($imageContent, $fileName);
-            
-            // Verify the URL is accessible (test if it's publicly accessible)
-            try {
-                $testResponse = Http::timeout(10)->head($imageUrl);
-                if (!$testResponse->successful()) {
-                    Log::warning('Image URL may not be publicly accessible', [
-                        'url' => $imageUrl,
-                        'status' => $testResponse->status()
-                    ]);
-                }
-            } catch (\Exception $e) {
-                Log::warning('Could not verify image URL accessibility', [
+
+            // Acadmyq downloads the image itself, so it must be public https
+            if (!str_starts_with($imageUrl, 'https://')) {
+                Log::warning('Report image URL is not https; Acadmyq will reject it', [
                     'url' => $imageUrl,
-                    'error' => $e->getMessage()
                 ]);
             }
-            
+
             $payload = [
-                'to' => $jid,
-                'imageUrl' => $imageUrl,
+                'to' => $this->formatPhone($phoneNumber),
+                'image_url' => $imageUrl,
             ];
-            
+
             if ($caption) {
                 $payload['caption'] = $caption;
             }
-            
+
             Log::info('Sending image via WhatsApp', [
                 'phone' => $phoneNumber,
                 'url' => $imageUrl,
                 'file' => $fileName
             ]);
-            
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl . '/send-message', $payload);
-            
-            $responseData = $response->json();
-            $statusCode = $response->status();
-            
-            if ($response->successful()) {
-                Log::info('WhatsApp image sent successfully', [
-                    'phone' => $phoneNumber,
-                    'file' => $fileName,
-                    'url' => $imageUrl,
-                    'status' => $statusCode,
-                    'response' => $responseData
-                ]);
-                return [
-                    'success' => true, 
-                    'data' => $responseData,
-                    'message_id' => $responseData['id'] ?? null,
-                    'image_url' => $imageUrl
-                ];
-            } else {
-                $errorMessage = $responseData['message'] ?? $response->body() ?? 'Unknown error';
-                Log::error('WhatsApp API error', [
-                    'phone' => $phoneNumber,
-                    'status' => $statusCode,
-                    'url' => $imageUrl,
-                    'payload' => $payload,
-                    'response' => $responseData,
-                    'body' => $response->body()
-                ]);
-                return [
-                    'success' => false, 
-                    'error' => $errorMessage,
-                    'status_code' => $statusCode,
-                    'full_response' => $responseData,
-                    'image_url' => $imageUrl
-                ];
-            }
+
+            $result = $this->send($payload);
+            $result['image_url'] = $imageUrl;
+
+            return $result;
         } catch (\Exception $e) {
             Log::error('WhatsApp service exception', [
                 'phone' => $phoneNumber,
@@ -171,66 +116,17 @@ class WhatsAppService
     }
 
     /**
-     * Send PDF document via WhatsApp - sends file directly, not as link
+     * Send text message via WhatsApp
      */
-    public function sendDocument($phoneNumber, $pdfContent, $fileName, $caption = null)
+    public function sendText($phoneNumber, $text)
     {
         try {
-            $jid = $this->formatPhoneToJid($phoneNumber);
-            
-            // Upload PDF to get a publicly accessible URL
-            // The API will download from this URL and send as document attachment
-            $documentUrl = $this->uploadPdf($pdfContent, $fileName);
-            
-            $payload = [
-                'to' => $jid,
-                'documentUrl' => $documentUrl,
-                'fileName' => $fileName,
-            ];
-            
-            if ($caption) {
-                $payload['caption'] = $caption;
-            }
-            
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl . '/send-message', $payload);
-            
-            $responseData = $response->json();
-            $statusCode = $response->status();
-            
-            if ($response->successful()) {
-                Log::info('WhatsApp document sent successfully', [
-                    'phone' => $phoneNumber,
-                    'file' => $fileName,
-                    'status' => $statusCode,
-                    'response' => $responseData
-                ]);
-                return [
-                    'success' => true, 
-                    'data' => $responseData,
-                    'message_id' => $responseData['id'] ?? null
-                ];
-            } else {
-                $errorMessage = $responseData['message'] ?? $response->body() ?? 'Unknown error';
-                Log::error('WhatsApp API error', [
-                    'phone' => $phoneNumber,
-                    'status' => $statusCode,
-                    'payload' => $payload,
-                    'response' => $responseData,
-                    'body' => $response->body()
-                ]);
-                return [
-                    'success' => false, 
-                    'error' => $errorMessage,
-                    'status_code' => $statusCode,
-                    'full_response' => $responseData
-                ];
-            }
+            return $this->send([
+                'to' => $this->formatPhone($phoneNumber),
+                'text' => $text,
+            ]);
         } catch (\Exception $e) {
-            Log::error('WhatsApp service exception', [
+            Log::error('WhatsApp text message error', [
                 'phone' => $phoneNumber,
                 'error' => $e->getMessage()
             ]);
@@ -239,32 +135,52 @@ class WhatsAppService
     }
 
     /**
-     * Send text message via WhatsApp
+     * Post one message to Acadmyq and translate its answer into our result array.
      */
-    public function sendText($phoneNumber, $text)
+    private function send(array $payload)
     {
-        try {
-            $jid = $this->formatPhoneToJid($phoneNumber);
-            
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post($this->apiUrl . '/send-message', [
-                'to' => $jid,
-                'text' => $text,
-            ]);
-            
-            if ($response->successful()) {
-                return ['success' => true, 'data' => $response->json()];
-            } else {
-                return ['success' => false, 'error' => $response->body()];
-            }
-        } catch (\Exception $e) {
-            Log::error('WhatsApp text message error', [
-                'phone' => $phoneNumber,
-                'error' => $e->getMessage()
-            ]);
-            return ['success' => false, 'error' => $e->getMessage()];
+        if (empty($this->apiKey)) {
+            Log::error('WhatsApp not sent: WHATSAPP_API_KEY is not set', ['to' => $payload['to']]);
+            return ['success' => false, 'error' => 'WhatsApp API key is not configured'];
         }
+
+        $response = Http::withToken($this->apiKey)
+            ->acceptJson()
+            ->withHeaders(['Idempotency-Key' => 'azhary-' . Str::uuid()])
+            ->timeout($this->timeout)
+            ->post($this->apiUrl . '/api/wa/v1/messages', $payload);
+
+        $responseData = $response->json();
+        $statusCode = $response->status();
+
+        // 202 = queued for delivery; 200 + duplicate = this exact send was already accepted
+        if ($statusCode === 202 || ($statusCode === 200 && ($responseData['status'] ?? null) === 'duplicate')) {
+            Log::info('WhatsApp message accepted by Acadmyq', [
+                'to' => $payload['to'],
+                'status' => $statusCode,
+                'response' => $responseData
+            ]);
+            return [
+                'success' => true,
+                'data' => $responseData,
+                'message_id' => $responseData['message_id'] ?? null,
+            ];
+        }
+
+        // 409 not_connected = no WhatsApp number is linked to this API key (rescan the QR in Acadmyq)
+        $errorMessage = $responseData['error'] ?? $responseData['message'] ?? $response->body();
+        Log::error('WhatsApp API error', [
+            'to' => $payload['to'],
+            'status' => $statusCode,
+            'payload' => $payload,
+            'response' => $responseData,
+            'body' => $response->body()
+        ]);
+        return [
+            'success' => false,
+            'error' => $errorMessage ?: 'Unknown error',
+            'status_code' => $statusCode,
+            'full_response' => $responseData
+        ];
     }
 }

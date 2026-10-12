@@ -28,6 +28,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'acadmyq' => [
+        'base_url' => env('WHATSAPP_API_BASE_URL', 'https://api.acadmyq.com'),
+        'api_key' => env('WHATSAPP_API_KEY'),
+        'timeout' => env('WHATSAPP_TIMEOUT', 30),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
